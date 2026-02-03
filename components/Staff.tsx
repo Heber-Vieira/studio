@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { Professional, BlockedPeriod, WorkSchedule, Service } from '../types';
+import { Professional, BlockedPeriod, WorkSchedule, Service, Category } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/database';
 import {
@@ -14,13 +14,14 @@ import {
 interface StaffProps {
   staff: Professional[];
   services: Service[];
-  onAdd: (pro: Omit<Professional, 'id'>) => void;
-  onUpdate: (pro: Professional) => void;
-  onDelete: (id: string) => void;
+  onAdd: (pro: Omit<Professional, 'id'>) => Promise<void>;
+  onUpdate: (pro: Professional) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
   blockedPeriods: BlockedPeriod[];
   onBlock: (block: BlockedPeriod) => void;
   onUnblock: (id: string) => void;
   onViewSchedule: () => void;
+  categories: Category[];
 }
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -34,7 +35,8 @@ const StaffView: React.FC<StaffProps> = ({
   blockedPeriods,
   onBlock,
   onUnblock,
-  onViewSchedule
+  onViewSchedule,
+  categories
 }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'master_admin' || user?.role === 'company_admin';
@@ -114,7 +116,7 @@ const StaffView: React.FC<StaffProps> = ({
       const defaultSchedule: WorkSchedule = {};
       for (let i = 0; i < 7; i++) defaultSchedule[i] = { isOff: i === 0, workStart: '09:00', workEnd: '19:00', lunchStart: '12:00', lunchEnd: '13:00' };
 
-      onAdd({
+      await onAdd({
         name: newPro.name,
         role: newPro.role,
         specialties: newPro.specialty ? [newPro.specialty] : [],
@@ -150,7 +152,7 @@ const StaffView: React.FC<StaffProps> = ({
         finalPro.avatar = uploadedUrl;
       }
 
-      onUpdate(finalPro);
+      await onUpdate(finalPro);
       setIsEditModalOpen(false);
       setSelectedPro(null);
       setSelectedFile(null);
@@ -162,9 +164,9 @@ const StaffView: React.FC<StaffProps> = ({
     }
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (selectedPro) {
-      onDelete(selectedPro.id);
+      await onDelete(selectedPro.id);
       setIsDeleteModalOpen(false);
       setSelectedPro(null);
     }
@@ -224,9 +226,11 @@ const StaffView: React.FC<StaffProps> = ({
 
   // Helper para agrupar serviços por categoria
   const groupedServices = services.reduce((acc, service) => {
-    const catId = service.category || 'Outros';
-    if (!acc[catId]) acc[catId] = [];
-    acc[catId].push(service);
+    const cat = categories.find(c => c.id === service.category || c.label === service.category);
+    const catLabel = cat?.label || service.category || 'Outros';
+
+    if (!acc[catLabel]) acc[catLabel] = [];
+    acc[catLabel].push(service);
     return acc;
   }, {} as Record<string, Service[]>);
 

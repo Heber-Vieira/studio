@@ -563,7 +563,7 @@ const MainLayout: React.FC = () => {
       case View.CRM:
         if (user?.role === 'attendant' && !permissions.viewCRM) return <AccessRestricted />;
         return <CRMView clients={clients} onAdd={addClient} onUpdate={updateClient} onDelete={deleteClient} onRedeem={() => { }} onPrefilledBooking={handlePrefilledBooking} appointments={appointments} settings={settings} t={t} onShowToast={showToast} />;
-      case View.STAFF: if (user?.role === 'attendant' && !permissions.viewStaff) return <AccessRestricted />; return <StaffView staff={staff} services={services} onAdd={addStaff} onUpdate={updateStaff} onDelete={deleteStaff} blockedPeriods={blockedPeriods} onBlock={() => { }} onUnblock={() => { }} onViewSchedule={() => setCurrentView(View.APPOINTMENTS)} />;
+      case View.STAFF: if (user?.role === 'attendant' && !permissions.viewStaff) return <AccessRestricted />; return <StaffView staff={staff} services={services} onAdd={addStaff} onUpdate={updateStaff} onDelete={deleteStaff} blockedPeriods={blockedPeriods} onBlock={() => { }} onUnblock={() => { }} onViewSchedule={() => setCurrentView(View.APPOINTMENTS)} categories={categories} />;
       case View.SERVICES: if (user?.role === 'attendant' && !permissions.viewServices) return <AccessRestricted />; return <ServicesView services={services} categories={categories} onAdd={addService} onUpdate={updateService} onDelete={deleteService} onAddCategory={addServiceCategory} onDeleteCategory={deleteServiceCategory} />;
       case View.INVENTORY:
         if (user?.role === 'attendant' && !permissions.viewInventory) return <AccessRestricted />;
