@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Appointment, Client, Professional, Service, BlockedPeriod } from '../types';
 import {
   Plus,
@@ -680,8 +681,8 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       </div>
 
       {/* Modal: Novo Agendamento */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+      {isModalOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
           <div className="bg-white w-full max-w-xl rounded-[3rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 border border-white/20 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-pink-50 rounded-full -translate-y-1/2 translate-x-1/2 -z-10"></div>
 
@@ -816,12 +817,12 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
               </div>
             </form>
           </div>
-        </div>
+        </div>, document.body
       )}
 
       {/* MODAL DETALHES */}
-      {isDetailsModalOpen && selectedAppointment && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+      {isDetailsModalOpen && selectedAppointment && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
           <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300">
             <div className="flex justify-between items-center">
               <h3 className="text-xl font-black">Detalhes do Agendamento</h3>
@@ -856,12 +857,12 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
               </div>
             </div>
           </div>
-        </div>
+        </div>, document.body
       )}
 
       {/* MODAL REAGENDAMENTO (WhatsApp Notifier) */}
-      {isRescheduleOpen && selectedAppointment && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+      {isRescheduleOpen && selectedAppointment && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
           <div className="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 border border-white/20 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-full -translate-y-1/2 translate-x-1/2 -z-10"></div>
 
@@ -921,12 +922,12 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body
       )}
 
       {/* MODAL CONFIRMAÇÃO DE CANCELAMENTO */}
-      {isConfirmCancelOpen && selectedAppointment && (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+      {isConfirmCancelOpen && selectedAppointment && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
           <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center">
             <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm mb-2">
               <AlertTriangle size={32} />
@@ -944,7 +945,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
               <button onClick={() => setIsConfirmCancelOpen(false)} className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-100 transition-all">Não, Manter Horário</button>
             </div>
           </div>
-        </div>
+        </div>, document.body
       )}
     </div>
   );
