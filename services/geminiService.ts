@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { Language } from "../../i18n";
+import { Language } from "../i18n";
 
 const getSystemInstruction = (lang: Language) => `
 Você é BellaAI, o assistente inteligente e ultra-moderno para gestão de salões de beleza.
