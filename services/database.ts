@@ -27,22 +27,29 @@ export const db = {
             .eq('id', DEFAULT_COMPANY_ID)
             .single();
 
-        if (error) throw error;
+        if (error || !data) throw error || new Error("Configurações não encontradas");
         return {
-            name: data.name,
-            address: data.address,
-            phone: data.phone,
-            aiTone: data.ai_tone,
-            autoReminders: data.auto_reminders,
-            pixKey: data.pix_key,
-            commissionDefault: data.commission_default,
-            taxRate: data.tax_rate,
-            monthlyGoal: data.monthly_goal,
-            instagram: data.instagram,
+            name: data.name || '',
+            address: data.address || '',
+            phone: data.phone || '',
+            aiTone: data.ai_tone || 'friendly',
+            autoReminders: !!data.auto_reminders,
+            pixKey: data.pix_key || '',
+            commissionDefault: Number(data.commission_default) || 40,
+            taxRate: Number(data.tax_rate) || 0,
+            monthlyGoal: Number(data.monthly_goal) || 0,
+            instagram: data.instagram || '',
             logo: data.logo_url,
-            theme: data.theme,
-            permissions: data.permissions,
-            loyalty: data.loyalty_config
+            theme: data.theme || { enabled: false, primaryColor: '#FF69B4', secondaryColor: '#40E0D0' },
+            permissions: data.permissions || {
+                viewFinancial: false, viewInventory: false, viewMarketing: false, viewStaff: false, viewServices: false, viewCRM: false
+            },
+            loyalty: data.loyalty_config || {
+                enabled: false,
+                pointsPerReal: 1,
+                redemptionCost: 100,
+                rewardName: 'Presente'
+            }
         } as SalonSettings;
     },
 
@@ -78,7 +85,7 @@ export const db = {
             .eq('company_id', DEFAULT_COMPANY_ID);
 
         if (error) throw error;
-        return data.map(c => ({
+        return (data || []).map(c => ({
             id: c.id,
             name: c.name,
             phone: c.phone,
@@ -142,7 +149,7 @@ export const db = {
             .eq('company_id', DEFAULT_COMPANY_ID);
 
         if (error) throw error;
-        return data.map(p => ({
+        return (data || []).map(p => ({
             id: p.id,
             name: p.name,
             role: p.role,
@@ -218,7 +225,7 @@ export const db = {
             .eq('company_id', DEFAULT_COMPANY_ID);
 
         if (error) throw error;
-        return data.map(a => ({
+        return (data || []).map(a => ({
             id: a.id,
             clientId: a.client_id,
             clientName: a.clients?.name || 'Cliente Desconhecido',
@@ -279,7 +286,7 @@ export const db = {
             .order('transaction_date', { ascending: false });
 
         if (error) throw error;
-        return data.map(t => ({
+        return (data || []).map(t => ({
             id: t.id,
             type: t.type,
             title: t.title,
@@ -323,7 +330,7 @@ export const db = {
             .eq('company_id', DEFAULT_COMPANY_ID);
 
         if (error) throw error;
-        return data.map(i => ({
+        return (data || []).map(i => ({
             id: i.id,
             name: i.name,
             type: i.type,
@@ -413,7 +420,7 @@ export const db = {
             .eq('company_id', DEFAULT_COMPANY_ID);
 
         if (error) throw error;
-        return data.map(c => ({
+        return (data || []).map(c => ({
             id: c.id,
             label: c.label,
             iconName: c.icon_name
@@ -501,5 +508,167 @@ export const db = {
     async deleteSupplier(id: string) {
         const { error } = await supabase.from('suppliers').delete().eq('id', id);
         if (error) throw error;
+    },
+
+    // --- SERVICES ---
+    async getServices() {
+        const { data, error } = await supabase
+            .from('services')
+            .select('*')
+            .eq('company_id', DEFAULT_COMPANY_ID);
+
+        if (error) throw error;
+        return (data || []).map(s => ({
+            id: s.id,
+            name: s.name,
+            category: s.category_id,
+            price: Number(s.price) || 0,
+            duration: s.duration || '30min',
+            description: s.description || '',
+            color: s.color || '#FF69B4'
+        } as Service));
+    },
+
+    async addService(svc: Omit<Service, 'id'>) {
+        const { data, error } = await supabase
+            .from('services')
+            .insert([{
+                company_id: DEFAULT_COMPANY_ID,
+                name: svc.name,
+                category_id: svc.category || null,
+                price: svc.price,
+                duration: svc.duration,
+                description: svc.description,
+                color: svc.color
+            }])
+            .select()
+            .single();
+        if (error) throw error;
+        return {
+            id: data.id,
+            name: data.name,
+            category: data.category_id,
+            price: Number(data.price) || 0,
+            duration: data.duration,
+            description: data.description,
+            color: data.color
+        } as Service;
+    },
+
+    async updateService(svc: Service) {
+        const { error } = await supabase
+            .from('services')
+            .update({
+                name: svc.name,
+                category_id: svc.category || null,
+                price: svc.price,
+                duration: svc.duration,
+                description: svc.description,
+                color: svc.color
+            })
+            .eq('id', svc.id);
+        if (error) throw error;
+    },
+
+    async deleteService(id: string) {
+        const { error } = await supabase.from('services').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    // --- SERVICE CATEGORIES ---
+    async getServiceCategories() {
+        const { data, error } = await supabase
+            .from('service_categories')
+            .select('*')
+            .eq('company_id', DEFAULT_COMPANY_ID);
+
+        if (error) throw error;
+        return (data || []).map(c => ({
+            id: c.id,
+            label: c.label,
+            iconName: c.icon_name
+        } as Category));
+    },
+
+    async addServiceCategory(cat: Omit<Category, 'id'>) {
+        const { data, error } = await supabase
+            .from('service_categories')
+            .insert([{
+                company_id: DEFAULT_COMPANY_ID,
+                label: cat.label,
+                icon_name: cat.iconName
+            }])
+            .select()
+            .single();
+        if (error) throw error;
+        return {
+            id: data.id,
+            label: data.label,
+            iconName: data.icon_name
+        } as Category;
+    },
+
+    async deleteServiceCategory(id: string) {
+        const { error } = await supabase.from('service_categories').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    async syncMockData(mockCategories: any[], mockServices: any[], mockProfessionals: any[]) {
+        // 1. Sync Categories
+        const { data: existingCats } = await supabase.from('service_categories').select('id').eq('company_id', DEFAULT_COMPANY_ID).limit(1);
+        if (!existingCats || existingCats.length === 0) {
+            for (const cat of mockCategories) {
+                await this.addServiceCategory({ label: cat.label, iconName: cat.iconName });
+            }
+        }
+        const cats = await this.getServiceCategories();
+
+        // 2. Sync Services and Create ID Map
+        const { data: existingSvcs } = await supabase.from('services').select('id, name').eq('company_id', DEFAULT_COMPANY_ID).limit(1);
+        const serviceMap: Record<string, string> = {}; // mockID -> DB UUID
+
+        if (!existingSvcs || existingSvcs.length === 0) {
+            for (const svc of mockServices) {
+                const cat = cats.find(c => c.label === svc.category);
+                const dbSvc = await this.addService({
+                    name: svc.name,
+                    category: cat?.id || '',
+                    price: svc.price,
+                    duration: svc.duration,
+                    description: svc.description,
+                    color: svc.color
+                });
+                serviceMap[svc.id] = dbSvc.id;
+            }
+        } else {
+            // If they exist, try to build a map by name for professionals sync
+            const allDbSvcs = await this.getServices();
+            mockServices.forEach(ms => {
+                const found = allDbSvcs.find(ds => ds.name === ms.name);
+                if (found) serviceMap[ms.id] = found.id;
+            });
+        }
+
+        // 3. Sync Professionals
+        const { data: existingPros } = await supabase.from('professionals').select('id').eq('company_id', DEFAULT_COMPANY_ID).limit(1);
+        if (!existingPros || existingPros.length === 0) {
+            for (const pro of mockProfessionals) {
+                // Map mock service IDs to DB UUIDs
+                const mappedServiceIds = (pro.services || []).map((msId: string) => serviceMap[msId]).filter(Boolean);
+
+                await this.addProfessional({
+                    name: pro.name,
+                    role: pro.role,
+                    specialties: pro.specialties,
+                    services: mappedServiceIds,
+                    commissionRate: pro.commissionRate,
+                    avatar: pro.avatar,
+                    schedule: pro.schedule,
+                    rating: pro.rating,
+                    revenueGenerated: pro.revenueGenerated,
+                    appointmentsCount: pro.appointmentsCount
+                });
+            }
+        }
     }
 };

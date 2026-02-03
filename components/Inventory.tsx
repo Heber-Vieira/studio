@@ -499,7 +499,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({
 
                   {/* Lista Existente */}
                   <div className="max-h-48 overflow-y-auto space-y-2 scrollbar-hide bg-gray-50 p-2 rounded-xl">
-                     {categories.map(cat => {
+                     {(categories || []).map(cat => {
                         const Icon = IconMap[cat.iconName] || Tag;
                         return (
                            <div key={cat.id} className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -594,7 +594,8 @@ const InventoryView: React.FC<InventoryViewProps> = ({
                               value={formData.category}
                               onChange={e => setFormData({ ...formData, category: e.target.value })}
                            >
-                              {categories.map(cat => (
+                              <option value="">Sem Categoria</option>
+                              {(categories || []).map(cat => (
                                  <option key={cat.id} value={cat.label}>{cat.label}</option>
                               ))}
                            </select>

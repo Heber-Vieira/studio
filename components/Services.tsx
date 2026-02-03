@@ -12,10 +12,10 @@ import {
 interface ServicesProps {
   services: Service[];
   categories: Category[];
-  onAdd: (service: Service) => void;
+  onAdd: (service: Omit<Service, 'id'>) => void;
   onUpdate: (service: Service) => void;
   onDelete: (id: string) => void;
-  onAddCategory: (cat: Category) => void;
+  onAddCategory: (cat: Omit<Category, 'id'>) => void;
   onDeleteCategory: (id: string) => void;
 }
 
@@ -72,21 +72,23 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
   });
 
   React.useEffect(() => {
-    if (categories.length > 0 && !newSvc.category) {
+    if (categories && categories.length > 0 && !newSvc.category) {
       setNewSvc(prev => ({ ...prev, category: categories[0].id }));
     }
-  }, [categories]);
+  }, [categories, newSvc.category]);
   const [newCat, setNewCat] = useState({ label: '', iconName: 'Tag' });
 
   const filteredServices = services.filter(s =>
     (selectedCategory === 'all' || s.category === selectedCategory) &&
-    (s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    (
+      (s.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (s.description?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    )
   );
 
   const handleAdd = () => {
     if (!newSvc.name || !newSvc.price) return;
     onAdd({
-      id: '', // Supabase will generate this
       name: newSvc.name,
       category: newSvc.category,
       price: newSvc.price,
@@ -101,7 +103,6 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
   const handleAddCategory = () => {
     if (!newCat.label) return;
     onAddCategory({
-      id: newCat.label,
       label: newCat.label,
       iconName: newCat.iconName
     });
@@ -186,7 +187,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
           >
             <Sparkles size={18} /> Todos
           </button>
-          {categories.map(cat => {
+          {(categories || []).map(cat => {
             const Icon = IconMap[cat.iconName] || Tag;
             return (
               <button
@@ -348,7 +349,8 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
                     value={isEditModalOpen ? selectedService?.category : newSvc.category}
                     onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, category: e.target.value }) : setNewSvc({ ...newSvc, category: e.target.value })}
                   >
-                    {categories.map(cat => (
+                    <option value="">Sem Categoria</option>
+                    {(categories || []).map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.label}</option>
                     ))}
                   </select>

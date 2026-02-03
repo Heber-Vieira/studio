@@ -196,8 +196,8 @@ const MainLayout: React.FC = () => {
         db.getSettings(),
         db.getClients(),
         db.getProfessionals(),
-        supabase.from('services').select('*, service_categories(label)'),
-        supabase.from('service_categories').select('*'),
+        db.getServices(),
+        db.getServiceCategories(),
         db.getInventoryItems(),
         db.getInventoryCategories(),
         db.getAppointments(),
@@ -214,24 +214,32 @@ const MainLayout: React.FC = () => {
       if (transactionsRes.status === 'fulfilled') setTransactions(transactionsRes.value);
       if (suppliersRes.status === 'fulfilled') setSuppliers(suppliersRes.value);
 
-      if (categoriesRes.status === 'fulfilled' && categoriesRes.value.data) {
-        setCategories(categoriesRes.value.data.map((c: any) => ({
-          id: c.id,
-          label: c.label,
-          iconName: c.icon_name
-        })));
+      if (categoriesRes.status === 'fulfilled') {
+        setCategories(categoriesRes.value);
       }
 
-      if (servicesRes.status === 'fulfilled' && servicesRes.value.data) {
-        setServices(servicesRes.value.data.map((s: any) => ({
-          id: s.id,
-          name: s.name,
-          category: s.category_id,
-          price: s.price,
-          duration: s.duration,
-          description: s.description,
-          color: s.color
-        })));
+      if (servicesRes.status === 'fulfilled') {
+        setServices(servicesRes.value);
+      }
+
+      // Proactive Sync: If DB is empty, sync mock data
+      if (
+        (categoriesRes.status === 'fulfilled' && categoriesRes.value.length === 0) ||
+        (servicesRes.status === 'fulfilled' && servicesRes.value.length === 0)
+      ) {
+        console.log("Database empty, syncing initial data...");
+        await db.syncMockData(MOCK_CATEGORIES, MOCK_SERVICES, MOCK_PROFESSIONALS);
+        // Re-fetch after sync to update local state with DB IDs
+        if (isInitial) {
+          const [freshCats, freshSvcs, freshStaff] = await Promise.all([
+            db.getServiceCategories(),
+            db.getServices(),
+            db.getProfessionals()
+          ]);
+          setCategories(freshCats);
+          setServices(freshSvcs);
+          setStaff(freshStaff);
+        }
       }
     } catch (error) {
       console.error("Critical error in fetchData:", error);
@@ -389,91 +397,54 @@ const MainLayout: React.FC = () => {
   };
 
   const addService = async (newSvc: Omit<Service, 'id'>) => {
-    const categoryObj = categories.find(c => c.label === newSvc.category || c.id === newSvc.category);
-
-    const { data, error } = await supabase
-      .from('services')
-      .insert([{
-        name: newSvc.name,
-        category_id: categoryObj?.id,
-        price: newSvc.price,
-        duration: newSvc.duration,
-        description: newSvc.description,
-        color: newSvc.color
-      }])
-      .select();
-
-    if (error) {
-      showToast("Erro ao adicionar serviço.");
-      console.error(error);
-    } else {
+    try {
+      await db.addService(newSvc);
       showToast("Serviço adicionado!");
       fetchData();
+    } catch (e) {
+      showToast("Erro ao adicionar serviço.");
+      console.error(e);
     }
   };
 
   const updateService = async (updatedSvc: Service) => {
-    const categoryObj = categories.find(c => c.label === updatedSvc.category || c.id === updatedSvc.category);
-
-    const { error } = await supabase
-      .from('services')
-      .update({
-        name: updatedSvc.name,
-        category_id: categoryObj?.id,
-        price: updatedSvc.price,
-        duration: updatedSvc.duration,
-        description: updatedSvc.description,
-        color: updatedSvc.color
-      })
-      .eq('id', updatedSvc.id);
-
-    if (error) {
-      showToast("Erro ao atualizar serviço.");
-      console.error(error);
-    } else {
+    try {
+      await db.updateService(updatedSvc);
       showToast("Serviço atualizado! 🌸");
       fetchData();
+    } catch (e) {
+      showToast("Erro ao atualizar serviço.");
+      console.error(e);
     }
   };
 
   const deleteService = async (id: string) => {
-    const { error } = await supabase
-      .from('services')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      showToast("Erro ao remover serviço.");
-    } else {
+    try {
+      await db.deleteService(id);
       showToast("Serviço removido.");
       fetchData();
+    } catch (e) {
+      showToast("Erro ao remover serviço.");
     }
   };
 
   const addServiceCategory = async (cat: Omit<Category, 'id'>) => {
-    const { error } = await supabase
-      .from('service_categories')
-      .insert([{ label: cat.label, icon_name: cat.iconName }]);
-
-    if (error) {
-      showToast("Erro ao criar categoria.");
-    } else {
+    try {
+      await db.addServiceCategory(cat);
       showToast("Categoria criada!");
       fetchData();
+    } catch (e) {
+      showToast("Erro ao criar categoria.");
     }
   };
 
   const deleteServiceCategory = async (id: string) => {
-    const { error } = await supabase
-      .from('service_categories')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      showToast("Erro ao remover categoria. Verifique se há serviços vinculados.");
-    } else {
+    try {
+      await db.deleteServiceCategory(id);
       showToast("Categoria removida.");
       fetchData();
+    } catch (e) {
+      showToast("Erro ao remover categoria. Verifique se há serviços vinculados.");
     }
   };
   const addInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
