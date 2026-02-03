@@ -131,6 +131,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
       id: Math.random().toString(36).substr(2, 9),
       clientId: 'external',
       clientName: clientInfo.name,
+      serviceId: selectedService.id,
       service: selectedService.name,
       date: selectedDate,
       time: selectedTime,

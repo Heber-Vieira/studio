@@ -13,10 +13,11 @@ export interface Appointment {
   id: string;
   clientId: string;
   clientName: string;
-  service: string;
+  service: string; // O nome do serviço para exibição
+  serviceId?: string; // O ID do serviço no banco
   date: string; // ISO string
   time: string;
-  status: 'confirmed' | 'pending' | 'cancelled';
+  status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
   price: number;
   professionalId?: string; // ID do profissional responsável
 }

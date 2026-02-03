@@ -214,7 +214,7 @@ export const db = {
     async getAppointments() {
         const { data, error } = await supabase
             .from('appointments')
-            .select('*, clients(name)')
+            .select('*, clients(name), services(name)')
             .eq('company_id', DEFAULT_COMPANY_ID);
 
         if (error) throw error;
@@ -222,7 +222,8 @@ export const db = {
             id: a.id,
             clientId: a.client_id,
             clientName: a.clients?.name || 'Cliente Desconhecido',
-            service: a.service_id,
+            service: a.services?.name || 'Serviço Desconhecido',
+            serviceId: a.service_id,
             date: a.appointment_date,
             time: a.appointment_time,
             status: a.status,
@@ -238,7 +239,7 @@ export const db = {
                 company_id: DEFAULT_COMPANY_ID,
                 client_id: apt.clientId,
                 professional_id: apt.professionalId,
-                service_id: apt.service, // Assumes this is an ID now
+                service_id: apt.serviceId || apt.service,
                 appointment_date: apt.date,
                 appointment_time: apt.time,
                 status: apt.status,
@@ -258,7 +259,7 @@ export const db = {
                 appointment_date: apt.date,
                 appointment_time: apt.time,
                 price: apt.price,
-                service_id: apt.service // Make sure this is consistent with how it's saved
+                service_id: apt.serviceId || apt.service
             })
             .eq('id', apt.id);
         if (error) throw error;
