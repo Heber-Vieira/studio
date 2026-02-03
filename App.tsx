@@ -637,14 +637,14 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   filter: none;
 }
 `}</style>
-      <div className={`flex h-screen bg-white text-gray-800 overflow-hidden ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'p-0' : ''} `}>
+      <div className={`flex h-[100dvh] bg-white text-gray-800 overflow-hidden ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'p-0' : ''} `}>
         {!isPortalMode && (
           <Sidebar t={t} activeView={currentView} onViewChange={setCurrentView} isOpen={isSidebarOpen} toggleOpen={() => setSidebarOpen(!isSidebarOpen)} logo={settings.logo} userRole={user?.role || 'client'} settings={settings} />
         )}
         <main ref={mainContentRef} className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-300 ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'bg-white p-0' : 'p-4 md:p-8'} `}>
           {!isPortalMode && user && (
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 md:mb-12 fade-in gap-6 border-b border-gray-100 pb-6">
-              <div className="w-full md:w-auto flex justify-between items-center pl-14 md:pl-0">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-12 fade-in gap-6 border-b border-gray-100 pb-6 shrink-0 px-4 md:px-0">
+              <div className="w-full md:w-auto flex justify-between items-center sm:pl-14 md:pl-0">
                 <div className="flex items-center gap-5">
                   <div className="md:hidden w-12 h-12 bg-white rounded-2xl shadow-lg border border-gray-100 flex items-center justify-center overflow-hidden">{settings.logo ? <img src={settings.logo} className="w-full h-full object-contain p-1.5" /> : <Sparkles className="text-[#FF69B4]" />}</div>
                   <div><h1 className="text-2xl md:text-4xl font-black text-gray-900 leading-none tracking-tight">{settings.name}</h1><div className="flex items-center gap-2 mt-1.5"><span className="text-[10px] font-black text-[#FF69B4] uppercase tracking-widest bg-pink-50 px-2 py-0.5 rounded-full">Pro Studio</span><span className="text-xs font-medium text-gray-400">{settings.address}</span></div></div>

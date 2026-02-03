@@ -104,6 +104,14 @@ const Sidebar: React.FC<SidebarProps> = ({ t, activeView, onViewChange, isOpen, 
 
   return (
     <>
+      {/* MOBILE OVERLAY */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-300"
+          onClick={toggleOpen}
+        />
+      )}
+
       {!isOpen && (
         <button
           onClick={toggleOpen}
