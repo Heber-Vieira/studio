@@ -1,0 +1,8 @@
+{
+  "name": "VERSÃO ESTÁVEL 1.0 - BellaAI - Beauty Salon Management",
+  "description": "A minimalist vibrant management system for beauty salons featuring AI-driven scheduling, CRM, and financial tracking.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
