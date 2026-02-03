@@ -417,7 +417,7 @@ export const db = {
         const { data, error } = await supabase
             .from('inventory_categories')
             .select('*')
-            .eq('company_id', DEFAULT_COMPANY_ID);
+            .or(`company_id.eq.${DEFAULT_COMPANY_ID},company_id.is.null`);
 
         if (error) throw error;
         return (data || []).map(c => ({
@@ -514,8 +514,7 @@ export const db = {
     async getServices() {
         const { data, error } = await supabase
             .from('services')
-            .select('*')
-            .eq('company_id', DEFAULT_COMPANY_ID);
+            .select('*');
 
         if (error) throw error;
         return (data || []).map(s => ({
@@ -579,8 +578,7 @@ export const db = {
     async getServiceCategories() {
         const { data, error } = await supabase
             .from('service_categories')
-            .select('*')
-            .eq('company_id', DEFAULT_COMPANY_ID);
+            .select('*');
 
         if (error) throw error;
         return (data || []).map(c => ({

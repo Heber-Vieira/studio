@@ -136,7 +136,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
   };
 
   const getServiceCountByCategory = (catId: string) => {
-    return services.filter(s => s.category === catId).length;
+    return services.filter(s => s.category === catId || (categories.find(c => c.id === catId)?.label === s.category)).length;
   };
 
   const handleDeleteCategoryClick = (cat: Category) => {
@@ -233,7 +233,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110" style={{ backgroundColor: svc.color }}>
                       {(() => {
-                        const cat = categories.find(c => c.id === svc.category);
+                        const cat = categories.find(c => c.id === svc.category || c.label === svc.category);
                         const Icon = cat ? (IconMap[cat.iconName] || Sparkles) : Sparkles;
                         return <Icon size={24} />;
                       })()}
@@ -241,7 +241,10 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
                     <div>
                       <h4 className="font-bold text-lg group-hover:text-[#FF69B4] transition-colors">{svc.name}</h4>
                       <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">
-                        {categories.find(c => c.id === svc.category)?.label || 'Sem Categoria'}
+                        {(() => {
+                          const cat = categories.find(c => c.id === svc.category || c.label === svc.category);
+                          return cat ? cat.label : (svc.category || 'Sem Categoria');
+                        })()}
                       </span>
                     </div>
                   </div>
