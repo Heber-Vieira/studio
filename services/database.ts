@@ -160,6 +160,7 @@ export const db = {
             rating: Number(p.rating) || 0,
             revenueGenerated: Number(p.revenue_generated) || 0,
             appointmentsCount: Number(p.appointments_count) || 0,
+            appointmentsGoal: Number(p.appointments_goal) || 0,
             schedule: p.schedule
         } as Professional));
     },
@@ -175,7 +176,8 @@ export const db = {
                 services: pro.services,
                 commission_rate: pro.commissionRate,
                 avatar_url: pro.avatar,
-                schedule: pro.schedule
+                schedule: pro.schedule,
+                appointments_goal: pro.appointmentsGoal
             }])
             .select()
             .single();
@@ -192,6 +194,7 @@ export const db = {
             rating: Number(data.rating) || 0,
             revenueGenerated: Number(data.revenue_generated) || 0,
             appointmentsCount: Number(data.appointments_count) || 0,
+            appointmentsGoal: Number(data.appointments_goal) || 0,
             schedule: data.schedule
         } as Professional;
     },
@@ -206,7 +209,8 @@ export const db = {
                 services: pro.services,
                 commission_rate: pro.commissionRate,
                 avatar_url: pro.avatar,
-                schedule: pro.schedule
+                schedule: pro.schedule,
+                appointments_goal: pro.appointmentsGoal
             })
             .eq('id', pro.id);
         if (error) throw error;

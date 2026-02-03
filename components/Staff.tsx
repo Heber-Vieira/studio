@@ -63,13 +63,15 @@ const StaffView: React.FC<StaffProps> = ({
     commissionRate: number;
     avatar: string;
     services: string[];
+    appointmentsGoal: number;
   }>({
     name: '',
     role: '',
     specialty: '',
     commissionRate: 40,
     avatar: '',
-    services: []
+    services: [],
+    appointmentsGoal: 200
   });
 
   const [blockData, setBlockData] = useState({
@@ -128,10 +130,11 @@ const StaffView: React.FC<StaffProps> = ({
         rating: 5.0,
         revenueGenerated: 0,
         appointmentsCount: 0,
+        appointmentsGoal: newPro.appointmentsGoal,
         schedule: defaultSchedule
       });
       setIsModalOpen(false);
-      setNewPro({ name: '', role: '', specialty: '', commissionRate: 40, avatar: '', services: [] });
+      setNewPro({ name: '', role: '', specialty: '', commissionRate: 40, avatar: '', services: [], appointmentsGoal: 200 });
       setSelectedFile(null);
     } catch (err) {
       console.error("Upload error:", err);
@@ -601,6 +604,13 @@ const StaffView: React.FC<StaffProps> = ({
                   <input type="number" className="w-full bg-gray-100 border-none rounded-2xl px-5 py-4 outline-none font-black" value={selectedPro.commissionRate} onChange={e => setSelectedPro({ ...selectedPro, commissionRate: parseInt(e.target.value) || 0 })} />
                 </div>
                 <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Meta de Atendimentos</label>
+                  <input type="number" className="w-full bg-gray-100 border-none rounded-2xl px-5 py-4 outline-none font-black text-[#FF69B4]" value={selectedPro.appointmentsGoal || 0} onChange={e => setSelectedPro({ ...selectedPro, appointmentsGoal: parseInt(e.target.value) || 0 })} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Avaliação</label>
                   <div className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 font-black flex items-center gap-2 text-yellow-600">
                     <Star size={16} fill="currentColor" /> {selectedPro.rating.toFixed(1)}
@@ -776,7 +786,7 @@ const StaffView: React.FC<StaffProps> = ({
               <div className="bg-[#F5F5F5] p-6 rounded-[2rem] border border-white">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Atendimentos</span>
                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">{selectedPro.appointmentsCount}</h2>
-                <span className="text-[#FF69B4] font-black text-[10px] uppercase mt-1 block">Meta: 200</span>
+                <span className="text-[#FF69B4] font-black text-[10px] uppercase mt-1 block">Meta: {selectedPro.appointmentsGoal || 200}</span>
               </div>
             </div>
 
@@ -831,14 +841,18 @@ const StaffView: React.FC<StaffProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Especialidade Principal</label>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Especialidade</label>
                   <input type="text" placeholder="Ex: Mechas" className="w-full bg-gray-100 border-none rounded-2xl px-5 py-4 outline-none font-bold text-[#FF69B4]" value={newPro.specialty} onChange={e => setNewPro({ ...newPro, specialty: e.target.value })} />
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Comissão (%)</label>
                   <input type="number" className="w-full bg-gray-100 border-none rounded-2xl px-5 py-4 outline-none font-black" value={newPro.commissionRate} onChange={e => setNewPro({ ...newPro, commissionRate: parseInt(e.target.value) || 0 })} />
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Meta Mensal</label>
+                  <input type="number" placeholder="Ex: 200" className="w-full bg-gray-100 border-none rounded-2xl px-5 py-4 outline-none font-black text-[#40E0D0]" value={newPro.appointmentsGoal} onChange={e => setNewPro({ ...newPro, appointmentsGoal: parseInt(e.target.value) || 0 })} />
                 </div>
               </div>
 

@@ -91,6 +91,7 @@ export interface Professional {
   rating: number;
   revenueGenerated: number;
   appointmentsCount: number;
+  appointmentsGoal?: number;
   blockedPeriods?: BlockedPeriod[];
   schedule?: WorkSchedule; // Nova propriedade de jornada
 }
