@@ -136,15 +136,20 @@ const MainLayout: React.FC = () => {
     };
 
     if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        ...parsed,
-        loyalty: parsed.loyalty || defaultLoyalty,
-        theme: parsed.theme || { enabled: false, primaryColor: '#FF69B4', secondaryColor: '#40E0D0' },
-        permissions: parsed.permissions || defaultPermissions,
-        integrations: parsed.integrations || defaultIntegrations,
-        automations: parsed.automations || defaultAutomations,
-      };
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          loyalty: parsed.loyalty || defaultLoyalty,
+          theme: parsed.theme || { enabled: false, primaryColor: '#FF69B4', secondaryColor: '#40E0D0' },
+          permissions: parsed.permissions || defaultPermissions,
+          integrations: parsed.integrations || defaultIntegrations,
+          automations: parsed.automations || defaultAutomations,
+        };
+      } catch (e) {
+        console.warn("Failed to parse saved settings, using defaults.");
+        localStorage.removeItem('salon_settings');
+      }
     }
 
     return {
@@ -179,6 +184,13 @@ const MainLayout: React.FC = () => {
   const fetchData = useCallback(async (isInitial = false) => {
     if (!user) return;
     if (isInitial) setIsDataLoading(true);
+
+    const safetyTimeout = setTimeout(() => {
+      if (isDataLoading) {
+        console.warn("fetchData safety timeout triggered");
+        setIsDataLoading(false);
+      }
+    }, 15000);
 
     try {
       const [
@@ -244,6 +256,7 @@ const MainLayout: React.FC = () => {
     } catch (error) {
       console.error("Critical error in fetchData:", error);
     } finally {
+      clearTimeout(safetyTimeout);
       setIsDataLoading(false);
     }
   }, [user]);

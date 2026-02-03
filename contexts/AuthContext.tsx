@@ -41,21 +41,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Check active sessions and sets the user
     const initSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setUser(profile);
+      try {
+        // Timeout after 10 seconds if getSession hangs
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Session fetch timeout')), 10000)
+        );
+
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+
+        if (session?.user) {
+          const profile = await fetchProfile(session.user.id);
+          if (profile) {
+            setUser(profile);
+          } else {
+            // Profile fetch failed but user is logged in? 
+            // Might be a sync issue, could try signout or just leave as null
+            console.warn("User logged in but profile not found.");
+          }
+        }
+      } catch (err) {
+        console.error('Session initialization error:', err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     initSession();
 
     // Listen for changes on auth state (logged in, signed out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event);
       if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setUser(profile);
+        try {
+          const profile = await fetchProfile(session.user.id);
+          setUser(profile);
+        } catch (err) {
+          console.error('Profile fetch error on auth change:', err);
+        }
       } else {
         setUser(null);
       }
