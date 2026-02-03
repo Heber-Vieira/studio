@@ -62,7 +62,7 @@ const MainLayout: React.FC = () => {
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: '', show: false });
   const [prefilledClient, setPrefilledClient] = useState<{ name: string; phone: string } | null>(null);
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
   const [lang, setLang] = useState<Language>(() => {
     const saved = localStorage.getItem('bella_lang');
     return (saved as Language) || 'pt';
@@ -172,9 +172,7 @@ const MainLayout: React.FC = () => {
     setTimeout(() => setToast({ message: '', show: false }), 3000);
   }, []);
 
-  const handleLogout = () => setIsLogoutModalOpen(true);
-  const confirmLogout = async () => {
-    setIsLogoutModalOpen(false);
+  const handleLogout = async () => {
     await logout();
   };
 
@@ -666,23 +664,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
           <ReleaseNotesPopup config={settings.releaseNotes} />
         )}
         {toast.show && <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#40E0D0] text-white px-8 py-4 rounded-[2rem] shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300 z-[200] border-2 border-white pointer-events-none"><CheckCircle2 size={24} /><span className="font-bold text-sm tracking-tight">{toast.message}</span></div>}
-        {isLogoutModalOpen && (
-          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center">
-              <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm mb-2">
-                <LogOut size={32} />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black text-gray-900">Encerrar Sessão?</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">Tem certeza que deseja sair do sistema? Suas alterações salvas estão seguras na nuvem. ✨</p>
-              </div>
-              <div className="flex flex-col gap-3 pt-2">
-                <Button variant="danger" size="lg" fullWidth onClick={confirmLogout}>Sair Agora 🚪</Button>
-                <Button variant="secondary" size="lg" fullWidth onClick={() => setIsLogoutModalOpen(false)}>Continuar Conectado</Button>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     </>
   );
