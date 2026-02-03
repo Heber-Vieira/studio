@@ -476,6 +476,22 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
             )}
           </div>
 
+          {/* Filtro por Profissional */}
+          <div className="relative w-full md:w-56 group">
+            <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF69B4] transition-colors" size={18} />
+            <select
+              value={selectedProfessionalId}
+              onChange={e => setSelectedProfessionalId(e.target.value)}
+              className="w-full bg-[#F5F5F5] border-none rounded-2xl py-3 pl-11 pr-10 focus:ring-2 focus:ring-[#FF69B4]/20 outline-none font-bold text-xs uppercase tracking-widest text-gray-500 appearance-none cursor-pointer transition-all"
+            >
+              <option value="all">Filtro: Todos</option>
+              {staff.map(pro => (
+                <option key={pro.id} value={pro.id}>{pro.name}</option>
+              ))}
+            </select>
+            <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none group-focus-within:text-[#FF69B4] transition-colors" />
+          </div>
+
           <div className="flex items-center gap-2">
             <button onClick={() => handleNavigate(-1)} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft size={20} className="text-gray-400" /></button>
             <p className="text-gray-500 font-bold text-sm min-w-[180px] text-center">
