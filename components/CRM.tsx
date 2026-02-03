@@ -98,7 +98,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRed
       onShowToast("Link copiado com sucesso! ✨");
     }).catch(err => {
       console.error("Copy failed", err);
-      alert("Link gerado! Por favor, copie manualmente:\n\n" + text);
+      onShowToast("Link gerado! Por favor, copie manualmente.");
     });
   };
 
@@ -142,9 +142,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRed
       });
 
       if (importedCount > 0) {
-        alert(`${importedCount} clientes importados com sucesso via arquivo!`);
-      } else {
-        alert('Nenhum contato novo encontrado ou formato inválido. Use "Nome,Telefone".');
+        onShowToast('Nenhum contato novo encontrado ou formato inválido. Use "Nome,Telefone".');
       }
     };
     reader.readAsText(file);
@@ -194,19 +192,16 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRed
         });
 
         if (importedCount > 0) {
-          alert(`${importedCount} contatos da agenda importados com sucesso!`);
+          onShowToast(`${importedCount} contatos da agenda importados com sucesso!`);
         } else if (contacts.length > 0) {
-          alert('Os contatos selecionados já estão cadastrados.');
+          onShowToast('Os contatos selecionados já estão cadastrados.');
         }
 
       } catch (ex) {
         console.log('Importação cancelada ou falhou', ex);
       }
     } else {
-      const confirmCsv = window.confirm("A importação direta da agenda requer um celular (Android/iOS). Deseja importar via arquivo CSV (Excel)?");
-      if (confirmCsv) {
-        fileInputRef.current?.click();
-      }
+      onShowToast("Importação via agenda disponível apenas em dispositivos móveis.");
     }
   };
 

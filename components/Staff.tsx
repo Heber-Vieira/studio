@@ -22,6 +22,7 @@ interface StaffProps {
   onUnblock: (id: string) => void;
   onViewSchedule: () => void;
   categories: Category[];
+  onShowToast: (msg: string) => void;
 }
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -36,7 +37,8 @@ const StaffView: React.FC<StaffProps> = ({
   onBlock,
   onUnblock,
   onViewSchedule,
-  categories
+  categories,
+  onShowToast
 }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'master_admin' || user?.role === 'company_admin';
@@ -133,7 +135,7 @@ const StaffView: React.FC<StaffProps> = ({
       setSelectedFile(null);
     } catch (err) {
       console.error("Upload error:", err);
-      alert("Erro ao enviar imagem. Verifique sua conexão.");
+      onShowToast("Erro ao enviar imagem. Verifique sua conexão.");
     } finally {
       setIsUploading(false);
     }
@@ -158,7 +160,7 @@ const StaffView: React.FC<StaffProps> = ({
       setSelectedFile(null);
     } catch (err) {
       console.error("Update error:", err);
-      alert("Erro ao atualizar perfil.");
+      onShowToast("Erro ao atualizar perfil.");
     } finally {
       setIsUploading(false);
     }
@@ -211,7 +213,7 @@ const StaffView: React.FC<StaffProps> = ({
       }
     }
     setEditingSchedule(newSchedule);
-    alert('Horários replicados de Segunda a Sexta! 🚀');
+    onShowToast('Horários replicados de Segunda a Sexta! 🚀');
   };
 
   const saveSchedule = () => {

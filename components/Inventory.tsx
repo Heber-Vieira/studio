@@ -19,6 +19,7 @@ interface InventoryViewProps {
    onAddTransaction: (transaction: Omit<Transaction, 'id'>) => void;
    onAddCategory: (cat: Omit<Category, 'id'>) => void;
    onDeleteCategory: (id: string) => void;
+   onShowToast: (msg: string) => void;
 }
 
 const IconMap: Record<string, any> = {
@@ -50,7 +51,8 @@ const InventoryView: React.FC<InventoryViewProps> = ({
    onStockMovement,
    onAddTransaction,
    onAddCategory,
-   onDeleteCategory
+   onDeleteCategory,
+   onShowToast
 }) => {
    const [activeTab, setActiveTab] = useState<'all' | 'consumable' | 'resale'>('all');
    const [searchTerm, setSearchTerm] = useState('');
@@ -167,6 +169,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({
          onDeleteItem(itemToDelete.id);
          setIsDeleteModalOpen(false);
          setItemToDelete(null);
+         onShowToast("Item removido do estoque.");
       }
    };
 
@@ -211,6 +214,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({
 
       onStockMovement(selectedItem.id, newQty);
       setIsMovementModalOpen(false);
+      onShowToast("Movimentação registrada! ✨");
    };
 
    const handleAddCategory = async () => {
@@ -237,6 +241,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({
          onDeleteCategory(categoryToDelete.id);
          setIsDeleteCatModalOpen(false);
          setCategoryToDelete(null);
+         onShowToast("Categoria removida.");
       }
    };
 

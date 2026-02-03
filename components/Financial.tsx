@@ -74,6 +74,7 @@ interface FinancialProps {
    onUpdateSupplier: (s: Supplier) => void;
    onDeleteSupplier: (id: string) => void;
    user: UserProfile;
+   onShowToast: (msg: string) => void;
 }
 
 const COLORS_CHART = [COLORS.pink, COLORS.turquoise, COLORS.purple, COLORS.yellow, '#FF9F43'];
@@ -100,7 +101,8 @@ const FinancialView: React.FC<FinancialProps> = ({
    onAddSupplier,
    onUpdateSupplier,
    onDeleteSupplier,
-   user
+   user,
+   onShowToast
 }) => {
    const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'transactions' | 'suppliers'>('overview');
 
@@ -523,7 +525,7 @@ const FinancialView: React.FC<FinancialProps> = ({
                            <div key={s.id} className="p-6 rounded-[2rem] bg-gray-50 border border-gray-100 hover:border-orange-200 transition-all group relative overflow-hidden">
                               <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-all flex gap-2">
                                  <button onClick={() => openEditSupplier(s)} className="p-2 bg-white rounded-xl shadow-sm hover:text-orange-500"><Edit3 size={16} /></button>
-                                 <button onClick={() => { if (confirm('Excluir fornecedor?')) onDeleteSupplier(s.id) }} className="p-2 bg-white rounded-xl shadow-sm hover:text-rose-500"><Trash2 size={16} /></button>
+                                 <button onClick={() => { onDeleteSupplier(s.id); onShowToast("Fornecedor removido."); }} className="p-2 bg-white rounded-xl shadow-sm hover:text-rose-500"><Trash2 size={16} /></button>
                               </div>
 
                               <div className="space-y-4">
@@ -721,10 +723,9 @@ const FinancialView: React.FC<FinancialProps> = ({
                      </button>
                      <button
                         onClick={() => {
-                           if (confirm('Deseja realmente excluir esta transação?')) {
-                              onDeleteTransaction(selectedDetailTransaction.id);
-                              setSelectedDetailTransaction(null);
-                           }
+                           onDeleteTransaction(selectedDetailTransaction.id);
+                           setSelectedDetailTransaction(null);
+                           onShowToast("Transação excluída com sucesso.");
                         }}
                         className="p-5 bg-rose-50 text-rose-500 rounded-[1.8rem] hover:bg-rose-100 transition-all active:scale-95"
                      >

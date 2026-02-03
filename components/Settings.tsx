@@ -72,6 +72,7 @@ interface SettingsProps {
   onUpdate: (settings: SalonSettings) => void;
   onExportData: () => void;
   onImportData: (data: BackupData) => void;
+  onShowToast: (msg: string) => void;
 }
 
 type TabId = 'general' | 'ai' | 'financial' | 'integrations' | 'plan' | 'loyalty' | 'data' | 'team' | 'releases';
@@ -136,7 +137,7 @@ const AccessToggle: React.FC<{ title: string; description: string; isActive: boo
   </div>
 );
 
-const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onUpdate, onExportData, onImportData }) => {
+const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onUpdate, onExportData, onImportData, onShowToast }) => {
   const [activeTab, setActiveTab] = useState<TabId>('general');
   const [localSettings, setLocalSettings] = useState<SalonSettings>(settings);
   const [showSavedToast, setShowSavedToast] = useState(false);
@@ -289,16 +290,17 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
   const handleBackupUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (window.confirm("⚠️ ATENÇÃO: Restaurar um backup substituirá TODOS os dados atuais. Tem certeza?")) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          try {
-            const json = JSON.parse(event.target?.result as string);
-            onImportData(json as BackupData);
-          } catch (err) { alert("Erro ao ler arquivo de backup."); }
-        };
-        reader.readAsText(file);
-      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const json = JSON.parse(event.target?.result as string);
+          onImportData(json as BackupData);
+          onShowToast("Backup restaurado com sucesso! ✨");
+        } catch (err) {
+          onShowToast("Erro ao ler arquivo de backup.");
+        }
+      };
+      reader.readAsText(file);
       if (backupInputRef.current) backupInputRef.current.value = '';
     }
   };

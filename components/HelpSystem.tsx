@@ -18,6 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface HelpSystemProps {
   currentView: View;
+  onShowToast: (msg: string) => void;
 }
 
 interface Step {
@@ -43,7 +44,7 @@ interface DocCategory {
   articles: DocArticle[];
 }
 
-const HelpSystem: React.FC<HelpSystemProps> = ({ currentView }) => {
+const HelpSystem: React.FC<HelpSystemProps> = ({ currentView, onShowToast }) => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -419,7 +420,7 @@ const HelpSystem: React.FC<HelpSystemProps> = ({ currentView }) => {
                       value={supportMessage} onChange={(e) => setSupportMessage(e.target.value)}
                     ></textarea>
                     <button
-                      onClick={() => { setIsSendingSupport(true); setTimeout(() => { setIsSendingSupport(false); setSupportMessage(''); alert('Mensagem enviada! Retornaremos em breve. ✨'); setActiveScreen('hub'); }, 1500); }}
+                      onClick={() => { setIsSendingSupport(true); setTimeout(() => { setIsSendingSupport(false); setSupportMessage(''); onShowToast('Mensagem enviada! Retornaremos em breve. ✨'); setActiveScreen('hub'); }, 1500); }}
                       className="w-full py-6 bg-gray-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.3em] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
                     >
                       {isSendingSupport ? <Loader2 className="animate-spin" /> : "Enviar p/ Suporte ✨"}
