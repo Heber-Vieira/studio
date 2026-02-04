@@ -144,7 +144,6 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
   const [userProfiles, setUserProfiles] = useState<any[]>([]);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [isSavingUser, setIsSavingUser] = useState(false); // NEW STATE
 
   // Fetch profiles when entering "Users" tab
   React.useEffect(() => {
@@ -167,7 +166,6 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
 
   const handleSaveUser = async () => {
     if (!editingUser) return;
-    setIsSavingUser(true); // START LOADING
     try {
       const { db } = await import('../services/database');
       await db.updateProfile(editingUser);
@@ -178,8 +176,6 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
     } catch (e) {
       console.error("Error updating user:", e);
       onShowToast("Erro ao salvar usuário.");
-    } finally {
-      setIsSavingUser(false); // STOP LOADING
     }
   };
 
@@ -887,13 +883,58 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
                 </div>
               )}
             </div>
+
+            {isUserModalOpen && editingUser && (
+              <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in">
+                <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative animate-in zoom-in duration-300">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-2xl font-black text-gray-900 tracking-tight">Editar Usuário</h3>
+                    <button onClick={() => setIsUserModalOpen(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><X size={20} /></button>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nome Completo</label>
+                      <input
+                        type="text"
+                        value={editingUser.name}
+                        onChange={e => setEditingUser({ ...editingUser, name: e.target.value })}
+                        className="w-full bg-gray-50 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:bg-white focus:border-indigo-200 transition-all font-bold text-gray-800"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nível de Acesso</label>
+                      <div className="grid grid-cols-1 gap-3">
+                        {[{ id: 'client', label: 'Cliente', icon: User }, { id: 'attendant', label: 'Equipe (Atendente)', icon: Briefcase }, { id: 'company_admin', label: 'Administrador', icon: ShieldCheck }].map(role => (
+                          <button
+                            key={role.id}
+                            onClick={() => setEditingUser({ ...editingUser, role: role.id as any })}
+                            className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${editingUser.role === role.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 hover:border-indigo-200'}`}
+                          >
+                            <div className={`p-2 rounded-xl ${editingUser.role === role.id ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-500'}`}><role.icon size={20} /></div>
+                            <div>
+                              <span className={`block text-sm font-bold ${editingUser.role === role.id ? 'text-indigo-900' : 'text-gray-700'}`}>{role.label}</span>
+                            </div>
+                            {editingUser.role === role.id && <CheckCircle2 size={20} className="ml-auto text-indigo-500" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button onClick={handleSaveUser} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-95 transition-all mt-4 flex items-center justify-center gap-2">
+                      <Save size={18} /> Salvar Alterações
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       default:
         return null;
     }
   };
-
 
   return (
     <div className="max-w-6xl mx-auto space-y-10 pb-20">
@@ -942,59 +983,6 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
           <div>
             <span className="font-black text-lg block leading-none">Salvo com Brilho! ✨</span>
             <span className="text-xs font-medium opacity-60">Suas configurações foram atualizadas.</span>
-          </div>
-        </div>
-      )}
-
-      {/* FIXED: User Edit Modal moved to root level to prevent z-index/transform clipping issues */}
-      {isUserModalOpen && editingUser && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative animate-in zoom-in duration-300">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-2xl font-black text-gray-900 tracking-tight">Editar Usuário</h3>
-              <button onClick={() => setIsUserModalOpen(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><X size={20} /></button>
-            </div>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nome Completo</label>
-                <input
-                  type="text"
-                  value={editingUser.name}
-                  onChange={e => setEditingUser({ ...editingUser, name: e.target.value })}
-                  className="w-full bg-gray-50 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:bg-white focus:border-indigo-200 transition-all font-bold text-gray-800"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nível de Acesso</label>
-                <div className="grid grid-cols-1 gap-3">
-                  {[{ id: 'client', label: 'Cliente', icon: User }, { id: 'attendant', label: 'Equipe (Atendente)', icon: Briefcase }, { id: 'company_admin', label: 'Administrador', icon: ShieldCheck }].map(role => (
-                    <button
-                      key={role.id}
-                      type="button"
-                      onClick={() => setEditingUser({ ...editingUser, role: role.id as any })}
-                      className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${editingUser.role === role.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 hover:border-indigo-200'}`}
-                    >
-                      <div className={`p-2 rounded-xl ${editingUser.role === role.id ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-500'}`}><role.icon size={20} /></div>
-                      <div>
-                        <span className={`block text-sm font-bold ${editingUser.role === role.id ? 'text-indigo-900' : 'text-gray-700'}`}>{role.label}</span>
-                      </div>
-                      {editingUser.role === role.id && <CheckCircle2 size={20} className="ml-auto text-indigo-500" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={handleSaveUser}
-                disabled={isSavingUser}
-                className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-95 transition-all mt-4 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isSavingUser ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                {isSavingUser ? 'Salvando...' : 'Salvar Alterações'}
-              </button>
-            </div>
           </div>
         </div>
       )}
