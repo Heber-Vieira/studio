@@ -894,29 +894,6 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
     }
   };
 
-  const [isSavingUser, setIsSavingUser] = useState(false); // Added isSavingUser state
-
-  const handleSaveUser = async () => {
-    if (!editingUser) return;
-    setIsSavingUser(true); // Set saving state to true
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ name: editingUser.name, role: editingUser.role })
-        .eq('id', editingUser.id);
-
-      if (error) throw error;
-
-      setUserProfiles(prev => prev.map(user => user.id === editingUser.id ? editingUser : user));
-      setIsUserModalOpen(false);
-      toast.success('Usuário atualizado com sucesso!');
-    } catch (error: any) {
-      console.error('Error updating user:', error.message);
-      toast.error('Erro ao atualizar usuário: ' + error.message);
-    } finally {
-      setIsSavingUser(false); // Reset saving state
-    }
-  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-10 pb-20">
