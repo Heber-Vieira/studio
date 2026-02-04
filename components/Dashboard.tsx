@@ -104,7 +104,7 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
             {/* Welcome Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                <div className="space-y-1">
-                  <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Olá, {user?.name.split(' ')[0]}! 🌸</h2>
+                  <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Olá, {user?.name?.split(' ')[0] || 'Visitante'}! 🌸</h2>
                   <p className="text-gray-500 font-medium">Que bom ter você de volta no {settings?.name || 'Studio'}.</p>
                </div>
                <div className="w-16 h-16 rounded-[2rem] overflow-hidden shadow-2xl ring-4 ring-white border border-gray-100">

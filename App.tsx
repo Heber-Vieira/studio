@@ -62,13 +62,17 @@ const MainLayout: React.FC = () => {
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: '', show: false });
   const [prefilledClient, setPrefilledClient] = useState<{ name: string; phone: string } | null>(null);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const [lang, setLang] = useState<Language>(() => {
     const saved = localStorage.getItem('bella_lang');
-    return (saved as Language) || 'pt';
+    if (saved && ['pt', 'en', 'es'].includes(saved)) {
+      return saved as Language;
+    }
+    return 'pt';
   });
 
-  const t = translations[lang];
+  const t = translations[lang] || translations.pt;
 
   // FIX: Auto-scroll to top on View or User change
   useEffect(() => {
@@ -567,34 +571,39 @@ const MainLayout: React.FC = () => {
   );
 
   const renderView = () => {
-    // SECURITY GUARD: Clients are strictly limited to Dashboard or Booking Portal
-    if (user?.role === 'client' && currentView !== View.DASHBOARD && currentView !== View.CLIENT_BOOKING) {
-      return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user.role} user={user} settings={settings} clients={clients} staff={staff} onLogout={logout} />;
-    }
+    try {
+      // SECURITY GUARD: Clients are strictly limited to Dashboard or Booking Portal
+      if (user?.role === 'client' && currentView !== View.DASHBOARD && currentView !== View.CLIENT_BOOKING) {
+        return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user.role} user={user} settings={settings} clients={clients} staff={staff} onLogout={logout} />;
+      }
 
-    const permissions = settings.permissions || {
-      viewFinancial: false, viewInventory: false, viewMarketing: false, viewStaff: false, viewServices: false, viewCRM: false
-    };
+      const permissions = settings.permissions || {
+        viewFinancial: false, viewInventory: false, viewMarketing: false, viewStaff: false, viewServices: false, viewCRM: false
+      };
 
-    switch (currentView) {
-      case View.DASHBOARD:
-        return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={handleLogout} />;
-      case View.APPOINTMENTS:
-        return <AppointmentsView appointments={appointments} clients={clients} staff={staff} services={services} onAdd={addAppointment} onDelete={deleteAppointment} onBlock={() => { }} lang={lang} initialDate={selectedDate} blockedPeriods={blockedPeriods} />;
-      case View.CRM:
-        if (user?.role === 'attendant' && !permissions.viewCRM) return <AccessRestricted />;
-        return <CRMView clients={clients} onAdd={addClient} onImport={importClients} onUpdate={updateClient} onDelete={deleteClient} onRedeem={() => { }} onPrefilledBooking={handlePrefilledBooking} appointments={appointments} settings={settings} t={t} onShowToast={showToast} />;
-      case View.STAFF: if (user?.role === 'attendant' && !permissions.viewStaff) return <AccessRestricted />; return <StaffView staff={staff} services={services} onAdd={addStaff} onUpdate={updateStaff} onDelete={deleteStaff} blockedPeriods={blockedPeriods} onBlock={() => { }} onUnblock={() => { }} onViewSchedule={() => setCurrentView(View.APPOINTMENTS)} categories={categories} onShowToast={showToast} />;
-      case View.SERVICES: if (user?.role === 'attendant' && !permissions.viewServices) return <AccessRestricted />; return <ServicesView services={services} categories={categories} onAdd={addService} onUpdate={updateService} onDelete={deleteService} onAddCategory={addServiceCategory} onDeleteCategory={deleteServiceCategory} />;
-      case View.INVENTORY:
-        if (user?.role === 'attendant' && !permissions.viewInventory) return <AccessRestricted />;
-        return <InventoryView inventory={inventory} categories={inventoryCategories} onAddItem={addInventoryItem} onUpdateItem={updateInventoryItem} onDeleteItem={deleteInventoryItem} onStockMovement={handleStockMovement} onAddTransaction={addTransaction} onAddCategory={addInventoryCategory} onDeleteCategory={deleteInventoryCategory} onShowToast={showToast} />;
-      case View.FINANCIAL: if (user?.role === 'attendant' && !permissions.viewFinancial) return <AccessRestricted />; return <FinancialView transactions={transactions} appointments={appointments} onProcessPayment={processPayment} onAddTransaction={addTransaction} onDeleteTransaction={deleteTransaction} clients={clients} services={services} inventory={inventory} suppliers={suppliers} onAddSupplier={addSupplier} onUpdateSupplier={updateSupplier} onDeleteSupplier={deleteSupplier} user={user!} onShowToast={showToast} />;
-      case View.MARKETING: if (user?.role === 'attendant' && !permissions.viewMarketing) return <AccessRestricted />; return <MarketingView clients={clients} appointments={appointments} settings={settings} onUpdateSettings={setSettingsAndPersist} onShowToast={showToast} />;
-      case View.SETTINGS: if (user?.role === 'attendant' || user?.role === 'client') return <AccessRestricted />; return <SettingsView t={t} lang={lang} setLang={setLang} settings={settings} onUpdate={setSettingsAndPersist} onExportData={handleExportData} onImportData={handleImportData} onShowToast={showToast} />;
-      case View.CLIENT_BOOKING:
-        return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} />;
-      default: return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={logout} />;
+      switch (currentView) {
+        case View.DASHBOARD:
+          return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={handleLogout} />;
+        case View.APPOINTMENTS:
+          return <AppointmentsView appointments={appointments} clients={clients} staff={staff} services={services} onAdd={addAppointment} onDelete={deleteAppointment} onBlock={() => { }} lang={lang} initialDate={selectedDate} blockedPeriods={blockedPeriods} />;
+        case View.CRM:
+          if (user?.role === 'attendant' && !permissions.viewCRM) return <AccessRestricted />;
+          return <CRMView clients={clients} onAdd={addClient} onImport={importClients} onUpdate={updateClient} onDelete={deleteClient} onRedeem={() => { }} onPrefilledBooking={handlePrefilledBooking} appointments={appointments} settings={settings} t={t} onShowToast={showToast} />;
+        case View.STAFF: if (user?.role === 'attendant' && !permissions.viewStaff) return <AccessRestricted />; return <StaffView staff={staff} services={services} onAdd={addStaff} onUpdate={updateStaff} onDelete={deleteStaff} blockedPeriods={blockedPeriods} onBlock={() => { }} onUnblock={() => { }} onViewSchedule={() => setCurrentView(View.APPOINTMENTS)} categories={categories} onShowToast={showToast} />;
+        case View.SERVICES: if (user?.role === 'attendant' && !permissions.viewServices) return <AccessRestricted />; return <ServicesView services={services} categories={categories} onAdd={addService} onUpdate={updateService} onDelete={deleteService} onAddCategory={addServiceCategory} onDeleteCategory={deleteServiceCategory} />;
+        case View.INVENTORY:
+          if (user?.role === 'attendant' && !permissions.viewInventory) return <AccessRestricted />;
+          return <InventoryView inventory={inventory} categories={inventoryCategories} onAddItem={addInventoryItem} onUpdateItem={updateInventoryItem} onDeleteItem={deleteInventoryItem} onStockMovement={handleStockMovement} onAddTransaction={addTransaction} onAddCategory={addInventoryCategory} onDeleteCategory={deleteInventoryCategory} onShowToast={showToast} />;
+        case View.FINANCIAL: if (user?.role === 'attendant' && !permissions.viewFinancial) return <AccessRestricted />; return <FinancialView transactions={transactions} appointments={appointments} onProcessPayment={processPayment} onAddTransaction={addTransaction} onDeleteTransaction={deleteTransaction} clients={clients} services={services} inventory={inventory} suppliers={suppliers} onAddSupplier={addSupplier} onUpdateSupplier={updateSupplier} onDeleteSupplier={deleteSupplier} user={user!} onShowToast={showToast} />;
+        case View.MARKETING: if (user?.role === 'attendant' && !permissions.viewMarketing) return <AccessRestricted />; return <MarketingView clients={clients} appointments={appointments} settings={settings} onUpdateSettings={setSettingsAndPersist} onShowToast={showToast} />;
+        case View.SETTINGS: if (user?.role === 'attendant' || user?.role === 'client') return <AccessRestricted />; return <SettingsView t={t} lang={lang} setLang={setLang} settings={settings} onUpdate={setSettingsAndPersist} onExportData={handleExportData} onImportData={handleImportData} onShowToast={showToast} />;
+        case View.CLIENT_BOOKING:
+          return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} />;
+        default: return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={logout} />;
+      }
+    } catch (err) {
+      console.error("Render error:", err);
+      return <div className="p-20 text-center">Erro crítico ao carregar vista.</div>;
     }
   };
 
@@ -631,7 +640,17 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 `}</style>
       <div className={`flex h-[100dvh] bg-white text-gray-800 overflow-hidden ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'p-0' : ''} `}>
         {!isPortalMode && (
-          <Sidebar t={t} activeView={currentView} onViewChange={setCurrentView} isOpen={isSidebarOpen} toggleOpen={() => setSidebarOpen(!isSidebarOpen)} logo={settings.logo} userRole={user?.role || 'client'} settings={settings} />
+          <Sidebar
+            t={t}
+            activeView={currentView}
+            onViewChange={setCurrentView}
+            isOpen={isSidebarOpen}
+            toggleOpen={() => setSidebarOpen(!isSidebarOpen)}
+            logo={settings.logo}
+            userRole={user?.role || 'client'}
+            settings={settings}
+            onOpenHelp={() => setIsHelpOpen(true)}
+          />
         )}
         <main ref={mainContentRef} className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-300 ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'bg-white p-0' : 'p-4 md:p-8'} `}>
           {!isPortalMode && user && (
@@ -650,12 +669,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
           )}
           {renderView()}
         </main>
-        <HelpSystem currentView={currentView} onShowToast={showToast} />
+        <HelpSystem currentView={currentView} onShowToast={showToast} isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
         <ChatBellaAI lang={lang} />
         {!isPortalMode && user && (
           <ReleaseNotesPopup config={settings.releaseNotes} />
         )}
-        {toast.show && <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#40E0D0] text-white px-8 py-4 rounded-[2rem] shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300 z-[200] border-2 border-white pointer-events-none"><CheckCircle2 size={24} /><span className="font-bold text-sm tracking-tight">{toast.message}</span></div>}
+        {toast.show && <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#40E0D0] text-white px-8 py-4 rounded-[2rem] shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300 z-[200] border-2 border-white pointer-events-none"><Sparkles size={24} /><span className="font-bold text-sm tracking-tight">{toast.message}</span></div>}
 
       </div>
     </>

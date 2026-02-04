@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabase';
 import { UserRole } from '../types';
 import {
   Sparkles,
@@ -44,18 +45,25 @@ const LoginView: React.FC = () => {
     try {
       if (mode === 'login') {
         const { error: loginError } = await login(email, password);
-        if (loginError) setError(loginError.message);
+        if (loginError) {
+          setError(loginError.message === 'Invalid login credentials'
+            ? 'E-mail ou senha incorretos. Por favor, tente novamente.'
+            : loginError.message);
+        } else {
+          setSuccessMsg('Login realizado com sucesso! Carregando seu Studio...');
+        }
       } else if (mode === 'signup') {
         const { error: signUpError } = await signUp(email, password, name, role);
         if (signUpError) {
           setError(signUpError.message);
         } else {
           setSuccessMsg('Cadastro realizado! Verifique seu e-mail para confirmar.');
-          setMode('login');
+          setTimeout(() => setMode('login'), 2000);
         }
       }
     } catch (err: any) {
-      setError('Ocorreu um erro inesperado.');
+      console.error('Auth error:', err);
+      setError('Ocorreu um erro inesperado na conexão. Tente novamente em alguns instantes.');
     } finally {
       setIsLoading(false);
     }
@@ -240,13 +248,53 @@ const LoginView: React.FC = () => {
               </button>
 
               {mode === 'login' && (
-                <button
-                  type="button"
-                  onClick={() => setMode('forgot')}
-                  className="text-gray-300 text-[10px] font-bold uppercase tracking-widest hover:text-gray-500 transition-all"
-                >
-                  Esqueci minha senha
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMode('forgot')}
+                    className="text-gray-300 text-[10px] font-bold uppercase tracking-widest hover:text-gray-500 transition-all"
+                  >
+                    Esqueci minha senha
+                  </button>
+
+                  {/* Emergency profile fix button - useful for new users that might have failed profile creation */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!email) {
+                        setError('Informe seu e-mail para verificar o perfil.');
+                        return;
+                      }
+                      setIsLoading(true);
+                      try {
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (user) {
+                          const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+                          if (!profile) {
+                            await supabase.from('profiles').insert({
+                              id: user.id,
+                              email: user.email,
+                              name: user.user_metadata.name || 'Usuário',
+                              role: user.user_metadata.role || 'client'
+                            });
+                            setSuccessMsg('Perfil recuperado! Tente entrar novamente.');
+                          } else {
+                            setError('Perfil já existe. Verifique suas credenciais.');
+                          }
+                        } else {
+                          setError('Você precisa estar logado para recuperar o perfil.');
+                        }
+                      } catch (e) {
+                        setError('Erro ao verificar perfil técnico.');
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
+                    className="opacity-20 hover:opacity-100 transition-opacity text-[8px] font-bold uppercase tracking-tighter text-gray-400"
+                  >
+                    Reparação Técnica de Perfil
+                  </button>
+                </div>
               )}
             </div>
           </form>

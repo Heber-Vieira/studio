@@ -15,7 +15,8 @@ import {
   ChevronRight,
   ExternalLink,
   Package,
-  ArrowUpRight
+  ArrowUpRight,
+  HelpCircle
 } from 'lucide-react';
 import { COLORS } from '../constants';
 
@@ -28,9 +29,10 @@ interface SidebarProps {
   logo?: string;
   userRole: UserRole;
   settings?: SalonSettings;
+  onOpenHelp: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ t, activeView, onViewChange, isOpen, toggleOpen, logo, userRole, settings }) => {
+const Sidebar: React.FC<SidebarProps> = ({ t, activeView, onViewChange, isOpen, toggleOpen, logo, userRole, settings, onOpenHelp }) => {
 
   // Icon configuration with consistent styling
   const iconSize = 20;
@@ -230,27 +232,46 @@ const Sidebar: React.FC<SidebarProps> = ({ t, activeView, onViewChange, isOpen, 
           </button>
         </nav>
 
-        {(userRole === 'master_admin' || userRole === 'company_admin') && (
-          <div className="px-4 py-6 border-t border-gray-200/50 space-y-4 safe-pb">
+        <div className="px-4 py-4 border-t border-gray-200/50 safe-pb mt-auto">
+          <div className={`grid ${(userRole === 'master_admin' || userRole === 'company_admin') ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+            {(userRole === 'master_admin' || userRole === 'company_admin') && (
+              <button
+                onClick={() => { onViewChange(View.SETTINGS); if (window.innerWidth < 768) toggleOpen(); }}
+                className={`
+                  flex items-center ${isOpen ? 'gap-2 px-3 justify-start' : 'justify-center'} py-3 rounded-xl transition-all duration-300 touch-manipulation
+                  ${activeView === View.SETTINGS
+                    ? 'bg-white text-[#FF69B4] shadow-sm'
+                    : 'text-gray-500 hover:bg-white hover:text-gray-900'}
+                `}
+                title={!isOpen ? t.sidebar.settings : undefined}
+              >
+                <Settings2
+                  size={18}
+                  strokeWidth={2}
+                  color={activeView === View.SETTINGS ? COLORS.pink : '#9CA3AF'}
+                  className={`flex-shrink-0 transition-all ${activeView === View.SETTINGS ? 'rotate-90' : ''}`}
+                />
+                {isOpen && <span className="font-bold text-[10px] uppercase tracking-wider whitespace-nowrap fade-in">Ajustes</span>}
+              </button>
+            )}
+
             <button
-              onClick={() => { onViewChange(View.SETTINGS); if (window.innerWidth < 768) toggleOpen(); }}
+              onClick={onOpenHelp}
               className={`
-                w-full flex items-center ${isOpen ? 'gap-4 px-4' : 'justify-center'} py-3.5 rounded-[1.2rem] transition-all duration-300 touch-manipulation
-                ${activeView === View.SETTINGS
-                  ? 'bg-white text-[#FF69B4] shadow-sm'
-                  : 'text-gray-500 hover:bg-white hover:text-gray-900'}
-               `}
+                flex items-center ${isOpen ? 'gap-2 px-3 justify-start' : 'justify-center'} py-3 rounded-xl transition-all duration-300 touch-manipulation
+                bg-white/50 text-gray-500 hover:bg-white hover:text-[#FF69B4] hover:shadow-sm border border-transparent hover:border-gray-100
+              `}
+              title={!isOpen ? "Central de Ajuda" : undefined}
             >
-              <Settings2
-                size={iconSize}
-                strokeWidth={strokeWidth}
-                color={activeView === View.SETTINGS ? COLORS.pink : '#9CA3AF'}
-                className={`flex-shrink-0 transition-all ${activeView === View.SETTINGS ? 'rotate-90' : ''}`}
+              <HelpCircle
+                size={18}
+                strokeWidth={2}
+                className="flex-shrink-0"
               />
-              {isOpen && <span className="font-bold text-sm whitespace-nowrap fade-in">{t.sidebar.settings}</span>}
+              {isOpen && <span className="font-bold text-[10px] uppercase tracking-wider whitespace-nowrap fade-in">Ajuda</span>}
             </button>
           </div>
-        )}
+        </div>
       </aside>
     </>
   );
