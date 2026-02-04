@@ -865,18 +865,21 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                 <div className="relative group">
                   <button
                     type="button"
-                    disabled={!newApt.professionalId || !newApt.serviceId}
                     onClick={() => {
-                      const [h, m] = (newApt.time || '12:00').split(':').map(Number);
+                      const timeStr = newApt.time || '12:00';
+                      const parts = timeStr.split(':');
+                      const h = parts[0] ? Number(parts[0]) : 12;
+                      const m = parts[1] ? Number(parts[1]) : 0;
+
                       setTimePickerConfig({
                         isOpen: true,
                         label: "Escolher Horário",
                         initialH: h,
                         initialM: m,
-                        onConfirm: (nh, nm) => setNewApt({ ...newApt, time: `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}` })
+                        onConfirm: (nh, nm) => setNewApt(prev => ({ ...prev, time: `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}` }))
                       });
                     }}
-                    className="w-full bg-[#F5F5F5] border-none rounded-2xl pl-12 pr-4 py-4 font-bold text-left hover:bg-gray-100 transition-all disabled:opacity-50"
+                    className="w-full bg-[#F5F5F5] border-none rounded-2xl pl-12 pr-4 py-4 font-bold text-left hover:bg-gray-100 transition-all"
                   >
                     <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
                     <span>{newApt.time || '--:--'}</span>
@@ -975,7 +978,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                         label: "Novo Horário",
                         initialH: h || 12,
                         initialM: m || 0,
-                        onConfirm: (nh, nm) => setRescheduleData({ ...rescheduleData, time: `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}` })
+                        onConfirm: (nh, nm) => setRescheduleData(prev => ({ ...prev, time: `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}` }))
                       });
                     }}
                     className="w-full bg-[#F5F5F5] border-none rounded-2xl pl-12 pr-4 py-4 outline-none font-bold text-left relative hover:bg-gray-100 transition-all"
