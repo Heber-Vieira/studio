@@ -884,40 +884,6 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
               )}
             </div>
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nome Completo</label>
-                <input
-                  type="text"
-                  value={editingUser.name}
-                  onChange={e => setEditingUser({ ...editingUser, name: e.target.value })}
-                  className="w-full bg-gray-50 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:bg-white focus:border-indigo-200 transition-all font-bold text-gray-800"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nível de Acesso</label>
-                <div className="grid grid-cols-1 gap-3">
-                  {[{ id: 'client', label: 'Cliente', icon: User }, { id: 'attendant', label: 'Equipe (Atendente)', icon: Briefcase }, { id: 'company_admin', label: 'Administrador', icon: ShieldCheck }].map(role => (
-                    <button
-                      key={role.id}
-                      onClick={() => setEditingUser({ ...editingUser, role: role.id as any })}
-                      className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${editingUser.role === role.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 hover:border-indigo-200'}`}
-                    >
-                      <div className={`p-2 rounded-xl ${editingUser.role === role.id ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-500'}`}><role.icon size={20} /></div>
-                      <div>
-                        <span className={`block text-sm font-bold ${editingUser.role === role.id ? 'text-indigo-900' : 'text-gray-700'}`}>{role.label}</span>
-                      </div>
-                      {editingUser.role === role.id && <CheckCircle2 size={20} className="ml-auto text-indigo-500" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button onClick={handleSaveUser} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-95 transition-all mt-4 flex items-center justify-center gap-2">
-                <Save size={18} /> Salvar Alterações
-              </button>
-            </div>
           </div>
         );
       default:
