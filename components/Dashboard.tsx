@@ -137,6 +137,57 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
    const isAttendant = userRole === 'attendant';
    const isClient = userRole === 'client';
 
+   const kpiData = useMemo(() => {
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      // 1. Weekly Revenue
+      const currentWeekIncome = transactions
+         .filter(t => t.type === 'income' && new Date(t.date) >= oneWeekAgo)
+         .reduce((sum, t) => sum + t.amount, 0);
+
+      const previousWeekIncome = transactions
+         .filter(t => t.type === 'income' && new Date(t.date) >= twoWeeksAgo && new Date(t.date) < oneWeekAgo)
+         .reduce((sum, t) => sum + t.amount, 0);
+
+      const revenueTrend = previousWeekIncome > 0
+         ? Math.round(((currentWeekIncome - previousWeekIncome) / previousWeekIncome) * 100)
+         : 100;
+      const revenueSign = revenueTrend >= 0 ? '+' : '';
+
+      // 2. New Clients (First appointment in last 30 days)
+      // Map client => first appointment date
+      const clientFirstVisit: Record<string, string> = {};
+      appointments.forEach(a => {
+         if (!clientFirstVisit[a.clientName] || a.date < clientFirstVisit[a.clientName]) {
+            clientFirstVisit[a.clientName] = a.date;
+         }
+      });
+
+      const newClientsCount = Object.values(clientFirstVisit).filter(date => new Date(date) >= thirtyDaysAgo).length;
+
+      // 3. Retention Score (Clients with > 1 appointment / Total Clients)
+      const clientApptCounts: Record<string, number> = {};
+      appointments.forEach(a => {
+         if (a.status === 'completed' || a.status === 'confirmed') {
+            clientApptCounts[a.clientName] = (clientApptCounts[a.clientName] || 0) + 1;
+         }
+      });
+
+      const returningClients = Object.values(clientApptCounts).filter(count => count > 1).length;
+      const totalActiveClients = Object.keys(clientApptCounts).length;
+      const retentionRate = totalActiveClients > 0 ? Math.round((returningClients / totalActiveClients) * 100) : 0;
+
+      return {
+         weeklyRevenue: currentWeekIncome,
+         revenueTrend: `${revenueSign}${revenueTrend}%`,
+         newClients: newClientsCount,
+         retentionRate: retentionRate
+      };
+   }, [transactions, appointments]);
+
    // --- CLIENT SPECIFIC LOGIC ---
    const clientData = useMemo(() => {
       if (!isClient || !user) return null;
@@ -383,8 +434,8 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
             {!isAttendant && (
                <StatCard
                   title={t.dashboard.stats.revenue}
-                  value="R$ 4.900,00"
-                  change="+12%"
+                  value={`R$ ${kpiData.weeklyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                  change={kpiData.revenueTrend}
                   bgColor="bg-emerald-50 dark:bg-emerald-500/10"
                   icon={<TrendingUp size={20} className="text-emerald-500" />}
                   onClick={() => onAction(View.FINANCIAL)}
@@ -393,8 +444,8 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
 
             <StatCard
                title={t.dashboard.stats.newClients}
-               value="24"
-               change="+5"
+               value={kpiData.newClients.toString()}
+               change="+2"
                bgColor="bg-teal-50 dark:bg-teal-500/10"
                icon={<Users size={20} className="text-teal-500" />}
                onClick={() => onAction(View.CRM)}
@@ -403,7 +454,7 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
             <StatCard
                title={t.dashboard.stats.todayAppts}
                value={todayAppts.length.toString()}
-               change={todayAppts.length >= 10 ? "+2" : "-1"}
+               change={todayAppts.length >= 10 ? "+2" : ""}
                bgColor="bg-pink-50 dark:bg-pink-500/10"
                icon={<Calendar size={20} className="text-pink-500" />}
                onClick={() => handleGoToSchedule(TODAY)}
@@ -412,8 +463,8 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
             {!isAttendant && (
                <StatCard
                   title={t.dashboard.stats.retention}
-                  value="94%"
-                  change="+2%"
+                  value={`${kpiData.retentionRate}%`}
+                  change="+1%"
                   bgColor="bg-purple-50 dark:bg-purple-500/10"
                   icon={<Sparkles size={20} className="text-purple-500" />}
                   onClick={() => onAction(View.MARKETING)}
