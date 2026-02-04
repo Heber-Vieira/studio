@@ -19,6 +19,41 @@ export const db = {
         return publicUrl;
     },
 
+    // --- PROFILES (USER MANAGEMENT) ---
+    async getProfiles() {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .order('name');
+
+        if (error) throw error;
+        // Map to UserProfile interface if needed, or return raw data if it matches
+        return data as any[];
+    },
+
+    async updateProfile(profile: { id: string; name: string; role: string; email?: string }) {
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                name: profile.name,
+                role: profile.role
+            })
+            .eq('id', profile.id);
+
+        if (error) throw error;
+    },
+
+    async deleteProfile(id: string) {
+        // Note: usage of supabase.auth.admin.deleteUser is restricted from client side.
+        // We delete the profile row. App logic should handle "soft" auth deletion or RLS lockout.
+        const { error } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+
     // --- SETTINGS / COMPANY ---
     async getSettings() {
         const { data, error } = await supabase

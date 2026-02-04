@@ -76,7 +76,7 @@ interface SettingsProps {
   onShowToast: (msg: string) => void;
 }
 
-type TabId = 'general' | 'ai' | 'financial' | 'integrations' | 'plan' | 'loyalty' | 'data' | 'team' | 'releases';
+type TabId = 'general' | 'ai' | 'financial' | 'integrations' | 'plan' | 'loyalty' | 'data' | 'team' | 'releases' | 'users';
 
 const DEFAULT_SETTINGS: SalonSettings = {
   name: 'Studio Lívia Nicolly',
@@ -140,6 +140,60 @@ const AccessToggle: React.FC<{ title: string; description: string; isActive: boo
 
 const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onUpdate, onExportData, onImportData, onShowToast }) => {
   const [activeTab, setActiveTab] = useState<TabId>('general');
+  // --- USER MANAGEMENT STATE ---
+  const [userProfiles, setUserProfiles] = useState<any[]>([]);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+
+  // Fetch profiles when entering "Users" tab
+  React.useEffect(() => {
+    if (activeTab === 'users') {
+      fetchData();
+    }
+  }, [activeTab]);
+
+  const fetchData = async (force = false) => {
+    try {
+      const { db } = await import('../services/database');
+      const profiles = await db.getProfiles();
+      setUserProfiles(profiles);
+      if (force) onShowToast("Lista de usuários atualizada!");
+    } catch (e) {
+      console.error("Error fetching profiles:", e);
+      onShowToast("Erro ao carregar usuários.");
+    }
+  };
+
+  const handleSaveUser = async () => {
+    if (!editingUser) return;
+    try {
+      const { db } = await import('../services/database');
+      await db.updateProfile(editingUser);
+      onShowToast("Usuário atualizado com sucesso!");
+      setIsUserModalOpen(false);
+      setEditingUser(null);
+      fetchData(); // Refresh list
+    } catch (e) {
+      console.error("Error updating user:", e);
+      onShowToast("Erro ao salvar usuário.");
+    }
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    if (confirm("Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.")) {
+      try {
+        const { db } = await import('../services/database');
+        await db.deleteProfile(id);
+        onShowToast("Usuário excluído.");
+        fetchData();
+      } catch (e) {
+        console.error("Error deleting user:", e);
+        onShowToast("Erro ao excluir usuário.");
+      }
+    }
+  };
+  // -----------------------------
+
   const [localSettings, setLocalSettings] = useState<SalonSettings>(settings);
   const [showSavedToast, setShowSavedToast] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -415,6 +469,7 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
   const tabs: { id: TabId; label: string; icon: any }[] = [
     { id: 'general', label: t.settings.tabs.general, icon: Building2 },
     { id: 'team', label: 'Acesso & Equipe', icon: Users },
+    { id: 'users', label: 'Usuários', icon: ShieldCheck }, // New Users Tab
     { id: 'financial', label: t.settings.tabs.financial, icon: CreditCard },
     { id: 'loyalty', label: t.settings.tabs.loyalty, icon: Gift },
     { id: 'ai', label: t.settings.tabs.ai, icon: Sparkles },
@@ -748,6 +803,133 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
       case 'team':
         return (
           <div className="space-y-8 fade-in"><div className="bg-[#F5F5F5] p-6 rounded-[2.5rem] border border-gray-100 flex items-start gap-4"><div className="p-3 bg-white rounded-2xl shadow-sm text-gray-600"><Lock size={24} /></div><div><h3 className="font-bold text-lg text-gray-900">Permissões de Acesso</h3><p className="text-sm text-gray-500 leading-relaxed max-w-lg mt-1">Configure o perfil Atendente.</p></div></div><div className="grid grid-cols-1 gap-4"><AccessToggle title="Base de Clientes (CRM)" description="Visualizar dados, histórico e pontos." icon={<UsersRound size={20} />} colorClass="text-indigo-500" isActive={localSettings.permissions?.viewCRM || false} onToggle={() => togglePermission('viewCRM')} /><AccessToggle title="Financeiro" description="Acesso a faturamento e relatórios." icon={<CreditCard size={20} />} colorClass="text-emerald-500" isActive={localSettings.permissions?.viewFinancial || false} onToggle={() => togglePermission('viewFinancial')} /><AccessToggle title="Estoque" description="Gerenciar entradas/saídas." icon={<Package size={20} />} colorClass="text-blue-500" isActive={localSettings.permissions?.viewInventory || false} onToggle={() => togglePermission('viewInventory')} /><AccessToggle title="Marketing" description="Acesso ao gerador de copy." icon={<Megaphone size={20} />} colorClass="text-purple-500" isActive={localSettings.permissions?.viewMarketing || false} onToggle={() => togglePermission('viewMarketing')} /><AccessToggle title="Equipe" description="Ver lista de outros profissionais." icon={<Users size={20} />} colorClass="text-orange-500" isActive={localSettings.permissions?.viewStaff || false} onToggle={() => togglePermission('viewStaff')} /><AccessToggle title="Serviços" description="Catálogo de serviços." icon={<BookOpen size={20} />} colorClass="text-[#FF69B4]" isActive={localSettings.permissions?.viewServices || false} onToggle={() => togglePermission('viewServices')} /></div></div>
+        );
+      case 'users':
+        return (
+          <div className="space-y-8 fade-in h-full">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-[#F5F5F5] p-6 rounded-[2.5rem] border border-gray-100">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white rounded-2xl shadow-sm text-gray-900"><User size={24} /></div>
+                <div>
+                  <h3 className="font-bold text-lg text-gray-900">Gerenciamento de Usuários</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed max-w-lg mt-1">Administre o acesso e funções de todos os usuários do sistema.</p>
+                </div>
+              </div>
+              <button onClick={() => fetchData(true)} className="p-3 bg-white text-gray-400 hover:text-gray-900 rounded-xl transition-all shadow-sm active:scale-95"><RefreshCw size={20} /></button>
+            </div>
+
+            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+              {userProfiles.length === 0 ? (
+                <div className="p-10 text-center text-gray-400">
+                  <User size={48} className="mx-auto mb-4 opacity-20" />
+                  <p className="font-bold text-sm">Nenhum usuário encontrado.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-50 text-left">
+                        <th className="py-6 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest w-20">Avatar</th>
+                        <th className="py-6 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nome / Email</th>
+                        <th className="py-6 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nível de Acesso</th>
+                        <th className="py-6 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userProfiles.map((profile) => (
+                        <tr key={profile.id} className="group hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-none">
+                          <td className="py-4 px-8">
+                            {profile.avatar_url ? (
+                              <img src={profile.avatar_url} alt={profile.name} className="w-12 h-12 rounded-2xl object-cover shadow-sm border-2 border-white" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-400 font-black text-lg border-2 border-white">
+                                {profile.name?.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-4 px-8">
+                            <h4 className="font-bold text-gray-900 text-sm">{profile.name}</h4>
+                            <p className="text-xs text-gray-400 font-medium">{profile.email || 'Email não informado'}</p>
+                          </td>
+                          <td className="py-4 px-8">
+                            <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1.5
+                              ${profile.role === 'master_admin' ? 'bg-purple-100 text-purple-600' :
+                                profile.role === 'company_admin' ? 'bg-indigo-100 text-indigo-600' :
+                                  profile.role === 'attendant' ? 'bg-teal-100 text-teal-600' :
+                                    'bg-gray-100 text-gray-500'}`}>
+                              {profile.role === 'master_admin' && <Crown size={12} />}
+                              {profile.role === 'company_admin' && <ShieldCheck size={12} />}
+                              {profile.role === 'attendant' && <Briefcase size={12} />}
+                              {profile.role === 'client' && <User size={12} />}
+                              {profile.role === 'master_admin' ? 'Master Admin' :
+                                profile.role === 'company_admin' ? 'Administrador' :
+                                  profile.role === 'attendant' ? 'Equipe' : 'Cliente'}
+                            </span>
+                          </td>
+                          <td className="py-4 px-8 text-right">
+                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => { setEditingUser(profile); setIsUserModalOpen(true); }} className="p-2.5 rounded-xl bg-white text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 active:scale-95 transition-all shadow-sm border border-gray-100">
+                                <Settings size={16} />
+                              </button>
+                              <button onClick={() => handleDeleteUser(profile.id)} className="p-2.5 rounded-xl bg-white text-gray-400 hover:text-rose-500 hover:bg-rose-50 active:scale-95 transition-all shadow-sm border border-gray-100">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {isUserModalOpen && editingUser && (
+              <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in">
+                <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative animate-in zoom-in duration-300">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-2xl font-black text-gray-900 tracking-tight">Editar Usuário</h3>
+                    <button onClick={() => setIsUserModalOpen(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><X size={20} /></button>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nome Completo</label>
+                      <input
+                        type="text"
+                        value={editingUser.name}
+                        onChange={e => setEditingUser({ ...editingUser, name: e.target.value })}
+                        className="w-full bg-gray-50 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:bg-white focus:border-indigo-200 transition-all font-bold text-gray-800"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nível de Acesso</label>
+                      <div className="grid grid-cols-1 gap-3">
+                        {[{ id: 'client', label: 'Cliente', icon: User }, { id: 'attendant', label: 'Equipe (Atendente)', icon: Briefcase }, { id: 'company_admin', label: 'Administrador', icon: ShieldCheck }].map(role => (
+                          <button
+                            key={role.id}
+                            onClick={() => setEditingUser({ ...editingUser, role: role.id as any })}
+                            className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${editingUser.role === role.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 hover:border-indigo-200'}`}
+                          >
+                            <div className={`p-2 rounded-xl ${editingUser.role === role.id ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-500'}`}><role.icon size={20} /></div>
+                            <div>
+                              <span className={`block text-sm font-bold ${editingUser.role === role.id ? 'text-indigo-900' : 'text-gray-700'}`}>{role.label}</span>
+                            </div>
+                            {editingUser.role === role.id && <CheckCircle2 size={20} className="ml-auto text-indigo-500" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button onClick={handleSaveUser} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-95 transition-all mt-4 flex items-center justify-center gap-2">
+                      <Save size={18} /> Salvar Alterações
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         );
       default:
         return null;
