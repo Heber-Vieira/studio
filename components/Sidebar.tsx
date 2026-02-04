@@ -125,8 +125,8 @@ const Sidebar: React.FC<SidebarProps> = ({ t, activeView, onViewChange, isOpen, 
 
       <aside className={`
         ${isOpen ? 'w-64' : 'w-20'} 
-        bg-[#F5F5F5] border-r border-gray-200 flex flex-col transition-all duration-500 ease-in-out
-        fixed md:relative z-40 h-full
+        bg-[#F5F5F5] border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out
+        fixed md:relative z-40 h-[100dvh]
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
 

@@ -298,7 +298,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredClients.map(client => (
           <div key={client.id} className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-[#40E0D0] transition-all relative overflow-hidden group">
 

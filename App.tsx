@@ -58,7 +58,10 @@ const MainLayout: React.FC = () => {
   });
 
   const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isSidebarOpen, setSidebarOpen] = useState(() => {
+    // START CLOSED ON TABLETS/PHONES (< 1024px)
+    return typeof window !== 'undefined' ? window.innerWidth >= 1024 : true;
+  });
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: '', show: false });
   const [prefilledClient, setPrefilledClient] = useState<{ name: string; phone: string } | null>(null);
@@ -652,18 +655,40 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
             onOpenHelp={() => setIsHelpOpen(true)}
           />
         )}
-        <main ref={mainContentRef} className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-300 ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'bg-white p-0' : 'p-4 md:p-8'} `}>
+        <main ref={mainContentRef} className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-300 ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'bg-white p-0' : 'p-4 md:p-6 lg:p-8'} `}>
           {!isPortalMode && user && (
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-12 fade-in gap-6 border-b border-gray-100 pb-6 shrink-0 px-4 md:px-0">
-              <div className="w-full md:w-auto flex justify-between items-center sm:pl-14 md:pl-0">
-                <div className="flex items-center gap-5">
-                  <div className="md:hidden w-12 h-12 bg-white rounded-2xl shadow-lg border border-gray-100 flex items-center justify-center overflow-hidden">{settings.logo ? <img src={settings.logo} className="w-full h-full object-contain p-1.5" /> : <Sparkles className="text-[#FF69B4]" />}</div>
-                  <div><h1 className="text-2xl md:text-4xl font-black text-gray-900 leading-none tracking-tight">{settings.name}</h1><div className="flex items-center gap-2 mt-1.5"><span className="text-[10px] font-black text-[#FF69B4] uppercase tracking-widest bg-pink-50 px-2 py-0.5 rounded-full">Pro Studio</span><span className="text-xs font-medium text-gray-400">{settings.address}</span></div></div>
+            <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 lg:mb-12 fade-in gap-6 border-b border-gray-100 pb-6 shrink-0 px-4 lg:px-0">
+              <div className="w-full lg:w-auto flex justify-between items-center sm:pl-14 lg:pl-0 min-w-0">
+                <div className="flex items-center gap-5 min-w-0">
+                  <div className="lg:hidden w-12 h-12 bg-white rounded-2xl shadow-lg border border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                    {settings.logo ? <img src={settings.logo} className="w-full h-full object-contain p-1.5" /> : <Sparkles className="text-[#FF69B4]" />}
+                  </div>
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 leading-none tracking-tight truncate shrink-0">
+                      {settings.name}
+                    </h1>
+                    <div className="flex items-center gap-2 mt-1.5 overflow-hidden">
+                      <span className="text-[9px] sm:text-[10px] font-black text-[#FF69B4] uppercase tracking-widest bg-pink-50 px-2 py-0.5 rounded-full shrink-0">Pro Studio</span>
+                      <span className="text-xs font-medium text-gray-400 truncate">{settings.address}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto scrollbar-hide pb-2 md:pb-0">
-                {user.role !== 'client' && <button onClick={() => { setPrefilledClient(null); setCurrentView(View.CLIENT_BOOKING); }} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-[#40E0D0] to-[#FF69B4] text-white px-5 py-3 rounded-2xl font-black text-xs shadow-xl hover:scale-105 transition-all whitespace-nowrap">Portal do Cliente 🔗</button>}
-                <button onClick={handleLogout} className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-rose-50 hover:text-rose-500 text-gray-400 px-4 py-3 rounded-2xl font-bold text-xs transition-all whitespace-nowrap"><LogOut size={16} /> Sair</button>
+              <div className="flex items-center gap-3 sm:gap-4 w-full lg:w-auto overflow-x-auto scrollbar-hide pb-2 lg:pb-0">
+                {user.role !== 'client' && (
+                  <button
+                    onClick={() => { setPrefilledClient(null); setCurrentView(View.CLIENT_BOOKING); }}
+                    className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-[#40E0D0] to-[#FF69B4] text-white px-4 sm:px-5 py-3 rounded-2xl font-black text-[10px] sm:text-xs shadow-xl hover:scale-105 transition-all whitespace-nowrap"
+                  >
+                    Portal do Cliente 🔗
+                  </button>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-rose-50 hover:text-rose-500 text-gray-400 px-3 sm:px-4 py-3 rounded-2xl font-bold text-[10px] sm:text-xs transition-all whitespace-nowrap"
+                >
+                  <LogOut size={16} /> Sair
+                </button>
               </div>
             </header>
           )}
