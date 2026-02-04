@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Service, Category } from '../types';
 import { COLORS } from '../constants';
 import {
@@ -8,6 +8,7 @@ import {
   Brush, SprayCan, Palette, Gem, Crown, Gift, Zap, Heart, Smile,
   CheckCircle2
 } from 'lucide-react';
+import { TimePicker, CurrencyInput } from './ui';
 
 interface ServicesProps {
   services: Service[];
@@ -70,6 +71,9 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
     description: '',
     color: BELLA_PALETTE[0]
   });
+
+  const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
+  const [timePickerTarget, setTimePickerTarget] = useState<'new' | 'edit'>('new');
 
   React.useEffect(() => {
     if (categories && categories.length > 0 && !newSvc.category) {
@@ -382,30 +386,33 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
 
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Preço (R$)</label>
-                    <input
-                      type="number"
-                      className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none"
-                      value={isEditModalOpen ? selectedService?.price : newSvc.price}
-                      onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, price: parseInt(e.target.value) || 0 }) : setNewSvc({ ...newSvc, price: parseInt(e.target.value) || 0 })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Duração</label>
-                    <input
-                      type="text"
-                      placeholder="45min"
-                      className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none"
-                      value={isEditModalOpen ? selectedService?.duration : newSvc.duration}
-                      onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, duration: e.target.value }) : setNewSvc({ ...newSvc, duration: e.target.value })}
-                    />
+                  <CurrencyInput
+                    label="Preço"
+                    value={isEditModalOpen ? (selectedService?.price || 0) : newSvc.price}
+                    onChange={val => isEditModalOpen
+                      ? setSelectedService({ ...selectedService!, price: val })
+                      : setNewSvc({ ...newSvc, price: val })
+                    }
+                  />
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 block">Duração</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTimePickerTarget(isEditModalOpen ? 'edit' : 'new');
+                        setIsTimePickerOpen(true);
+                      }}
+                      className="w-full bg-[#F5F5F5] border-none rounded-2xl py-4 px-6 outline-none text-left font-bold text-gray-800 hover:ring-2 hover:ring-[#FF69B4]/20 transition-all flex items-center justify-between"
+                    >
+                      <span>{isEditModalOpen ? selectedService?.duration : newSvc.duration}</span>
+                      <Clock size={16} className="text-gray-300" />
+                    </button>
                   </div>
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Descrição (Marketing)</label>
                   <textarea
-                    className="w-full h-24 bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none resize-none"
+                    className="w-full h-24 bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none resize-none text-sm font-medium"
                     placeholder="Descreva o serviço para atrair clientes..."
                     value={isEditModalOpen ? selectedService?.description : newSvc.description}
                     onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, description: e.target.value }) : setNewSvc({ ...newSvc, description: e.target.value })}
@@ -413,6 +420,29 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
                 </div>
               </div>
             </div>
+
+            <TimePicker
+              isOpen={isTimePickerOpen}
+              onClose={() => setIsTimePickerOpen(false)}
+              onConfirm={(h, m) => {
+                const durationStr = `${h > 0 ? `${h}h ` : ''}${m > 0 ? `${m}min` : ''}`.trim() || '30min';
+                if (timePickerTarget === 'edit' && selectedService) {
+                  setSelectedService({ ...selectedService, duration: durationStr });
+                } else {
+                  setNewSvc({ ...newSvc, duration: durationStr });
+                }
+              }}
+              initialHours={(() => {
+                const dur = timePickerTarget === 'edit' ? selectedService?.duration : newSvc.duration;
+                const hours = dur?.match(/(\d+)h/);
+                return hours ? parseInt(hours[1]) : 0;
+              })()}
+              initialMinutes={(() => {
+                const dur = timePickerTarget === 'edit' ? selectedService?.duration : newSvc.duration;
+                const mins = dur?.match(/(\d+)min/);
+                return mins ? parseInt(mins[1]) : (dur?.includes('h') ? 0 : 30);
+              })()}
+            />
 
             <div className="flex gap-4 relative z-10 pt-4">
               <button

@@ -58,7 +58,7 @@ import {
    Bar
 } from 'recharts';
 import { Appointment, UserProfile, Transaction, Client, Service, InventoryItem, Supplier } from '../types';
-import { Modal, Button, StatCard } from './ui';
+import { Modal, Button, StatCard, CurrencyInput } from './ui';
 
 interface FinancialProps {
    transactions: Transaction[];
@@ -881,14 +881,12 @@ const FinancialView: React.FC<FinancialProps> = ({
                                     )}
                                  </div>
 
-                                 <div>
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Valor (R$)</label>
-                                    <input
-                                       type="number"
-                                       step="0.01"
-                                       className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-black text-lg text-[#FF69B4] outline-none focus:ring-2 focus:ring-[#FF69B4]"
-                                       value={directSaleData.amount || ''}
-                                       onChange={e => setDirectSaleData({ ...directSaleData, amount: Number(e.target.value) })}
+                                 <div className="md:col-span-2">
+                                    <CurrencyInput
+                                       label="Valor da Venda"
+                                       value={directSaleData.amount}
+                                       onChange={val => setDirectSaleData({ ...directSaleData, amount: val })}
+                                       placeholder="R$ 0,00"
                                     />
                                  </div>
                               </div>
@@ -968,12 +966,11 @@ const FinancialView: React.FC<FinancialProps> = ({
 
                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Valor (R$)</label>
-                           <input
-                              type="number"
-                              className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 font-black text-lg text-rose-500 outline-none focus:ring-2 focus:ring-rose-500 transition-all"
-                              value={expenseData.amount || ''}
-                              onChange={e => setExpenseData({ ...expenseData, amount: Number(e.target.value) })}
+                           <CurrencyInput
+                              label="Valor da Despesa"
+                              value={expenseData.amount}
+                              onChange={val => setExpenseData({ ...expenseData, amount: val })}
+                              placeholder="R$ 0,00"
                            />
                         </div>
                         <div>

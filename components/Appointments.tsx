@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { COLORS } from '../constants';
 import { translations } from '../i18n';
-import { Modal, Button, SelectField, InputField } from './ui';
+import { Modal, Button, SelectField, InputField, TimePicker } from './ui';
 
 interface AppointmentsProps {
   appointments: Appointment[];
@@ -79,6 +79,20 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
   // Estado de Reagendamento
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
 
+  const [timePickerConfig, setTimePickerConfig] = useState<{
+    isOpen: boolean;
+    label: string;
+    onConfirm: (h: number, m: number) => void;
+    initialH: number;
+    initialM: number;
+  }>({
+    isOpen: false,
+    label: '',
+    onConfirm: () => { },
+    initialH: 0,
+    initialM: 0
+  });
+
   const formatDateISO = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -97,6 +111,10 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
     date: TODAY,
     time: ''
   });
+
+  const sortedStaff = useMemo(() => {
+    return [...staff].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+  }, [staff]);
 
   // --- LÓGICA DE DISPONIBILIDADE DINÂMICA ---
 
@@ -167,9 +185,9 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
   // Filtra serviços disponíveis baseados no profissional selecionado
   const availableServicesForForm = useMemo(() => {
     if (!newApt.professionalId) return services;
-    const pro = staff.find(p => p.id === newApt.professionalId);
+    const pro = sortedStaff.find(p => p.id === newApt.professionalId);
     return pro ? services.filter(s => pro.services?.includes(s.id)) : services;
-  }, [services, staff, newApt.professionalId]);
+  }, [services, sortedStaff, newApt.professionalId]);
 
   // Horários disponíveis baseados no Profissional e Data
   const availableTimesForForm = useMemo(() => {
@@ -179,7 +197,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
 
   // Especialistas filtrados (por serviço E por horário se o horário estiver selecionado)
   const availableStaffForForm = useMemo(() => {
-    let filtered = staff;
+    let filtered = sortedStaff;
     if (newApt.serviceId) {
       filtered = filtered.filter(p => p.services?.includes(newApt.serviceId));
     }
@@ -191,7 +209,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       });
     }
     return filtered;
-  }, [staff, newApt.serviceId, newApt.time, newApt.date, appointments, blockedPeriods]);
+  }, [sortedStaff, newApt.serviceId, newApt.time, newApt.date, appointments, blockedPeriods]);
 
 
   const [selectedDate, setSelectedDate] = useState(initialDate || TODAY);
@@ -284,7 +302,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
     return labels;
   }, [startHour, endHour]);
 
-  const visibleStaff = selectedProfessionalId === 'all' ? staff : staff.filter(p => p.id === selectedProfessionalId);
+  const visibleStaff = selectedProfessionalId === 'all' ? sortedStaff : sortedStaff.filter(p => p.id === selectedProfessionalId);
 
   const calendarDays = useMemo(() => {
     const year = viewDate.getFullYear();
@@ -485,7 +503,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
               className="w-full bg-[#F5F5F5] border-none rounded-2xl py-3 pl-11 pr-10 focus:ring-2 focus:ring-[#FF69B4]/20 outline-none font-bold text-xs uppercase tracking-widest text-gray-500 appearance-none cursor-pointer transition-all"
             >
               <option value="all">Filtro: Todos</option>
-              {staff.map(pro => (
+              {sortedStaff.map(pro => (
                 <option key={pro.id} value={pro.id}>{pro.name}</option>
               ))}
             </select>
@@ -533,15 +551,47 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Início</label>
-                          <select value={startHour} onChange={(e) => setStartHour(Math.min(endHour - 1, Number(e.target.value)))} className="w-full bg-[#F5F5F5] border-none rounded-2xl px-5 py-4 font-black text-gray-800 text-lg outline-none appearance-none">
-                            {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>)}
-                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTimePickerConfig({
+                                isOpen: true,
+                                label: "Início da Agenda",
+                                initialH: startHour,
+                                initialM: 0,
+                                onConfirm: (nh) => {
+                                  const newStart = Math.min(endHour - 1, nh);
+                                  setStartHour(newStart);
+                                  localStorage.setItem('bella_start_hour', String(newStart));
+                                }
+                              });
+                            }}
+                            className="w-full bg-[#F5F5F5] border-none rounded-2xl px-5 py-4 font-black text-gray-800 text-lg text-left hover:bg-gray-100 transition-all font-mono"
+                          >
+                            {startHour.toString().padStart(2, '0')}:00
+                          </button>
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Fim</label>
-                          <select value={endHour} onChange={(e) => setEndHour(Math.max(startHour + 1, Number(e.target.value)))} className="w-full bg-[#F5F5F5] border-none rounded-2xl px-5 py-4 font-black text-gray-800 text-lg outline-none appearance-none">
-                            {Array.from({ length: 25 }).map((_, i) => <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>)}
-                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTimePickerConfig({
+                                isOpen: true,
+                                label: "Fim da Agenda",
+                                initialH: endHour,
+                                initialM: 0,
+                                onConfirm: (nh) => {
+                                  const newEnd = Math.max(startHour + 1, nh);
+                                  setEndHour(newEnd);
+                                  localStorage.setItem('bella_end_hour', String(newEnd));
+                                }
+                              });
+                            }}
+                            className="w-full bg-[#F5F5F5] border-none rounded-2xl px-5 py-4 font-black text-gray-800 text-lg text-left hover:bg-gray-100 transition-all font-mono"
+                          >
+                            {endHour.toString().padStart(2, '0')}:00
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -777,7 +827,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                     onChange={e => {
                       const proId = e.target.value;
                       setNewApt(prev => {
-                        const newPro = staff.find(p => p.id === proId);
+                        const newPro = sortedStaff.find(p => p.id === proId);
                         const isCompatible = newPro?.services?.includes(prev.serviceId);
                         return {
                           ...prev,
@@ -813,17 +863,24 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                   {availableTimesForForm.length > 0 && <span className="text-[#40E0D0] ml-1 lowercase">({availableTimesForForm.length} slots)</span>}
                 </label>
                 <div className="relative group">
-                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                  <select
-                    required
+                  <button
+                    type="button"
                     disabled={!newApt.professionalId || !newApt.serviceId}
-                    value={newApt.time}
-                    onChange={e => setNewApt({ ...newApt, time: e.target.value })}
-                    className="w-full bg-[#F5F5F5] border-none rounded-2xl pl-12 pr-4 py-4 outline-none focus:ring-2 focus:ring-[#FF69B4]/20 font-bold appearance-none transition-all disabled:opacity-50"
+                    onClick={() => {
+                      const [h, m] = (newApt.time || '12:00').split(':').map(Number);
+                      setTimePickerConfig({
+                        isOpen: true,
+                        label: "Escolher Horário",
+                        initialH: h,
+                        initialM: m,
+                        onConfirm: (nh, nm) => setNewApt({ ...newApt, time: `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}` })
+                      });
+                    }}
+                    className="w-full bg-[#F5F5F5] border-none rounded-2xl pl-12 pr-4 py-4 font-bold text-left hover:bg-gray-100 transition-all disabled:opacity-50"
                   >
-                    <option value="">--:--</option>
-                    {availableTimesForForm.map(time => <option key={time} value={time}>{time}</option>)}
-                  </select>
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                    <span>{newApt.time || '--:--'}</span>
+                  </button>
                 </div>
               </div>
 
@@ -909,15 +966,23 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 block mb-1">Novo Horário</label>
-                  <div className="relative group">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const [h, m] = rescheduleData.time.split(':').map(Number);
+                      setTimePickerConfig({
+                        isOpen: true,
+                        label: "Novo Horário",
+                        initialH: h || 12,
+                        initialM: m || 0,
+                        onConfirm: (nh, nm) => setRescheduleData({ ...rescheduleData, time: `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}` })
+                      });
+                    }}
+                    className="w-full bg-[#F5F5F5] border-none rounded-2xl pl-12 pr-4 py-4 outline-none font-bold text-left relative hover:bg-gray-100 transition-all"
+                  >
                     <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                    <input
-                      type="time"
-                      value={rescheduleData.time}
-                      onChange={e => setRescheduleData({ ...rescheduleData, time: e.target.value })}
-                      className="w-full bg-[#F5F5F5] border-none rounded-2xl pl-12 pr-4 py-4 outline-none font-bold"
-                    />
-                  </div>
+                    <span>{rescheduleData.time || '--:--'}</span>
+                  </button>
                 </div>
               </div>
 
@@ -964,6 +1029,15 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
           </div>
         </div>, document.body
       )}
+      {/* Time Picker Global Instance */}
+      <TimePicker
+        isOpen={timePickerConfig.isOpen}
+        onClose={() => setTimePickerConfig({ ...timePickerConfig, isOpen: false })}
+        label={timePickerConfig.label}
+        initialHours={timePickerConfig.initialH}
+        initialMinutes={timePickerConfig.initialM}
+        onConfirm={timePickerConfig.onConfirm}
+      />
     </div>
   );
 };

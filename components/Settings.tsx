@@ -63,6 +63,7 @@ import {
   // Added X icon import
   X
 } from 'lucide-react';
+import { CurrencyInput } from './ui';
 
 interface SettingsProps {
   t: any;
@@ -705,7 +706,29 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
               <div className="bg-gray-900 p-8 rounded-[2.5rem] text-white relative overflow-hidden shadow-2xl flex flex-col justify-between min-h-[300px] group"><div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div><div className="relative z-10"><div className="flex justify-between items-start mb-8"><QrCode size={40} className="text-[#40E0D0]" /><span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">BellaPay</span></div><label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Chave Pix Principal</label><input type="text" className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 font-mono text-lg text-white outline-none focus:border-[#40E0D0] transition-all" value={localSettings.pixKey} onChange={e => setLocalSettings({ ...localSettings, pixKey: e.target.value })} placeholder="CPF, Email ou Aleatória" /><p className="text-[10px] text-gray-500 mt-2 font-medium">Usada para gerar QR Codes.</p></div><div className="relative z-10 flex justify-between items-end mt-8"><div><span className="block text-[10px] text-gray-400 uppercase">Titular</span><span className="font-bold text-sm tracking-wide">{localSettings.name || 'Studio'}</span></div><div className="flex gap-2"><div className="w-8 h-8 rounded-full bg-white/20"></div><div className="w-8 h-8 rounded-full bg-[#FF69B4]/80"></div></div></div></div>
               <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-6"><div className="flex items-center gap-3"><div className="p-2 bg-pink-50 rounded-xl text-[#FF69B4]"><Percent size={20} /></div><h4 className="font-bold text-lg text-gray-900">Split de Comissão</h4></div><div className="space-y-4"><div><div className="flex justify-between mb-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Padrão</label><span className="font-black text-[#FF69B4]">{localSettings.commissionDefault} %</span></div><input type="range" min="0" max="100" step="5" className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#FF69B4]" value={localSettings.commissionDefault} onChange={e => setLocalSettings({ ...localSettings, commissionDefault: Number(e.target.value) })} /></div><div className="bg-gray-50 p-5 rounded-2xl border border-gray-100"><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 text-center">Simulação (Serviço R$ 100)</p><div className="flex gap-2"><div className="flex-1 bg-white p-3 rounded-xl border border-gray-100 text-center shadow-sm"><span className="block text-xs font-bold text-gray-500">Salão</span><span className="block text-lg font-black text-gray-800">R$ {100 - localSettings.commissionDefault}</span></div><div className="flex items-center text-gray-300 font-bold text-xs">VS</div><div className="flex-1 bg-pink-50 p-3 rounded-xl border border-pink-100 text-center shadow-sm"><span className="block text-xs font-bold text-pink-400">Pro</span><span className="block text-lg font-black text-[#FF69B4]">R$ {localSettings.commissionDefault}</span></div></div></div></div></div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="md:col-span-2 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex items-center justify-between gap-8"><div className="space-y-4 flex-1"><div className="flex items-center gap-2"><Target size={18} className="text-purple-500" /><label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Meta Mensal</label></div><div className="relative group"><span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">R$</span><input type="number" className="w-full bg-gray-50 border-none rounded-2xl pl-10 pr-4 py-4 font-black text-2xl text-gray-900 outline-none focus:ring-2 focus:ring-purple-200 transition-all" value={localSettings.monthlyGoal} onChange={e => setLocalSettings({ ...localSettings, monthlyGoal: Number(e.target.value) })} /></div></div><div className="w-24 h-24 rounded-full border-8 border-gray-50 flex items-center justify-center relative"><div className="text-center"><span className="block text-[10px] font-bold text-gray-400">Progresso</span><span className="block text-sm font-black text-purple-500">65%</span></div><svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#C084FC" strokeWidth="8" strokeDasharray="289" strokeDashoffset="100" strokeLinecap="round" className="opacity-100" /></svg></div></div><div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-4"><label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><FileText size={14} /> Impostos / Taxas</label><div className="relative group"><input type="number" className="w-full bg-gray-50 border-none rounded-2xl pl-4 pr-12 py-4 font-black text-xl text-gray-900 outline-none focus:ring-2 focus:ring-emerald-200 transition-all" value={localSettings.taxRate || 0} onChange={e => setLocalSettings({ ...localSettings, taxRate: Number(e.target.value) })} /><span className="absolute right-6 top-1/2 -translate-y-1/2 font-bold text-gray-400">%</span></div></div></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="md:col-span-2 bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex items-center justify-between gap-8">
+                <div className="space-y-4 flex-1">
+                  <CurrencyInput
+                    label="Meta Mensal de Faturamento"
+                    value={localSettings.monthlyGoal}
+                    onChange={val => setLocalSettings({ ...localSettings, monthlyGoal: val })}
+                    placeholder="R$ 0,00"
+                  />
+                </div>
+                <div className="w-24 h-24 rounded-full border-8 border-gray-50 flex items-center justify-center relative">
+                  <div className="text-center"><span className="block text-[10px] font-bold text-gray-400">Progresso</span><span className="block text-sm font-black text-purple-500">65%</span></div>
+                  <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#C084FC" strokeWidth="8" strokeDasharray="289" strokeDashoffset="100" strokeLinecap="round" className="opacity-100" /></svg>
+                </div>
+              </div>
+              <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-4">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><FileText size={14} /> Impostos / Taxas</label>
+                <div className="relative group">
+                  <input type="number" className="w-full bg-gray-50 border-none rounded-2xl pl-4 pr-12 py-4 font-black text-xl text-gray-900 outline-none focus:ring-2 focus:ring-emerald-200 transition-all" value={localSettings.taxRate || 0} onChange={e => setLocalSettings({ ...localSettings, taxRate: Number(e.target.value) })} />
+                  <span className="absolute right-6 top-1/2 -translate-y-1/2 font-bold text-gray-400">%</span>
+                </div>
+              </div>
+            </div>
           </div>
         );
       case 'ai':

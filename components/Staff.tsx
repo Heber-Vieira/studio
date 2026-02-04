@@ -10,6 +10,7 @@ import {
   AlertTriangle, Sun, Moon, Coffee, Utensils, Copy,
   CheckCircle2
 } from 'lucide-react';
+import { TimePicker } from './ui';
 
 interface StaffProps {
   staff: Professional[];
@@ -84,6 +85,20 @@ const StaffView: React.FC<StaffProps> = ({
   // State for Schedule Editor
   const [activeDay, setActiveDay] = useState(1); // Default to Monday
   const [editingSchedule, setEditingSchedule] = useState<WorkSchedule>({});
+
+  const [timePickerConfig, setTimePickerConfig] = useState<{
+    isOpen: boolean;
+    label: string;
+    onConfirm: (h: number, m: number) => void;
+    initialH: number;
+    initialM: number;
+  }>({
+    isOpen: false,
+    label: '',
+    onConfirm: () => { },
+    initialH: 0,
+    initialM: 0
+  });
 
   const fileInputAddRef = useRef<HTMLInputElement>(null);
   const fileInputEditRef = useRef<HTMLInputElement>(null);
@@ -435,23 +450,43 @@ const StaffView: React.FC<StaffProps> = ({
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
                       <Sun size={12} className="text-orange-400" /> Início Expediente
                     </label>
-                    <input
-                      type="time"
-                      className="text-2xl font-black text-gray-800 outline-none bg-transparent"
-                      value={editingSchedule[activeDay]?.workStart || '09:00'}
-                      onChange={(e) => updateScheduleDay('workStart', e.target.value)}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const [h, m] = (editingSchedule[activeDay]?.workStart || '09:00').split(':').map(Number);
+                        setTimePickerConfig({
+                          isOpen: true,
+                          label: "Início Expediente",
+                          initialH: h,
+                          initialM: m,
+                          onConfirm: (nh, nm) => updateScheduleDay('workStart', `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}`)
+                        });
+                      }}
+                      className="text-2xl font-black text-gray-800 text-left hover:text-[#FF69B4] transition-colors"
+                    >
+                      {editingSchedule[activeDay]?.workStart || '09:00'}
+                    </button>
                   </div>
                   <div className="bg-white p-4 rounded-2xl border border-gray-100 flex flex-col gap-2">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
                       <Moon size={12} className="text-indigo-400" /> Fim Expediente
                     </label>
-                    <input
-                      type="time"
-                      className="text-2xl font-black text-gray-800 outline-none bg-transparent"
-                      value={editingSchedule[activeDay]?.workEnd || '19:00'}
-                      onChange={(e) => updateScheduleDay('workEnd', e.target.value)}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const [h, m] = (editingSchedule[activeDay]?.workEnd || '19:00').split(':').map(Number);
+                        setTimePickerConfig({
+                          isOpen: true,
+                          label: "Fim Expediente",
+                          initialH: h,
+                          initialM: m,
+                          onConfirm: (nh, nm) => updateScheduleDay('workEnd', `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}`)
+                        });
+                      }}
+                      className="text-2xl font-black text-gray-800 text-left hover:text-[#FF69B4] transition-colors"
+                    >
+                      {editingSchedule[activeDay]?.workEnd || '19:00'}
+                    </button>
                   </div>
                 </div>
 
@@ -466,22 +501,42 @@ const StaffView: React.FC<StaffProps> = ({
                   <div className="flex items-center gap-4">
                     <div className="flex-1">
                       <label className="text-[9px] font-bold text-gray-400 uppercase block mb-1">Saída</label>
-                      <input
-                        type="time"
-                        className="w-full bg-gray-50 rounded-xl px-3 py-2 font-bold text-gray-700 outline-none"
-                        value={editingSchedule[activeDay]?.lunchStart || '12:00'}
-                        onChange={(e) => updateScheduleDay('lunchStart', e.target.value)}
-                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const [h, m] = (editingSchedule[activeDay]?.lunchStart || '12:00').split(':').map(Number);
+                          setTimePickerConfig({
+                            isOpen: true,
+                            label: "Saída para Almoço",
+                            initialH: h,
+                            initialM: m,
+                            onConfirm: (nh, nm) => updateScheduleDay('lunchStart', `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}`)
+                          });
+                        }}
+                        className="w-full bg-gray-50 rounded-xl px-3 py-2 font-bold text-gray-700 text-left hover:bg-gray-100 transition-all"
+                      >
+                        {editingSchedule[activeDay]?.lunchStart || '12:00'}
+                      </button>
                     </div>
                     <span className="text-gray-300 font-black">-</span>
                     <div className="flex-1">
                       <label className="text-[9px] font-bold text-gray-400 uppercase block mb-1">Retorno</label>
-                      <input
-                        type="time"
-                        className="w-full bg-gray-50 rounded-xl px-3 py-2 font-bold text-gray-700 outline-none"
-                        value={editingSchedule[activeDay]?.lunchEnd || '13:00'}
-                        onChange={(e) => updateScheduleDay('lunchEnd', e.target.value)}
-                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const [h, m] = (editingSchedule[activeDay]?.lunchEnd || '13:00').split(':').map(Number);
+                          setTimePickerConfig({
+                            isOpen: true,
+                            label: "Retorno do Almoço",
+                            initialH: h,
+                            initialM: m,
+                            onConfirm: (nh, nm) => updateScheduleDay('lunchEnd', `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}`)
+                          });
+                        }}
+                        className="w-full bg-gray-50 rounded-xl px-3 py-2 font-bold text-gray-700 text-left hover:bg-gray-100 transition-all"
+                      >
+                        {editingSchedule[activeDay]?.lunchEnd || '13:00'}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -497,22 +552,44 @@ const StaffView: React.FC<StaffProps> = ({
                   <div className="flex items-center gap-4">
                     <div className="flex-1">
                       <label className="text-[9px] font-bold text-gray-400 uppercase block mb-1">Início (Opcional)</label>
-                      <input
-                        type="time"
-                        className="w-full bg-gray-50 rounded-xl px-3 py-2 font-bold text-gray-700 outline-none"
-                        value={editingSchedule[activeDay]?.breakStart || ''}
-                        onChange={(e) => updateScheduleDay('breakStart', e.target.value)}
-                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const val = editingSchedule[activeDay]?.breakStart || '00:00';
+                          const [h, m] = val.split(':').map(Number);
+                          setTimePickerConfig({
+                            isOpen: true,
+                            label: "Início do Café",
+                            initialH: h,
+                            initialM: m,
+                            onConfirm: (nh, nm) => updateScheduleDay('breakStart', `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}`)
+                          });
+                        }}
+                        className="w-full bg-gray-50 rounded-xl px-3 py-2 font-bold text-gray-700 text-left hover:bg-gray-100 transition-all font-mono"
+                      >
+                        {editingSchedule[activeDay]?.breakStart || '--:--'}
+                      </button>
                     </div>
                     <span className="text-gray-300 font-black">-</span>
                     <div className="flex-1">
                       <label className="text-[9px] font-bold text-gray-400 uppercase block mb-1">Fim (Opcional)</label>
-                      <input
-                        type="time"
-                        className="w-full bg-gray-50 rounded-xl px-3 py-2 font-bold text-gray-700 outline-none"
-                        value={editingSchedule[activeDay]?.breakEnd || ''}
-                        onChange={(e) => updateScheduleDay('breakEnd', e.target.value)}
-                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const val = editingSchedule[activeDay]?.breakEnd || '00:00';
+                          const [h, m] = val.split(':').map(Number);
+                          setTimePickerConfig({
+                            isOpen: true,
+                            label: "Fim do Café",
+                            initialH: h,
+                            initialM: m,
+                            onConfirm: (nh, nm) => updateScheduleDay('breakEnd', `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}`)
+                          });
+                        }}
+                        className="w-full bg-gray-50 rounded-xl px-3 py-2 font-bold text-gray-700 text-left hover:bg-gray-100 transition-all font-mono"
+                      >
+                        {editingSchedule[activeDay]?.breakEnd || '--:--'}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -711,21 +788,41 @@ const StaffView: React.FC<StaffProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Início</label>
-                  <input
-                    type="time"
-                    className="w-full bg-gray-100 border-none rounded-2xl px-5 py-4 outline-none font-bold"
-                    value={blockData.start}
-                    onChange={e => setBlockData({ ...blockData, start: e.target.value })}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const [h, m] = blockData.start.split(':').map(Number);
+                      setTimePickerConfig({
+                        isOpen: true,
+                        label: "Início do Bloqueio",
+                        initialH: h,
+                        initialM: m,
+                        onConfirm: (nh, nm) => setBlockData({ ...blockData, start: `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}` })
+                      });
+                    }}
+                    className="w-full bg-gray-100 rounded-2xl px-5 py-4 font-bold text-gray-700 text-left hover:bg-gray-200 transition-all"
+                  >
+                    {blockData.start}
+                  </button>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Fim</label>
-                  <input
-                    type="time"
-                    className="w-full bg-gray-100 border-none rounded-2xl px-5 py-4 outline-none font-bold"
-                    value={blockData.end}
-                    onChange={e => setBlockData({ ...blockData, end: e.target.value })}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const [h, m] = blockData.end.split(':').map(Number);
+                      setTimePickerConfig({
+                        isOpen: true,
+                        label: "Fim do Bloqueio",
+                        initialH: h,
+                        initialM: m,
+                        onConfirm: (nh, nm) => setBlockData({ ...blockData, end: `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}` })
+                      });
+                    }}
+                    className="w-full bg-gray-100 rounded-2xl px-5 py-4 font-bold text-gray-700 text-left hover:bg-gray-200 transition-all"
+                  >
+                    {blockData.end}
+                  </button>
                 </div>
               </div>
               <div>
@@ -897,6 +994,15 @@ const StaffView: React.FC<StaffProps> = ({
           </div>
         </div>
       )}
+      {/* Time Picker Global Instance */}
+      <TimePicker
+        isOpen={timePickerConfig.isOpen}
+        onClose={() => setTimePickerConfig({ ...timePickerConfig, isOpen: false })}
+        label={timePickerConfig.label}
+        initialHours={timePickerConfig.initialH}
+        initialMinutes={timePickerConfig.initialM}
+        onConfirm={timePickerConfig.onConfirm}
+      />
     </div>
   );
 };

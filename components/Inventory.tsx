@@ -8,6 +8,7 @@ import {
    Tag, Scissors, Sparkles, Wand2, Droplet,
    Brush, SprayCan, Palette, Gem, Crown, Gift, Zap, Box, Heart, Smile
 } from 'lucide-react';
+import { Modal, Button, CurrencyInput } from './ui';
 
 interface InventoryViewProps {
    inventory: InventoryItem[];
@@ -623,15 +624,19 @@ const InventoryView: React.FC<InventoryViewProps> = ({
                      </div>
 
                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                           <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Preço Custo (R$)</label>
-                           <input type="number" step="0.01" className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none font-bold" value={formData.costPrice} onChange={e => setFormData({ ...formData, costPrice: Number(e.target.value) })} />
-                        </div>
+                        <CurrencyInput
+                           label="Preço Custo"
+                           value={formData.costPrice || 0}
+                           onChange={val => setFormData({ ...formData, costPrice: val })}
+                           placeholder="R$ 0,00"
+                        />
                         {formData.type === 'resale' && (
-                           <div>
-                              <label className="text-xs font-bold text-gray-400 uppercase block mb-2 text-emerald-600">Preço Venda (R$)</label>
-                              <input type="number" step="0.01" className="w-full bg-emerald-50 border-none rounded-xl px-4 py-3 outline-none font-bold text-emerald-700" value={formData.salePrice} onChange={e => setFormData({ ...formData, salePrice: Number(e.target.value) })} />
-                           </div>
+                           <CurrencyInput
+                              label="Preço Venda"
+                              value={formData.salePrice || 0}
+                              onChange={val => setFormData({ ...formData, salePrice: val })}
+                              placeholder="R$ 0,00"
+                           />
                         )}
                      </div>
 
