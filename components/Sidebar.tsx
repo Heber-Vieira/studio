@@ -15,7 +15,8 @@ import {
   ChevronRight,
   ExternalLink,
   Package,
-  ArrowUpRight
+  ArrowUpRight,
+  HelpCircle
 } from 'lucide-react';
 import { COLORS } from '../constants';
 
@@ -28,9 +29,10 @@ interface SidebarProps {
   logo?: string;
   userRole: UserRole;
   settings?: SalonSettings;
+  onShowHelp: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ t, activeView, onViewChange, isOpen, toggleOpen, logo, userRole, settings }) => {
+const Sidebar: React.FC<SidebarProps> = ({ t, activeView, onViewChange, isOpen, toggleOpen, logo, userRole, settings, onShowHelp }) => {
 
   // Icon configuration with consistent styling
   const iconSize = 20;
@@ -232,6 +234,21 @@ const Sidebar: React.FC<SidebarProps> = ({ t, activeView, onViewChange, isOpen, 
 
         {(userRole === 'master_admin' || userRole === 'company_admin') && (
           <div className="px-4 py-6 border-t border-gray-200/50 space-y-4 safe-pb">
+            <button
+              onClick={onShowHelp}
+              className={`
+                w-full flex items-center ${isOpen ? 'gap-4 px-4' : 'justify-center'} py-3.5 rounded-[1.2rem] transition-all duration-300 touch-manipulation
+                bg-indigo-50/50 text-indigo-600 hover:bg-indigo-100/50 mb-2 group
+               `}
+            >
+              <HelpCircle
+                size={iconSize}
+                strokeWidth={strokeWidth}
+                className="flex-shrink-0 transition-transform group-hover:rotate-[15deg] group-active:scale-90"
+              />
+              {isOpen && <span className="font-bold text-sm whitespace-nowrap fade-in">Central de Ajuda</span>}
+            </button>
+
             <button
               onClick={() => { onViewChange(View.SETTINGS); if (window.innerWidth < 768) toggleOpen(); }}
               className={`

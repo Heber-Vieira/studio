@@ -19,6 +19,8 @@ import { useAuth } from '../contexts/AuthContext';
 interface HelpSystemProps {
   currentView: View;
   onShowToast: (msg: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 interface Step {
@@ -44,9 +46,9 @@ interface DocCategory {
   articles: DocArticle[];
 }
 
-const HelpSystem: React.FC<HelpSystemProps> = ({ currentView, onShowToast }) => {
+const HelpSystem: React.FC<HelpSystemProps> = ({ currentView, onShowToast, isOpen, onClose }) => {
   const { user } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  // Lifted isOpen to parent (controlled component)
   const [searchQuery, setSearchQuery] = useState('');
   const [activeScreen, setActiveScreen] = useState<'hub' | 'article' | 'docs' | 'doc-category' | 'doc-article' | 'support'>('hub');
   const [selectedArticle, setSelectedArticle] = useState<DocArticle | null>(null);
@@ -180,7 +182,7 @@ const HelpSystem: React.FC<HelpSystemProps> = ({ currentView, onShowToast }) => 
   };
 
   const closeHub = () => {
-    setIsOpen(false);
+    onClose();
     setTimeout(() => {
       setActiveScreen('hub');
       setSearchQuery('');
@@ -191,27 +193,9 @@ const HelpSystem: React.FC<HelpSystemProps> = ({ currentView, onShowToast }) => 
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed z-[60] transition-all group flex items-center justify-center 
-          /* Mobile style: Elegant Floating Circle */
-          bottom-6 left-6 w-14 h-14 rounded-full bg-white shadow-[0_15px_35px_rgba(0,0,0,0.15)] border border-gray-100
-          /* Desktop style: Minimalist side tab */
-          md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-0 md:left-auto md:w-auto md:h-auto md:flex-col md:pl-5 md:pr-2 md:py-8 md:rounded-l-[2.5rem] md:rounded-r-none md:border-r-0 md:hover:pl-7
-          text-[#FF69B4] hover:scale-110 active:scale-95"
-      >
-        <div className="relative">
-          <HelpCircle size={26} className="group-hover:rotate-[15deg] transition-transform duration-500" />
-          <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#40E0D0] rounded-full border-2 border-white animate-ping"></div>
-        </div>
-        <span className="hidden md:block [writing-mode:vertical-lr] font-black text-[11px] uppercase tracking-[0.3em] mb-1">
-          CENTRAL AJUDA
-        </span>
-      </button>
-
       {isOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-500 backdrop-blur-xl bg-gray-900/40">
-          <div className="absolute inset-0" onClick={closeHub}></div>
+          <div className="absolute inset-0" onClick={onClose}></div>
 
           <div className="bg-white/95 w-full md:max-w-5xl h-[95vh] md:h-auto md:max-h-[90vh] rounded-[2.5rem] md:rounded-[4rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col border border-white relative animate-in zoom-in-95 duration-500">
 
@@ -236,7 +220,7 @@ const HelpSystem: React.FC<HelpSystemProps> = ({ currentView, onShowToast }) => 
                   </h2>
                 </div>
               </div>
-              <button onClick={closeHub} className="p-4 bg-gray-50 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-[1.5rem] transition-all active:rotate-90">
+              <button onClick={onClose} className="p-4 bg-gray-50 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-[1.5rem] transition-all active:rotate-90">
                 <X size={24} />
               </button>
             </div>
