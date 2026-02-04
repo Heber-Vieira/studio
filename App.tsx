@@ -222,7 +222,9 @@ const MainLayout: React.FC = () => {
   };
 
   const fetchData = useCallback(async (isInitial = false) => {
-    if (!user) return;
+    // ALLOW FETCHING IF LOGGED IN OR IF IN BOOKING MODE
+    if (!user && !initialParams.isBooking) return;
+
     if (isInitial) setIsDataLoading(true);
 
     const safetyTimeout = setTimeout(() => {
