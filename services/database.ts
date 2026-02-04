@@ -439,7 +439,10 @@ export const db = {
             .select('*')
             .or(`company_id.eq.${DEFAULT_COMPANY_ID},company_id.is.null`);
 
-        if (error) throw error;
+        if (error) {
+            console.error("Supabase error (getInventoryCategories):", error);
+            throw error;
+        }
         return (data || []).map(c => ({
             id: c.id,
             label: c.label,
@@ -453,7 +456,10 @@ export const db = {
             .insert([{ company_id: DEFAULT_COMPANY_ID, label: cat.label, icon_name: cat.iconName }])
             .select()
             .single();
-        if (error) throw error;
+        if (error) {
+            console.error("Supabase error (addInventoryCategory):", error);
+            throw error;
+        }
         return {
             id: data.id,
             label: data.label,
@@ -462,8 +468,15 @@ export const db = {
     },
 
     async deleteInventoryCategory(id: string) {
-        const { error } = await supabase.from('inventory_categories').delete().eq('id', id);
-        if (error) throw error;
+        const { error } = await supabase
+            .from('inventory_categories')
+            .delete()
+            .eq('id', id)
+            .eq('company_id', DEFAULT_COMPANY_ID);
+        if (error) {
+            console.error("Supabase error (deleteInventoryCategory):", error);
+            throw error;
+        }
     },
 
     // --- SUPPLIERS ---
@@ -534,7 +547,8 @@ export const db = {
     async getServices() {
         const { data, error } = await supabase
             .from('services')
-            .select('*');
+            .select('*')
+            .eq('company_id', DEFAULT_COMPANY_ID);
 
         if (error) throw error;
         return (data || []).map(s => ({
@@ -560,9 +574,13 @@ export const db = {
                 description: svc.description,
                 color: svc.color
             }])
-            .select()
+            .select('*')
             .single();
-        if (error) throw error;
+
+        if (error) {
+            console.error("Supabase error (addService):", error);
+            throw error;
+        }
         return {
             id: data.id,
             name: data.name,
@@ -575,6 +593,7 @@ export const db = {
     },
 
     async updateService(svc: Service) {
+        console.log("Updating service in DB:", svc);
         const { error } = await supabase
             .from('services')
             .update({
@@ -585,8 +604,13 @@ export const db = {
                 description: svc.description,
                 color: svc.color
             })
-            .eq('id', svc.id);
-        if (error) throw error;
+            .eq('id', svc.id)
+            .eq('company_id', DEFAULT_COMPANY_ID);
+
+        if (error) {
+            console.error("Supabase error (updateService):", error);
+            throw error;
+        }
     },
 
     async deleteService(id: string) {
@@ -598,7 +622,8 @@ export const db = {
     async getServiceCategories() {
         const { data, error } = await supabase
             .from('service_categories')
-            .select('*');
+            .select('*')
+            .eq('company_id', DEFAULT_COMPANY_ID);
 
         if (error) throw error;
         return (data || []).map(c => ({

@@ -61,8 +61,8 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
                     value={displayValue}
                     onChange={handleChange}
                     className={`
-                        w-full bg-[#F5F5F5] border-none rounded-2xl py-4 ${icon ? 'pl-12' : 'px-6'} pr-6 outline-none 
-                        focus:ring-2 focus:ring-[#FF69B4]/20 font-black text-gray-800 transition-all
+                        w-full bg-[#F5F5F5] border-none rounded-2xl py-4 ${icon ? 'pl-12' : 'px-5'} pr-4 outline-none 
+                        focus:ring-2 focus:ring-[#FF69B4]/20 font-bold text-gray-800 transition-all text-sm
                         ${className}
                     `}
                     {...props}

@@ -8,15 +8,15 @@ import {
   Brush, SprayCan, Palette, Gem, Crown, Gift, Zap, Heart, Smile,
   CheckCircle2
 } from 'lucide-react';
-import { TimePicker, CurrencyInput } from './ui';
+import { TimePicker, CurrencyInput, Modal, Button } from './ui';
 
 interface ServicesProps {
   services: Service[];
   categories: Category[];
-  onAdd: (service: Omit<Service, 'id'>) => void;
-  onUpdate: (service: Service) => void;
+  onAdd: (service: Omit<Service, 'id'>) => Promise<void> | void;
+  onUpdate: (service: Service) => Promise<void> | void;
   onDelete: (id: string) => void;
-  onAddCategory: (cat: Omit<Category, 'id'>) => void;
+  onAddCategory: (cat: Omit<Category, 'id'>) => Promise<void> | void;
   onDeleteCategory: (id: string) => void;
 }
 
@@ -75,11 +75,6 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
   const [timePickerTarget, setTimePickerTarget] = useState<'new' | 'edit'>('new');
 
-  React.useEffect(() => {
-    if (categories && categories.length > 0 && !newSvc.category) {
-      setNewSvc(prev => ({ ...prev, category: categories[0].id }));
-    }
-  }, [categories, newSvc.category]);
   const [newCat, setNewCat] = useState({ label: '', iconName: 'Tag' });
 
   const filteredServices = services.filter(s =>
@@ -90,28 +85,36 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
     )
   );
 
-  const handleAdd = () => {
-    if (!newSvc.name || !newSvc.price) return;
-    onAdd({
-      name: newSvc.name,
-      category: newSvc.category,
-      price: newSvc.price,
-      duration: newSvc.duration,
-      description: newSvc.description,
-      color: newSvc.color
-    });
-    setIsModalOpen(false);
-    setNewSvc({ name: '', category: categories[0]?.id || '', price: 0, duration: '1h', description: '', color: BELLA_PALETTE[0] });
+  const handleAdd = async () => {
+    if (!newSvc.name) return;
+    try {
+      await onAdd({
+        name: newSvc.name,
+        category: newSvc.category,
+        price: newSvc.price,
+        duration: newSvc.duration,
+        description: newSvc.description,
+        color: newSvc.color
+      });
+      setIsModalOpen(false);
+      setNewSvc({ name: '', category: categories[0]?.id || '', price: 0, duration: '1h', description: '', color: BELLA_PALETTE[0] });
+    } catch (error) {
+      console.error("Error adding service:", error);
+    }
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!newCat.label) return;
-    onAddCategory({
-      label: newCat.label,
-      iconName: newCat.iconName
-    });
-    setIsCatModalOpen(false);
-    setNewCat({ label: '', iconName: 'Tag' });
+    try {
+      await onAddCategory({
+        label: newCat.label,
+        iconName: newCat.iconName
+      });
+      setIsCatModalOpen(false);
+      setNewCat({ label: '', iconName: 'Tag' });
+    } catch (error) {
+      console.error("Error adding category:", error);
+    }
   };
 
   const handleEdit = (svc: Service) => {
@@ -119,11 +122,15 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
     setIsEditModalOpen(true);
   };
 
-  const handleUpdate = () => {
-    if (!selectedService || !selectedService.name || !selectedService.price) return;
-    onUpdate(selectedService);
-    setIsEditModalOpen(false);
-    setSelectedService(null);
+  const handleUpdate = async () => {
+    if (!selectedService || !selectedService.name) return;
+    try {
+      await onUpdate(selectedService);
+      setIsEditModalOpen(false);
+      setSelectedService(null);
+    } catch (error) {
+      console.error("Error updating service:", error);
+    }
   };
 
   const handleDeleteClick = (svc: Service) => {
@@ -174,7 +181,13 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
             <FolderPlus size={20} /> Categorias
           </button>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setNewSvc({
+                ...newSvc,
+                category: selectedCategory === 'all' ? (categories[0]?.id || '') : selectedCategory
+              });
+              setIsModalOpen(true);
+            }}
             className="flex-[2] md:flex-none flex items-center justify-center gap-2 bg-[#FF69B4] text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-pink-100 hover:scale-[1.05] transition-all"
           >
             <Plus size={20} /> Adicionar Serviço
@@ -289,282 +302,277 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
       </div>
 
       {/* Modal: Confirmar Exclusão de Serviço */}
-      {isDeleteModalOpen && serviceToDelete && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center">
-            <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm mb-2">
-              <Trash2 size={32} />
-            </div>
+      <Modal
+        isOpen={isDeleteModalOpen && !!serviceToDelete}
+        onClose={() => { setIsDeleteModalOpen(false); setServiceToDelete(null); }}
+        title="Remover Serviço?"
+      >
+        <div className="text-center space-y-6">
+          <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm">
+            <Trash2 size={32} />
+          </div>
 
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-gray-900">Remover Serviço?</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Você tem certeza que deseja remover <span className="font-bold text-gray-800">{serviceToDelete.name}</span>? Essa ação não pode ser desfeita.
-              </p>
-            </div>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Você tem certeza que deseja remover <span className="font-bold text-gray-800">{serviceToDelete?.name}</span>? Essa ação não pode ser desfeita.
+            </p>
+          </div>
 
-            <div className="flex flex-col gap-3 pt-2">
-              <button
-                onClick={confirmDeleteService}
-                className="w-full py-4 bg-rose-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-rose-200 hover:bg-rose-600 active:scale-95 transition-all"
-              >
-                Sim, Remover
-              </button>
-              <button
-                onClick={() => { setIsDeleteModalOpen(false); setServiceToDelete(null); }}
-                className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-100 transition-all"
-              >
-                Cancelar
-              </button>
-            </div>
+          <div className="flex flex-col gap-3 pt-2">
+            <Button
+              variant="danger"
+              fullWidth
+              onClick={confirmDeleteService}
+            >
+              Sim, Remover
+            </Button>
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => { setIsDeleteModalOpen(false); setServiceToDelete(null); }}
+            >
+              Cancelar
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Modal: Adicionar/Editar Serviço */}
-      {(isModalOpen || (isEditModalOpen && selectedService)) && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-xl rounded-[3rem] p-8 shadow-2xl space-y-8 fade-in relative overflow-hidden">
-            <div className={`absolute top-0 right-0 w-32 h-32 ${isEditModalOpen ? 'bg-[#40E0D0]/5' : 'bg-[#FF69B4]/5'} rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl`}></div>
-
-            <div className="flex justify-between items-center relative z-10">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${isEditModalOpen ? 'bg-[#40E0D0]' : 'bg-[#FF69B4]'}`}>
-                  {isEditModalOpen ? <Edit3 size={20} /> : <BookOpen size={20} />}
-                </div>
-                <h3 className="text-2xl font-bold">{isEditModalOpen ? 'Editar Serviço ⚙️' : 'Novo Serviço 💎'}</h3>
-              </div>
-              <button onClick={() => { setIsModalOpen(false); setIsEditModalOpen(false); setSelectedService(null); }} className="hover:rotate-90 transition-transform"><X /></button>
+      <Modal
+        isOpen={isModalOpen || (isEditModalOpen && !!selectedService)}
+        onClose={() => { setIsModalOpen(false); setIsEditModalOpen(false); setSelectedService(null); }}
+        title={isEditModalOpen ? 'Editar Serviço ⚙️' : 'Novo Serviço 💎'}
+        icon={isEditModalOpen ? <Edit3 size={24} /> : <BookOpen size={24} />}
+        iconBgColor={isEditModalOpen ? 'bg-[#40E0D0]' : 'bg-[#FF69B4]'}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Nome do Serviço</label>
+              <input
+                type="text"
+                placeholder="Ex: Botox Capilar"
+                className={`w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none focus:ring-2 ${isEditModalOpen ? 'focus:ring-[#40E0D0]' : 'focus:ring-[#FF69B4]'}`}
+                value={isEditModalOpen ? selectedService?.name : newSvc.name}
+                onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, name: e.target.value }) : setNewSvc({ ...newSvc, name: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Categoria</label>
+              <select
+                className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none"
+                value={isEditModalOpen ? selectedService?.category : newSvc.category}
+                onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, category: e.target.value }) : setNewSvc({ ...newSvc, category: e.target.value })}
+              >
+                <option value="">Sem Categoria</option>
+                {(categories || []).map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.label}</option>
+                ))}
+              </select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Nome do Serviço</label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Botox Capilar"
-                    className={`w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none focus:ring-2 ${isEditModalOpen ? 'focus:ring-[#40E0D0]' : 'focus:ring-[#FF69B4]'}`}
-                    value={isEditModalOpen ? selectedService?.name : newSvc.name}
-                    onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, name: e.target.value }) : setNewSvc({ ...newSvc, name: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Categoria</label>
-                  <select
-                    className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none"
-                    value={isEditModalOpen ? selectedService?.category : newSvc.category}
-                    onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, category: e.target.value }) : setNewSvc({ ...newSvc, category: e.target.value })}
-                  >
-                    <option value="">Sem Categoria</option>
-                    {(categories || []).map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Seletor de Cores - Estilo Screenshot */}
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase block mb-3">Cor Identificadora</label>
-                  <div className="flex flex-wrap gap-2.5">
-                    {BELLA_PALETTE.map(color => {
-                      const isSelected = isEditModalOpen ? selectedService?.color === color : newSvc.color === color;
-                      return (
-                        <button
-                          key={color}
-                          onClick={() => isEditModalOpen ? setSelectedService({ ...selectedService!, color }) : setNewSvc({ ...newSvc, color })}
-                          className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center shadow-sm ${isSelected ? 'border-gray-900 scale-110 shadow-md ring-2 ring-yellow-400' : 'border-white'}`}
-                          style={{ backgroundColor: color }}
-                        >
-                          {isSelected && <CheckCircle2 size={16} className="text-yellow-400 drop-shadow-md" fill="white" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <CurrencyInput
-                    label="Preço"
-                    value={isEditModalOpen ? (selectedService?.price || 0) : newSvc.price}
-                    onChange={val => isEditModalOpen
-                      ? setSelectedService({ ...selectedService!, price: val })
-                      : setNewSvc({ ...newSvc, price: val })
-                    }
-                  />
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 block">Duração</label>
+            {/* Seletor de Cores */}
+            <div>
+              <label className="text-xs font-bold text-gray-400 uppercase block mb-3">Cor Identificadora</label>
+              <div className="flex flex-wrap gap-2.5">
+                {BELLA_PALETTE.map(color => {
+                  const isSelected = isEditModalOpen ? selectedService?.color === color : newSvc.color === color;
+                  return (
                     <button
-                      type="button"
-                      onClick={() => {
-                        setTimePickerTarget(isEditModalOpen ? 'edit' : 'new');
-                        setIsTimePickerOpen(true);
-                      }}
-                      className="w-full bg-[#F5F5F5] border-none rounded-2xl py-4 px-6 outline-none text-left font-bold text-gray-800 hover:ring-2 hover:ring-[#FF69B4]/20 transition-all flex items-center justify-between"
+                      key={color}
+                      onClick={() => isEditModalOpen ? setSelectedService({ ...selectedService!, color }) : setNewSvc({ ...newSvc, color })}
+                      className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center shadow-sm ${isSelected ? 'border-gray-900 scale-110 shadow-md ring-2 ring-yellow-400' : 'border-white'}`}
+                      style={{ backgroundColor: color }}
                     >
-                      <span>{isEditModalOpen ? selectedService?.duration : newSvc.duration}</span>
-                      <Clock size={16} className="text-gray-300" />
+                      {isSelected && <CheckCircle2 size={16} className="text-yellow-400 drop-shadow-md" fill="white" />}
                     </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Descrição (Marketing)</label>
-                  <textarea
-                    className="w-full h-24 bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none resize-none text-sm font-medium"
-                    placeholder="Descreva o serviço para atrair clientes..."
-                    value={isEditModalOpen ? selectedService?.description : newSvc.description}
-                    onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, description: e.target.value }) : setNewSvc({ ...newSvc, description: e.target.value })}
-                  ></textarea>
-                </div>
+                  );
+                })}
               </div>
             </div>
+          </div>
 
-            <TimePicker
-              isOpen={isTimePickerOpen}
-              onClose={() => setIsTimePickerOpen(false)}
-              onConfirm={(h, m) => {
-                const durationStr = `${h > 0 ? `${h}h ` : ''}${m > 0 ? `${m}min` : ''}`.trim() || '30min';
-                if (timePickerTarget === 'edit' && selectedService) {
-                  setSelectedService({ ...selectedService, duration: durationStr });
-                } else {
-                  setNewSvc({ ...newSvc, duration: durationStr });
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <CurrencyInput
+                label="Preço"
+                value={isEditModalOpen ? (selectedService?.price || 0) : newSvc.price}
+                onChange={val => isEditModalOpen
+                  ? setSelectedService({ ...selectedService!, price: val })
+                  : setNewSvc({ ...newSvc, price: val })
                 }
-              }}
-              initialHours={(() => {
-                const dur = timePickerTarget === 'edit' ? selectedService?.duration : newSvc.duration;
-                const hours = dur?.match(/(\d+)h/);
-                return hours ? parseInt(hours[1]) : 0;
-              })()}
-              initialMinutes={(() => {
-                const dur = timePickerTarget === 'edit' ? selectedService?.duration : newSvc.duration;
-                const mins = dur?.match(/(\d+)min/);
-                return mins ? parseInt(mins[1]) : (dur?.includes('h') ? 0 : 30);
-              })()}
-            />
-
-            <div className="flex gap-4 relative z-10 pt-4">
-              <button
-                onClick={() => { setIsModalOpen(false); setIsEditModalOpen(false); setSelectedService(null); }}
-                className="flex-1 py-4 rounded-2xl font-bold text-gray-400 hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={isEditModalOpen ? handleUpdate : handleAdd}
-                className={`flex-[2] py-4 text-white rounded-2xl font-bold shadow-xl transition-transform hover:scale-[1.02] flex items-center justify-center gap-2 ${isEditModalOpen ? 'bg-[#40E0D0] shadow-teal-100' : 'bg-[#FF69B4] shadow-pink-100'}`}
-              >
-                {isEditModalOpen ? <><Check size={20} /> Salvar Alterações</> : 'Cadastrar no Menu ✨'}
-              </button>
+              />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 block">Duração</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTimePickerTarget(isEditModalOpen ? 'edit' : 'new');
+                    setIsTimePickerOpen(true);
+                  }}
+                  className="w-full bg-[#F5F5F5] border-none rounded-2xl py-4 px-6 outline-none text-left font-bold text-gray-800 hover:ring-2 hover:ring-[#FF69B4]/20 transition-all flex items-center justify-between"
+                >
+                  <span className="text-sm">{isEditModalOpen ? selectedService?.duration : newSvc.duration}</span>
+                  <Clock size={16} className="text-gray-300" />
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Descrição (Marketing)</label>
+              <textarea
+                className="w-full h-24 bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none resize-none text-sm font-medium"
+                placeholder="Descreva o serviço para atrair clientes..."
+                value={isEditModalOpen ? selectedService?.description : newSvc.description}
+                onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, description: e.target.value }) : setNewSvc({ ...newSvc, description: e.target.value })}
+              ></textarea>
             </div>
           </div>
         </div>
-      )}
+
+        <TimePicker
+          isOpen={isTimePickerOpen}
+          onClose={() => setIsTimePickerOpen(false)}
+          onConfirm={(h, m) => {
+            const durationStr = `${h > 0 ? `${h}h ` : ''}${m > 0 ? `${m}min` : ''}`.trim() || '30min';
+            if (timePickerTarget === 'edit' && selectedService) {
+              setSelectedService({ ...selectedService, duration: durationStr });
+            } else {
+              setNewSvc({ ...newSvc, duration: durationStr });
+            }
+          }}
+          initialHours={(() => {
+            const dur = timePickerTarget === 'edit' ? selectedService?.duration : newSvc.duration;
+            const hours = dur?.match(/(\d+)h/);
+            return hours ? parseInt(hours[1]) : 0;
+          })()}
+          initialMinutes={(() => {
+            const dur = timePickerTarget === 'edit' ? selectedService?.duration : newSvc.duration;
+            const mins = dur?.match(/(\d+)min/);
+            return mins ? parseInt(mins[1]) : (dur?.includes('h') ? 0 : 30);
+          })()}
+        />
+
+        <div className="flex gap-4 pt-4">
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={() => { setIsModalOpen(false); setIsEditModalOpen(false); setSelectedService(null); }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant={isEditModalOpen ? "success" : "primary"}
+            fullWidth
+            icon={<Check size={20} />}
+            onClick={isEditModalOpen ? handleUpdate : handleAdd}
+          >
+            {isEditModalOpen ? 'Salvar Alterações' : 'Cadastrar no Menu ✨'}
+          </Button>
+        </div>
+      </Modal>
 
       {/* Modal: Gerenciar Categorias */}
-      {isCatModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl space-y-6 fade-in">
-            <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-bold text-gray-900">Nova Categoria 📁</h3>
-              <button onClick={() => setIsCatModalOpen(false)}><X /></button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Nome da Categoria</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Maquiagem"
-                  className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#FF69B4]"
-                  value={newCat.label}
-                  onChange={e => setNewCat({ ...newCat, label: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Ícone Representativo</label>
-                <div className="grid grid-cols-5 gap-2">
-                  {Object.keys(IconMap).map(iconName => {
-                    const Icon = IconMap[iconName];
-                    return (
-                      <button
-                        key={iconName}
-                        onClick={() => setNewCat({ ...newCat, iconName })}
-                        className={`p-3 rounded-xl flex items-center justify-center border-2 transition-all ${newCat.iconName === iconName ? 'border-[#FF69B4] bg-[#FF69B4]/10 text-[#FF69B4]' : 'border-gray-50 text-gray-300'}`}
-                      >
-                        <Icon size={20} />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <button
-                onClick={handleAddCategory}
-                className="w-full py-4 bg-[#FF69B4] text-white rounded-2xl font-bold shadow-lg shadow-pink-100 mt-4 active:scale-95 transition-transform"
-              >
-                Criar Categoria 🌸
-              </button>
+      <Modal
+        isOpen={isCatModalOpen}
+        onClose={() => setIsCatModalOpen(false)}
+        title="Nova Categoria 📁"
+      >
+        <div className="space-y-6">
+          <div>
+            <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Nome da Categoria</label>
+            <input
+              type="text"
+              placeholder="Ex: Maquiagem"
+              className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#FF69B4]"
+              value={newCat.label}
+              onChange={e => setNewCat({ ...newCat, label: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Ícone Representativo</label>
+            <div className="grid grid-cols-5 gap-2">
+              {Object.keys(IconMap).map(iconName => {
+                const Icon = IconMap[iconName];
+                return (
+                  <button
+                    key={iconName}
+                    onClick={() => setNewCat({ ...newCat, iconName })}
+                    className={`p-3 rounded-xl flex items-center justify-center border-2 transition-all ${newCat.iconName === iconName ? 'border-[#FF69B4] bg-[#FF69B4]/10 text-[#FF69B4]' : 'border-gray-50 text-gray-300'}`}
+                  >
+                    <Icon size={20} />
+                  </button>
+                );
+              })}
             </div>
           </div>
+          <Button
+            fullWidth
+            onClick={handleAddCategory}
+          >
+            Criar Categoria 🌸
+          </Button>
         </div>
-      )}
+      </Modal>
 
       {/* Modal: Confirmar Exclusão de Categoria */}
-      {isDeleteCatModalOpen && categoryToDelete && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center">
-            {getServiceCountByCategory(categoryToDelete.id) > 0 ? (
-              <>
-                <div className="w-20 h-20 bg-amber-50 rounded-[1.5rem] flex items-center justify-center text-amber-500 mx-auto shadow-sm mb-2">
-                  <AlertTriangle size={32} />
-                </div>
+      <Modal
+        isOpen={isDeleteCatModalOpen && !!categoryToDelete}
+        onClose={() => { setIsDeleteCatModalOpen(false); setCategoryToDelete(null); }}
+        title={getServiceCountByCategory(categoryToDelete?.id || '') > 0 ? "Não é possível excluir" : "Excluir Categoria?"}
+      >
+        <div className="text-center space-y-6">
+          {getServiceCountByCategory(categoryToDelete?.id || '') > 0 ? (
+            <>
+              <div className="w-20 h-20 bg-amber-50 rounded-[1.5rem] flex items-center justify-center text-amber-500 mx-auto shadow-sm">
+                <AlertTriangle size={32} />
+              </div>
 
-                <div className="space-y-2">
-                  <h3 className="text-xl font-black text-gray-900">Não é possível excluir</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">
-                    A categoria <span className="font-bold text-gray-800">{categoryToDelete.label}</span> possui <span className="font-bold text-[#FF69B4]">{getServiceCountByCategory(categoryToDelete.id)} serviços</span> vinculados. Remova os serviços antes de excluir a categoria.
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  A categoria <span className="font-bold text-gray-800">{categoryToDelete?.label}</span> possui <span className="font-bold text-[#FF69B4]">{getServiceCountByCategory(categoryToDelete?.id || '')} serviços</span> vinculados. Remova os serviços antes de excluir a categoria.
+                </p>
+              </div>
 
-                <button
-                  onClick={() => setIsDeleteCatModalOpen(false)}
-                  className="w-full py-4 bg-gray-100 text-gray-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-200 transition-all"
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={() => setIsDeleteCatModalOpen(false)}
+              >
+                Entendido
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm">
+                <Trash2 size={32} />
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  Você tem certeza que deseja remover a categoria <span className="font-bold text-gray-800">{categoryToDelete?.label}</span>? Essa ação não pode ser desfeita.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 pt-2">
+                <Button
+                  variant="danger"
+                  fullWidth
+                  onClick={confirmDeleteCategory}
                 >
-                  Entendido
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm mb-2">
-                  <Trash2 size={32} />
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="text-xl font-black text-gray-900">Excluir Categoria?</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">
-                    Você tem certeza que deseja remover a categoria <span className="font-bold text-gray-800">{categoryToDelete.label}</span>? Essa ação não pode ser desfeita.
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-3 pt-2">
-                  <button
-                    onClick={confirmDeleteCategory}
-                    className="w-full py-4 bg-rose-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-rose-200 hover:bg-rose-600 active:scale-95 transition-all"
-                  >
-                    Sim, Excluir
-                  </button>
-                  <button
-                    onClick={() => { setIsDeleteCatModalOpen(false); setCategoryToDelete(null); }}
-                    className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-100 transition-all"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+                  Sim, Excluir
+                </Button>
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => { setIsDeleteCatModalOpen(false); setCategoryToDelete(null); }}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </>
+          )}
         </div>
-      )}
+      </Modal>
     </div>
   );
 };

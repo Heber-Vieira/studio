@@ -57,7 +57,7 @@ import {
    BarChart,
    Bar
 } from 'recharts';
-import { Appointment, UserProfile, Transaction, Client, Service, InventoryItem, Supplier } from '../types';
+import { Appointment, UserProfile, Transaction, Client, Service, InventoryItem, Supplier, Category } from '../types';
 import { Modal, Button, StatCard, CurrencyInput } from './ui';
 
 interface FinancialProps {
@@ -75,6 +75,7 @@ interface FinancialProps {
    onDeleteSupplier: (id: string) => void;
    user: UserProfile;
    onShowToast: (msg: string) => void;
+   categories: Category[];
 }
 
 const COLORS_CHART = [COLORS.pink, COLORS.turquoise, COLORS.purple, COLORS.yellow, '#FF9F43'];
@@ -102,7 +103,8 @@ const FinancialView: React.FC<FinancialProps> = ({
    onUpdateSupplier,
    onDeleteSupplier,
    user,
-   onShowToast
+   onShowToast,
+   categories
 }) => {
    const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'transactions' | 'suppliers'>('overview');
 
@@ -218,15 +220,42 @@ const FinancialView: React.FC<FinancialProps> = ({
 
    const categoryData = useMemo(() => {
       const data: Record<string, number> = {};
-      baseTransactions.filter(t => t.type === 'income').forEach(t => {
-         let cat = 'Outros';
-         if (t.title.toLowerCase().includes('mechas') || t.title.toLowerCase().includes('corte')) cat = 'Cabelo';
-         else if (t.title.toLowerCase().includes('manicure') || t.title.toLowerCase().includes('unhas')) cat = 'Unhas';
-         else if (t.title.toLowerCase().includes('pele') || t.title.toLowerCase().includes('estética')) cat = 'Estética';
-         data[cat] = (data[cat] || 0) + t.amount;
+
+      const incomeTransactions = baseTransactions.filter(t => t.type === 'income');
+
+      incomeTransactions.forEach(t => {
+         let catLabel = 'Outros';
+
+         // 1. Try to find the service by name (exact or partial)
+         const service = services.find(s =>
+            s.name.toLowerCase() === t.title.toLowerCase() ||
+            t.title.toLowerCase().includes(s.name.toLowerCase())
+         );
+
+         if (service && service.category) {
+            const category = categories.find(c => c.id === service.category);
+            if (category) {
+               catLabel = category.label;
+            }
+         } else {
+            // 2. Fallback to basic string matching if service not found
+            if (t.title.toLowerCase().includes('mechas') || t.title.toLowerCase().includes('corte') || t.title.toLowerCase().includes('escova')) catLabel = 'Cabelo';
+            else if (t.title.toLowerCase().includes('manicure') || t.title.toLowerCase().includes('unhas') || t.title.toLowerCase().includes('pé') || t.title.toLowerCase().includes('mão')) catLabel = 'Unhas';
+            else if (t.title.toLowerCase().includes('pele') || t.title.toLowerCase().includes('estética') || t.title.toLowerCase().includes('limpeza')) catLabel = 'Estética';
+         }
+
+         data[catLabel] = (data[catLabel] || 0) + t.amount;
       });
-      return Object.keys(data).map(key => ({ name: key, value: data[key] }));
-   }, [baseTransactions]);
+
+      // Ensure we have at least some variety if categories exist
+      if (Object.keys(data).length === 0 && categories.length > 0) {
+         categories.slice(0, 3).forEach(c => { data[c.label] = 0; });
+      }
+
+      return Object.keys(data)
+         .map(key => ({ name: key, value: data[key] }))
+         .sort((a, b) => b.value - a.value);
+   }, [baseTransactions, services, categories]);
 
    const handleOpenReport = () => {
       setIsGenerating(true);
@@ -438,7 +467,33 @@ const FinancialView: React.FC<FinancialProps> = ({
                      <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
                         <h3 className="text-xl font-bold text-gray-900 mb-6">Receita por Categoria</h3>
                         <div className="h-[300px]">
-                           <ResponsiveContainer width="100%" height="100%"><BarChart data={categoryData} layout="vertical"><XAxis type="number" hide /><YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#4B5563', fontSize: 12, fontWeight: 600 }} /><Tooltip contentStyle={{ borderRadius: '16px', border: 'none' }} formatter={(value: any) => `R$ ${value.toLocaleString('pt-BR')}`} /><Bar dataKey="value" fill={COLORS.pink} radius={[0, 10, 10, 0]}>{categoryData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS_CHART[index % COLORS_CHART.length]} />)}</Bar></BarChart></ResponsiveContainer>
+                           <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={categoryData} layout="vertical" margin={{ left: 20, right: 30 }}>
+                                 <XAxis type="number" hide />
+                                 <YAxis
+                                    dataKey="name"
+                                    type="category"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    width={100}
+                                    tick={{ fill: '#4B5563', fontSize: 11, fontWeight: 700 }}
+                                 />
+                                 <Tooltip
+                                    cursor={{ fill: 'transparent' }}
+                                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                    formatter={(value: any) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Receita']}
+                                 />
+                                 <Bar
+                                    dataKey="value"
+                                    radius={[0, 12, 12, 0]}
+                                    barSize={32}
+                                 >
+                                    {categoryData.map((_, index) => (
+                                       <Cell key={`cell-${index}`} fill={COLORS_CHART[index % COLORS_CHART.length]} />
+                                    ))}
+                                 </Bar>
+                              </BarChart>
+                           </ResponsiveContainer>
                         </div>
                      </div>
                      <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">

@@ -18,8 +18,8 @@ interface InventoryViewProps {
    onDeleteItem: (id: string) => void;
    onStockMovement: (id: string, newQuantity: number) => void;
    onAddTransaction: (transaction: Omit<Transaction, 'id'>) => void;
-   onAddCategory: (cat: Omit<Category, 'id'>) => void;
-   onDeleteCategory: (id: string) => void;
+   onAddCategory: (cat: Omit<Category, 'id'>) => Promise<void>;
+   onDeleteCategory: (id: string) => Promise<void>;
    onShowToast: (msg: string) => void;
 }
 
@@ -237,9 +237,9 @@ const InventoryView: React.FC<InventoryViewProps> = ({
       setIsDeleteCatModalOpen(true);
    };
 
-   const confirmDeleteCategory = () => {
+   const confirmDeleteCategory = async () => {
       if (categoryToDelete) {
-         onDeleteCategory(categoryToDelete.id);
+         await onDeleteCategory(categoryToDelete.id);
          setIsDeleteCatModalOpen(false);
          setCategoryToDelete(null);
          onShowToast("Categoria removida.");
@@ -437,134 +437,136 @@ const InventoryView: React.FC<InventoryViewProps> = ({
             </div>
          )}
 
-         {/* Modal: Confirm Delete Category */}
-         {isDeleteCatModalOpen && categoryToDelete && (
-            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-               <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center">
-                  {getItemsCountByCategory(categoryToDelete.label) > 0 ? (
-                     <>
-                        <div className="w-20 h-20 bg-amber-50 rounded-[1.5rem] flex items-center justify-center text-amber-500 mx-auto shadow-sm mb-2">
-                           <AlertTriangle size={32} />
-                        </div>
+         {/* Modal: Confirmar Exclusão de Categoria */}
+         <Modal
+            isOpen={isDeleteCatModalOpen && !!categoryToDelete}
+            onClose={() => { setIsDeleteCatModalOpen(false); setCategoryToDelete(null); }}
+            title={getItemsCountByCategory(categoryToDelete?.label || '') > 0 ? "Categoria em Uso" : "Excluir Categoria?"}
+         >
+            <div className="text-center space-y-6">
+               {getItemsCountByCategory(categoryToDelete?.label || '') > 0 ? (
+                  <>
+                     <div className="w-20 h-20 bg-amber-50 rounded-[1.5rem] flex items-center justify-center text-amber-500 mx-auto shadow-sm">
+                        <AlertTriangle size={32} />
+                     </div>
 
-                        <div className="space-y-2">
-                           <h3 className="text-xl font-black text-gray-900">Categoria em Uso</h3>
-                           <p className="text-sm text-gray-500 leading-relaxed">
-                              A categoria <span className="font-bold text-gray-800">{categoryToDelete.label}</span> possui <span className="font-bold text-[#FF69B4]">{getItemsCountByCategory(categoryToDelete.label)} itens</span> no estoque. Remova ou mova os itens antes de excluir.
-                           </p>
-                        </div>
+                     <div className="space-y-2">
+                        <p className="text-sm text-gray-500 leading-relaxed">
+                           A categoria <span className="font-bold text-gray-800">{categoryToDelete?.label}</span> possui <span className="font-bold text-[#FF69B4]">{getItemsCountByCategory(categoryToDelete?.label || '')} itens</span> no estoque. Remova ou mova os itens antes de excluir.
+                        </p>
+                     </div>
 
-                        <button
-                           onClick={() => setIsDeleteCatModalOpen(false)}
-                           className="w-full py-4 bg-gray-100 text-gray-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-200 transition-all"
+                     <Button
+                        variant="secondary"
+                        fullWidth
+                        onClick={() => setIsDeleteCatModalOpen(false)}
+                     >
+                        Entendido
+                     </Button>
+                  </>
+               ) : (
+                  <>
+                     <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm">
+                        <Trash2 size={32} />
+                     </div>
+
+                     <div className="space-y-2">
+                        <p className="text-sm text-gray-500 leading-relaxed">
+                           Você tem certeza que deseja remover a categoria <span className="font-bold text-gray-800">{categoryToDelete?.label}</span>? Essa ação não pode ser desfeita.
+                        </p>
+                     </div>
+
+                     <div className="flex flex-col gap-3 pt-2">
+                        <Button
+                           variant="danger"
+                           fullWidth
+                           onClick={confirmDeleteCategory}
                         >
-                           Entendido
-                        </button>
-                     </>
-                  ) : (
-                     <>
-                        <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm mb-2">
-                           <Trash2 size={32} />
-                        </div>
-
-                        <div className="space-y-2">
-                           <h3 className="text-xl font-black text-gray-900">Excluir Categoria?</h3>
-                           <p className="text-sm text-gray-500 leading-relaxed">
-                              Você tem certeza que deseja remover a categoria <span className="font-bold text-gray-800">{categoryToDelete.label}</span>? Essa ação não pode ser desfeita.
-                           </p>
-                        </div>
-
-                        <div className="flex flex-col gap-3 pt-2">
-                           <button
-                              onClick={confirmDeleteCategory}
-                              className="w-full py-4 bg-rose-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-rose-200 hover:bg-rose-600 active:scale-95 transition-all"
-                           >
-                              Sim, Excluir
-                           </button>
-                           <button
-                              onClick={() => setIsDeleteCatModalOpen(false)}
-                              className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-100 transition-all"
-                           >
-                              Cancelar
-                           </button>
-                        </div>
-                     </>
-                  )}
-               </div>
+                           Sim, Excluir
+                        </Button>
+                        <Button
+                           variant="secondary"
+                           fullWidth
+                           onClick={() => { setIsDeleteCatModalOpen(false); setCategoryToDelete(null); }}
+                        >
+                           Cancelar
+                        </Button>
+                     </div>
+                  </>
+               )}
             </div>
-         )}
+         </Modal>
 
          {/* Modal: Gerenciar Categorias */}
-         {isCatModalOpen && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-               <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl space-y-6 fade-in">
-                  <div className="flex justify-between items-center">
-                     <h3 className="text-2xl font-bold text-gray-900">Categorias 📁</h3>
-                     <button onClick={() => setIsCatModalOpen(false)}><X /></button>
-                  </div>
-
-                  {/* Lista Existente */}
-                  <div className="max-h-48 overflow-y-auto space-y-2 scrollbar-hide bg-gray-50 p-2 rounded-xl">
-                     {(categories || []).map(cat => {
-                        const Icon = IconMap[cat.iconName] || Tag;
-                        return (
-                           <div key={cat.id} className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-gray-100">
-                              <div className="flex items-center gap-3">
-                                 <div className="w-8 h-8 bg-[#FF69B4]/10 rounded-lg flex items-center justify-center text-[#FF69B4]">
-                                    <Icon size={16} />
-                                 </div>
-                                 <span className="font-bold text-gray-700">{cat.label}</span>
+         <Modal
+            isOpen={isCatModalOpen}
+            onClose={() => setIsCatModalOpen(false)}
+            title="Categorias de Estoque 📁"
+         >
+            <div className="space-y-6">
+               {/* Lista Existente */}
+               <div className="max-h-48 overflow-y-auto space-y-2 scrollbar-hide bg-gray-50 p-2 rounded-xl">
+                  {(categories || []).map(cat => {
+                     const Icon = IconMap[cat.iconName] || Tag;
+                     return (
+                        <div key={cat.id} className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-gray-100">
+                           <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-[#FF69B4]/10 rounded-lg flex items-center justify-center text-[#FF69B4]">
+                                 <Icon size={16} />
                               </div>
-                              <button onClick={() => handleDeleteCategoryClick(cat)} className="text-gray-400 hover:text-rose-500 transition-colors p-1">
-                                 <Trash2 size={16} />
-                              </button>
+                              <span className="font-bold text-gray-700">{cat.label}</span>
                            </div>
-                        );
-                     })}
-                  </div>
-
-                  <div className="h-px bg-gray-100 w-full" />
-
-                  {/* Form Add Nova */}
-                  <div className="space-y-4">
-                     <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Nova Categoria</label>
-                        <input
-                           type="text"
-                           placeholder="Ex: Maquiagem"
-                           className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#FF69B4]"
-                           value={newCat.label}
-                           onChange={e => setNewCat({ ...newCat, label: e.target.value })}
-                        />
-                     </div>
-                     <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Ícone</label>
-                        <div className="grid grid-cols-6 gap-2">
-                           {Object.keys(IconMap).map(iconName => {
-                              const Icon = IconMap[iconName];
-                              return (
-                                 <button
-                                    key={iconName}
-                                    onClick={() => setNewCat({ ...newCat, iconName })}
-                                    className={`p-2 rounded-xl flex items-center justify-center border-2 transition-all ${newCat.iconName === iconName ? 'border-[#FF69B4] bg-[#FF69B4]/10 text-[#FF69B4]' : 'border-gray-50 text-gray-300'}`}
-                                 >
-                                    <Icon size={18} />
-                                 </button>
-                              );
-                           })}
+                           <button onClick={() => handleDeleteCategoryClick(cat)} className="text-gray-400 hover:text-rose-500 transition-colors p-1">
+                              <Trash2 size={16} />
+                           </button>
                         </div>
-                     </div>
-                     <button
-                        onClick={handleAddCategory}
-                        disabled={isSaving}
-                        className="w-full py-4 bg-[#FF69B4] text-white rounded-2xl font-bold shadow-lg shadow-pink-100 mt-4 active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-2"
-                     >
-                        {isSaving ? <Plus className="animate-spin" /> : 'Adicionar'}
-                     </button>
+                     );
+                  })}
+               </div>
+
+               <div className="h-px bg-gray-100 w-full" />
+
+               {/* Form Add Nova */}
+               <div className="space-y-4">
+                  <div>
+                     <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Nova Categoria</label>
+                     <input
+                        type="text"
+                        placeholder="Ex: Maquiagem"
+                        className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#FF69B4]"
+                        value={newCat.label}
+                        onChange={e => setNewCat({ ...newCat, label: e.target.value })}
+                     />
                   </div>
+                  <div>
+                     <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Ícone</label>
+                     <div className="grid grid-cols-6 gap-2">
+                        {Object.keys(IconMap).map(iconName => {
+                           const Icon = IconMap[iconName];
+                           return (
+                              <button
+                                 key={iconName}
+                                 onClick={() => setNewCat({ ...newCat, iconName })}
+                                 className={`p-2 rounded-xl flex items-center justify-center border-2 transition-all ${newCat.iconName === iconName ? 'border-[#FF69B4] bg-[#FF69B4]/10 text-[#FF69B4]' : 'border-gray-50 text-gray-300'}`}
+                              >
+                                 <Icon size={18} />
+                              </button>
+                           );
+                        })}
+                     </div>
+                  </div>
+                  <Button
+                     variant="primary"
+                     fullWidth
+                     disabled={isSaving}
+                     onClick={handleAddCategory}
+                     icon={isSaving ? <Plus className="animate-spin" /> : <Plus />}
+                  >
+                     Adicionar Categoria
+                  </Button>
                </div>
             </div>
-         )}
+         </Modal>
 
          {/* Modal: Add/Edit Item */}
          {isModalOpen && (

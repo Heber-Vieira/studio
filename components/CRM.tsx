@@ -303,61 +303,60 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
           <div key={client.id} className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-[#40E0D0] transition-all relative overflow-hidden group">
 
             {/* Header: Avatar, Name and Actions Flexbox */}
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
-              <div className="flex items-center gap-4 min-w-0 flex-1">
+            <div className="flex justify-between items-start gap-4 mb-6">
+              <div className="flex items-start gap-4 min-w-0">
                 <div className="w-14 h-14 shrink-0 rounded-2xl bg-[#40E0D0]/10 flex items-center justify-center text-[#40E0D0] font-bold text-xl">
                   {client.name.charAt(0)}
                 </div>
-                <div className="min-w-0">
-                  <h3 className="font-bold text-lg text-gray-900 truncate leading-tight" title={client.name}>{client.name}</h3>
-                  <p className="text-sm text-gray-400 font-medium">{client.phone}</p>
+                <div className="min-w-0 space-y-1">
+                  <h3 className="font-black text-lg text-gray-900 leading-tight break-words pr-2" title={client.name}>
+                    {client.name}
+                  </h3>
+                  <p className="text-sm text-gray-400 font-bold flex items-center gap-1.5">
+                    <Smartphone size={14} className="opacity-50" />
+                    {client.phone}
+                  </p>
                 </div>
               </div>
 
-              {/* Actions Row */}
-              <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setActiveMagicClient(client); }}
-                  className="p-2 bg-teal-50 rounded-xl text-[#40E0D0] hover:text-white hover:bg-[#40E0D0] transition-all shadow-sm active:scale-90"
-                  title="Link de Agendamento"
-                >
-                  <Link2 size={16} />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const cleanPhone = client.phone.replace(/\D/g, '');
-                    window.open(`https://wa.me/55${cleanPhone}`, '_blank');
-                  }}
-                  className="p-2 bg-emerald-50 rounded-xl text-emerald-500 hover:text-white hover:bg-emerald-500 transition-all shadow-sm active:scale-90"
-                  title="WhatsApp"
-                >
-                  <MessageCircle size={16} />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(`tel:${client.phone}`);
-                  }}
-                  className="p-2 bg-gray-50 rounded-xl text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 transition-all shadow-sm active:scale-90"
-                  title="Ligar"
-                >
-                  <Phone size={16} />
-                </button>
-                <button
-                  onClick={(e) => handleEditClick(e, client)}
-                  className="p-2 bg-gray-50 rounded-xl text-gray-400 hover:text-[#FF69B4] hover:bg-pink-50 transition-all shadow-sm active:scale-90"
-                  title="Editar Cliente"
-                >
-                  <Edit3 size={16} />
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setClientToDelete(client); setIsDeleteModalOpen(true); }}
-                  className="p-2 bg-rose-50 rounded-xl text-rose-300 hover:text-rose-600 hover:bg-rose-100 transition-all shadow-sm active:scale-90"
-                  title="Remover Cliente"
-                >
-                  <Trash2 size={16} />
-                </button>
+              {/* Actions Column/Row - Hidden on very small if needed, but here we keep it tidy */}
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setActiveMagicClient(client); }}
+                    className="p-2 bg-teal-50 rounded-xl text-[#40E0D0] hover:text-white hover:bg-[#40E0D0] transition-all shadow-sm active:scale-90"
+                    title="Link de Agendamento"
+                  >
+                    <Link2 size={16} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const cleanPhone = client.phone.replace(/\D/g, '');
+                      window.open(`https://wa.me/55${cleanPhone}`, '_blank');
+                    }}
+                    className="p-2 bg-emerald-50 rounded-xl text-emerald-500 hover:text-white hover:bg-emerald-500 transition-all shadow-sm active:scale-90"
+                    title="WhatsApp"
+                  >
+                    <MessageCircle size={16} />
+                  </button>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => handleEditClick(e, client)}
+                    className="p-2 bg-gray-50 rounded-xl text-gray-300 hover:text-[#FF69B4] hover:bg-pink-50 transition-all shadow-sm active:scale-90"
+                    title="Editar Cliente"
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setClientToDelete(client); setIsDeleteModalOpen(true); }}
+                    className="p-2 bg-rose-50 rounded-xl text-rose-200 hover:text-rose-600 hover:bg-rose-100 transition-all shadow-sm active:scale-90"
+                    title="Remover Cliente"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             </div>
 
