@@ -59,7 +59,6 @@ const MainLayout: React.FC = () => {
 
   const [selectedDate, setSelectedDate] = useState<string | undefined>(undefined);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [helpOpen, setHelpOpen] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: '', show: false });
   const [prefilledClient, setPrefilledClient] = useState<{ name: string; phone: string } | null>(null);
@@ -632,7 +631,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 `}</style>
       <div className={`flex h-[100dvh] bg-white text-gray-800 overflow-hidden ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'p-0' : ''} `}>
         {!isPortalMode && (
-          <Sidebar t={t} activeView={currentView} onViewChange={setCurrentView} onShowHelp={() => setHelpOpen(true)} isOpen={isSidebarOpen} toggleOpen={() => setSidebarOpen(!isSidebarOpen)} logo={settings.logo} userRole={user?.role || 'client'} settings={settings} />
+          <Sidebar t={t} activeView={currentView} onViewChange={setCurrentView} isOpen={isSidebarOpen} toggleOpen={() => setSidebarOpen(!isSidebarOpen)} logo={settings.logo} userRole={user?.role || 'client'} settings={settings} />
         )}
         <main ref={mainContentRef} className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-300 ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'bg-white p-0' : 'p-4 md:p-8'} `}>
           {!isPortalMode && user && (
@@ -651,7 +650,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
           )}
           {renderView()}
         </main>
-        <HelpSystem isOpen={helpOpen} onClose={() => setHelpOpen(false)} currentView={currentView} onShowToast={showToast} />
+        <HelpSystem currentView={currentView} onShowToast={showToast} />
         <ChatBellaAI lang={lang} />
         {!isPortalMode && user && (
           <ReleaseNotesPopup config={settings.releaseNotes} />
