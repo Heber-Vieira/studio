@@ -35,6 +35,9 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
 
+  // States for Contact API Help
+  const [isContactInstructionsOpen, setIsContactInstructionsOpen] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatPhoneNumber = (value: string) => {
@@ -162,7 +165,9 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
 
   const handleImportContacts = async () => {
     const nav = navigator as any;
-    const isSupported = 'contacts' in navigator && 'ContactsManager' in window;
+
+    // Robust check for Contact Picker API
+    const isSupported = 'contacts' in navigator && !!(nav.contacts && nav.contacts.select);
 
     if (isSupported) {
       try {
@@ -196,7 +201,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
                 lastVisit: new Date().toISOString().split('T')[0],
                 totalSpent: 0,
                 loyaltyPoints: 0,
-                tags: ['Importado']
+                tags: ['Importado Agenda']
               });
             } else {
               alreadyExistsCount++;
@@ -206,7 +211,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
 
         if (toImport.length > 0) {
           await onImport(toImport);
-          onShowToast(`${toImport.length} contatos da agenda importados com sucesso!`);
+          onShowToast(`${toImport.length} contatos da agenda importados com sucesso! ✨`);
         } else if (alreadyExistsCount > 0) {
           onShowToast('Os contatos selecionados já estão cadastrados.');
         }
@@ -215,9 +220,14 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
         console.log('Importação cancelada ou falhou', ex);
       }
     } else {
-      // Fallback para iOS e desktop: Abrir seletor de arquivo
-      fileInputRef.current?.click();
-      onShowToast("Selecione um arquivo CSV ou TXT com seus clientes.");
+      // Determine if it's iOS to show specific instructions
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+      if (isIOS) {
+        setIsContactInstructionsOpen(true);
+      } else {
+        onShowToast("A importação direta da agenda requer o Google Chrome no seu dispositivo.");
+      }
     }
   };
 
@@ -664,6 +674,54 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Instruções Agenda iOS */}
+      {isContactInstructionsOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 relative border border-white/20">
+            <div className="text-center space-y-2">
+              <div className="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center text-indigo-500 mx-auto shadow-inner mb-4">
+                <Smartphone size={40} className="animate-bounce" />
+              </div>
+              <h3 className="text-2xl font-black text-gray-900 tracking-tight">Agenda Bloqueada 🔒</h3>
+              <p className="text-sm text-gray-500 font-medium">O Safari ainda trata a agenda como um recurso experimental. Ative para usar:</p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">1</div>
+                <p className="text-xs font-bold text-gray-700">Abra os <span className="text-[#FF69B4]">Ajustes</span> do seu iPhone.</p>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">2</div>
+                <p className="text-xs font-bold text-gray-700">Vá em <span className="text-[#FF69B4]">Safari</span> {'>'} <span className="text-[#FF69B4]">Avançado</span>.</p>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">3</div>
+                <p className="text-xs font-bold text-gray-700">Toque em <span className="text-[#FF69B4]">Feature Flags</span> (ou Experimental Features).</p>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">4</div>
+                <p className="text-xs font-bold text-gray-700">Ative o <span className="font-black text-indigo-600 underline">Contact Picker API</span>.</p>
+              </div>
+            </div>
+
+            <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 flex gap-4 items-start">
+              <div className="p-2 bg-white rounded-lg text-indigo-500 shadow-sm"><Sparkles size={16} /></div>
+              <p className="text-[11px] text-indigo-800 font-medium leading-relaxed">
+                Após ativar, retorne aqui e clique em Importar novamente. Sua agenda aparecerá magicamente! ✨
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsContactInstructionsOpen(false)}
+              className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              Entendi, vou ativar
+            </button>
           </div>
         </div>
       )}
