@@ -122,6 +122,22 @@ export const db = {
         } as Client;
     },
 
+    async batchAddClients(clients: Omit<Client, 'id'>[]) {
+        const payload = clients.map(c => ({
+            company_id: DEFAULT_COMPANY_ID,
+            name: c.name,
+            phone: c.phone,
+            last_visit: c.lastVisit,
+            total_spent: c.totalSpent,
+            loyalty_points: c.loyaltyPoints,
+            tags: c.tags
+        }));
+        const { error } = await supabase
+            .from('clients')
+            .insert(payload);
+        if (error) throw error;
+    },
+
     async updateClient(client: Client) {
         const { error } = await supabase
             .from('clients')

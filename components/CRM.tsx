@@ -7,6 +7,7 @@ import { Modal, Button, InputField } from './ui';
 interface CRMProps {
   clients: Client[];
   onAdd: (client: Omit<Client, 'id'>) => void;
+  onImport: (clients: Omit<Client, 'id'>[]) => Promise<void>;
   onUpdate: (client: Client) => void;
   onDelete: (id: string) => void;
   onRedeem: (clientId: string) => void;
@@ -17,7 +18,7 @@ interface CRMProps {
   onShowToast: (msg: string) => void;
 }
 
-const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRedeem, onPrefilledBooking, appointments, settings, t, onShowToast }) => {
+const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDelete, onRedeem, onPrefilledBooking, appointments, settings, t, onShowToast }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -107,14 +108,15 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRed
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const text = event.target?.result as string;
-      const lines = text.split('\n');
-      let importedCount = 0;
+      const lines = text.split(/\r?\n/);
+      const toImport: Omit<Client, 'id'>[] = [];
+      let alreadyExistsCount = 0;
 
-      lines.forEach(line => {
+      for (const line of lines) {
         const cleanLine = line.replace(/"/g, '').trim();
-        if (!cleanLine) return;
+        if (!cleanLine) continue;
 
         const parts = cleanLine.split(/[;,]/);
 
@@ -123,11 +125,14 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRed
           const rawPhone = parts[1].trim();
           const cleanPhone = rawPhone.replace(/\D/g, '');
 
+          // Pular cabeçalhos
+          if (name.toLowerCase() === 'nome' || name.toLowerCase() === 'name') continue;
+
           if (name && cleanPhone.length >= 8) {
             const exists = clients.some(c => c.phone.replace(/\D/g, '') === cleanPhone);
 
             if (!exists) {
-              onAdd({
+              toImport.push({
                 name: name,
                 phone: formatPhoneNumber(cleanPhone),
                 lastVisit: new Date().toISOString().split('T')[0],
@@ -135,14 +140,20 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRed
                 loyaltyPoints: 0,
                 tags: ['Importado CSV']
               });
-              importedCount++;
+            } else {
+              alreadyExistsCount++;
             }
           }
         }
-      });
+      }
 
-      if (importedCount > 0) {
-        onShowToast('Nenhum contato novo encontrado ou formato inválido. Use "Nome,Telefone".');
+      if (toImport.length > 0) {
+        await onImport(toImport);
+        onShowToast(`${toImport.length} novos clientes importados com sucesso! ✨`);
+      } else if (alreadyExistsCount > 0) {
+        onShowToast('Os contatos do arquivo já estão cadastrados no sistema.');
+      } else {
+        onShowToast('Nenhum contato encontrado ou formato inválido. Use "Nome,Telefone".');
       }
     };
     reader.readAsText(file);
@@ -162,7 +173,8 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRed
 
         if (!contacts || contacts.length === 0) return;
 
-        let importedCount = 0;
+        const toImport: Omit<Client, 'id'>[] = [];
+        let alreadyExistsCount = 0;
 
         contacts.forEach((contact: any) => {
           const name = contact.name?.[0];
@@ -178,7 +190,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRed
             const exists = clients.some(c => c.phone.replace(/\D/g, '') === cleanPhone);
 
             if (!exists) {
-              onAdd({
+              toImport.push({
                 name: name,
                 phone: formattedPhone,
                 lastVisit: new Date().toISOString().split('T')[0],
@@ -186,14 +198,16 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRed
                 loyaltyPoints: 0,
                 tags: ['Importado']
               });
-              importedCount++;
+            } else {
+              alreadyExistsCount++;
             }
           }
         });
 
-        if (importedCount > 0) {
-          onShowToast(`${importedCount} contatos da agenda importados com sucesso!`);
-        } else if (contacts.length > 0) {
+        if (toImport.length > 0) {
+          await onImport(toImport);
+          onShowToast(`${toImport.length} contatos da agenda importados com sucesso!`);
+        } else if (alreadyExistsCount > 0) {
           onShowToast('Os contatos selecionados já estão cadastrados.');
         }
 
@@ -201,7 +215,9 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRed
         console.log('Importação cancelada ou falhou', ex);
       }
     } else {
-      onShowToast("Importação via agenda disponível apenas em dispositivos móveis.");
+      // Fallback para iOS e desktop: Abrir seletor de arquivo
+      fileInputRef.current?.click();
+      onShowToast("Selecione um arquivo CSV ou TXT com seus clientes.");
     }
   };
 
@@ -247,7 +263,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onUpdate, onDelete, onRed
             type="file"
             ref={fileInputRef}
             className="hidden"
-            accept=".csv,.txt"
+            accept=".csv,.txt,text/csv,text/plain"
             onChange={handleFileImport}
           />
 

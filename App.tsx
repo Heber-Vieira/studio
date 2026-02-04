@@ -275,6 +275,14 @@ const MainLayout: React.FC = () => {
     } catch (e) { showToast("Erro ao cadastrar cliente."); }
   };
 
+  const importClients = async (clientsData: Omit<Client, 'id'>[]) => {
+    try {
+      await db.batchAddClients(clientsData);
+      // No toast here as CRMView will handle it with the specific count
+      fetchData();
+    } catch (e) { showToast("Erro ao importar clientes."); }
+  };
+
   const updateClient = async (updatedClient: Client) => {
     try {
       await db.updateClient(updatedClient);
@@ -575,7 +583,7 @@ const MainLayout: React.FC = () => {
         return <AppointmentsView appointments={appointments} clients={clients} staff={staff} services={services} onAdd={addAppointment} onDelete={deleteAppointment} onBlock={() => { }} lang={lang} initialDate={selectedDate} blockedPeriods={blockedPeriods} />;
       case View.CRM:
         if (user?.role === 'attendant' && !permissions.viewCRM) return <AccessRestricted />;
-        return <CRMView clients={clients} onAdd={addClient} onUpdate={updateClient} onDelete={deleteClient} onRedeem={() => { }} onPrefilledBooking={handlePrefilledBooking} appointments={appointments} settings={settings} t={t} onShowToast={showToast} />;
+        return <CRMView clients={clients} onAdd={addClient} onImport={importClients} onUpdate={updateClient} onDelete={deleteClient} onRedeem={() => { }} onPrefilledBooking={handlePrefilledBooking} appointments={appointments} settings={settings} t={t} onShowToast={showToast} />;
       case View.STAFF: if (user?.role === 'attendant' && !permissions.viewStaff) return <AccessRestricted />; return <StaffView staff={staff} services={services} onAdd={addStaff} onUpdate={updateStaff} onDelete={deleteStaff} blockedPeriods={blockedPeriods} onBlock={() => { }} onUnblock={() => { }} onViewSchedule={() => setCurrentView(View.APPOINTMENTS)} categories={categories} onShowToast={showToast} />;
       case View.SERVICES: if (user?.role === 'attendant' && !permissions.viewServices) return <AccessRestricted />; return <ServicesView services={services} categories={categories} onAdd={addService} onUpdate={updateService} onDelete={deleteService} onAddCategory={addServiceCategory} onDeleteCategory={deleteServiceCategory} />;
       case View.INVENTORY:
