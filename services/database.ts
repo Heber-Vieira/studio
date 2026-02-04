@@ -692,61 +692,78 @@ export const db = {
     },
 
     async syncMockData(mockCategories: any[], mockServices: any[], mockProfessionals: any[]) {
-        // 1. Sync Categories
-        const { data: existingCats } = await supabase.from('service_categories').select('id').eq('company_id', DEFAULT_COMPANY_ID).limit(1);
-        if (!existingCats || existingCats.length === 0) {
-            for (const cat of mockCategories) {
-                await this.addServiceCategory({ label: cat.label, iconName: cat.iconName });
+        try {
+            // 1. Sync Categories in Batch
+            const { data: existingCats } = await supabase.from('service_categories').select('id').eq('company_id', DEFAULT_COMPANY_ID).limit(1);
+            if (!existingCats || existingCats.length === 0) {
+                console.log("Syncing categories in batch...");
+                const catPayload = mockCategories.map(cat => ({
+                    company_id: DEFAULT_COMPANY_ID,
+                    label: cat.label,
+                    icon_name: cat.iconName
+                }));
+                await supabase.from('service_categories').insert(catPayload);
             }
-        }
-        const cats = await this.getServiceCategories();
+            const cats = await this.getServiceCategories();
 
-        // 2. Sync Services and Create ID Map
-        const { data: existingSvcs } = await supabase.from('services').select('id, name').eq('company_id', DEFAULT_COMPANY_ID).limit(1);
-        const serviceMap: Record<string, string> = {}; // mockID -> DB UUID
-
-        if (!existingSvcs || existingSvcs.length === 0) {
-            for (const svc of mockServices) {
-                const cat = cats.find(c => c.label === svc.category);
-                const dbSvc = await this.addService({
-                    name: svc.name,
-                    category: cat?.id || '',
-                    price: svc.price,
-                    duration: svc.duration,
-                    description: svc.description,
-                    color: svc.color
+            // 2. Sync Services in Batch
+            const { data: existingSvcs } = await supabase.from('services').select('id, name').eq('company_id', DEFAULT_COMPANY_ID).limit(1);
+            if (!existingSvcs || existingSvcs.length === 0) {
+                console.log("Syncing services in batch...");
+                const svcPayload = mockServices.map(svc => {
+                    const cat = cats.find(c => c.label === svc.category);
+                    return {
+                        company_id: DEFAULT_COMPANY_ID,
+                        name: svc.name,
+                        category_id: cat?.id || null,
+                        price: svc.price,
+                        duration: svc.duration,
+                        description: svc.description,
+                        color: svc.color
+                    };
                 });
-                serviceMap[svc.id] = dbSvc.id;
+                await supabase.from('services').insert(svcPayload);
             }
-        } else {
-            // If they exist, try to build a map by name for professionals sync
-            const allDbSvcs = await this.getServices();
-            mockServices.forEach(ms => {
-                const found = allDbSvcs.find(ds => ds.name === ms.name);
-                if (found) serviceMap[ms.id] = found.id;
-            });
-        }
 
-        // 3. Sync Professionals
-        const { data: existingPros } = await supabase.from('professionals').select('id').eq('company_id', DEFAULT_COMPANY_ID).limit(1);
-        if (!existingPros || existingPros.length === 0) {
-            for (const pro of mockProfessionals) {
-                // Map mock service IDs to DB UUIDs
-                const mappedServiceIds = (pro.services || []).map((msId: string) => serviceMap[msId]).filter(Boolean);
+            // Re-fetch categories and services to have all DB IDs for professional mapping
+            const [allDbCats, allDbSvcs] = await Promise.all([
+                this.getServiceCategories(),
+                this.getServices()
+            ]);
 
-                await this.addProfessional({
-                    name: pro.name,
-                    role: pro.role,
-                    specialties: pro.specialties,
-                    services: mappedServiceIds,
-                    commissionRate: pro.commissionRate,
-                    avatar: pro.avatar,
-                    schedule: pro.schedule,
-                    rating: pro.rating,
-                    revenueGenerated: pro.revenueGenerated,
-                    appointmentsCount: pro.appointmentsCount
+            // 3. Sync Professionals in Batch
+            const { data: existingPros } = await supabase.from('professionals').select('id').eq('company_id', DEFAULT_COMPANY_ID).limit(1);
+            if (!existingPros || existingPros.length === 0) {
+                console.log("Syncing professionals in batch...");
+                const proPayload = mockProfessionals.map(pro => {
+                    // pro.services = ['s1', 's2', ...]
+                    const mappedServiceIds = (pro.services || []).map((msId: string) => {
+                        const mockSvc = mockServices.find(s => s.id === msId);
+                        if (!mockSvc) return null;
+
+                        const dbSvc = allDbSvcs.find(s => s.name.toLowerCase() === mockSvc.name.toLowerCase());
+                        return dbSvc?.id;
+                    }).filter(Boolean);
+
+                    return {
+                        company_id: DEFAULT_COMPANY_ID,
+                        name: pro.name,
+                        role: pro.role,
+                        specialties: pro.specialties,
+                        services: mappedServiceIds,
+                        commission_rate: pro.commissionRate,
+                        avatar_url: pro.avatar,
+                        schedule: pro.schedule,
+                        rating: pro.rating,
+                        revenue_generated: pro.revenueGenerated,
+                        appointments_count: pro.appointmentsCount,
+                        appointments_goal: pro.appointmentsGoal
+                    };
                 });
+                await supabase.from('professionals').insert(proPayload);
             }
+        } catch (e) {
+            console.error("Error in syncMockData:", e);
         }
     }
 };

@@ -222,86 +222,105 @@ const MainLayout: React.FC = () => {
   };
 
   const fetchData = useCallback(async (isInitial = false) => {
-    // ALLOW FETCHING IF LOGGED IN OR IF IN BOOKING MODE
     if (!user && !initialParams.isBooking) return;
 
-    if (isInitial) setIsDataLoading(true);
+    // --- CACHE LAYER ---
+    if (isInitial) {
+      const cached = localStorage.getItem('bella_startup_cache');
+      if (cached) {
+        try {
+          const { settings: s, cats, svcs, profs } = JSON.parse(cached);
+          if (s) setSettings(s);
+          if (cats) setCategories(cats);
+          if (svcs) setServices(svcs);
+          if (profs) setStaff(profs);
+          // Don't set isDataLoading to false yet, we want a silent sync
+        } catch (e) {
+          console.warn("Cache parse error", e);
+        }
+      }
+      setIsDataLoading(true);
+    }
 
     const safetyTimeout = setTimeout(() => {
-      if (isDataLoading) {
-        console.warn("fetchData safety timeout triggered");
-        setIsDataLoading(false);
-      }
+      setIsDataLoading(false);
     }, 15000);
 
     try {
-      const [
-        settingsRes,
-        clientsRes,
-        staffRes,
-        servicesRes,
-        categoriesRes,
-        inventoryRes,
-        invCatsRes,
-        appointmentsRes,
-        transactionsRes,
-        suppliersRes
-      ] = await Promise.allSettled([
+      // PHASE 1: PRIORITY 0 (ESSENTIAL FOR RENDER)
+      const [settingsRes, catsRes, svcsRes, staffRes] = await Promise.allSettled([
         db.getSettings(),
-        db.getClients(),
-        db.getProfessionals(),
-        db.getServices(),
         db.getServiceCategories(),
-        db.getInventoryItems(),
-        db.getInventoryCategories(),
-        db.getAppointments(),
-        db.getTransactions(),
-        db.getSuppliers()
+        db.getServices(),
+        db.getProfessionals()
       ]);
 
       if (settingsRes.status === 'fulfilled') setSettings(settingsRes.value);
-      if (clientsRes.status === 'fulfilled') setClients(clientsRes.value);
+      if (catsRes.status === 'fulfilled') setCategories(catsRes.value);
+      if (svcsRes.status === 'fulfilled') setServices(svcsRes.value);
       if (staffRes.status === 'fulfilled') setStaff(staffRes.value);
-      if (inventoryRes.status === 'fulfilled') setInventory(inventoryRes.value);
-      if (invCatsRes.status === 'fulfilled') setInventoryCategories(invCatsRes.value);
-      if (appointmentsRes.status === 'fulfilled') setAppointments(appointmentsRes.value);
-      if (transactionsRes.status === 'fulfilled') setTransactions(transactionsRes.value);
-      if (suppliersRes.status === 'fulfilled') setSuppliers(suppliersRes.value);
 
-      if (categoriesRes.status === 'fulfilled') {
-        setCategories(categoriesRes.value);
-      }
+      // PROACTIVE SYNC: If core data is missing, sync mock data
+      const isEmpty = (catsRes.status === 'fulfilled' && catsRes.value.length === 0) ||
+        (svcsRes.status === 'fulfilled' && svcsRes.value.length === 0);
 
-      if (servicesRes.status === 'fulfilled') {
-        setServices(servicesRes.value);
-      }
-
-      // Proactive Sync: If DB is empty, sync mock data
-      if (
-        (categoriesRes.status === 'fulfilled' && categoriesRes.value.length === 0) ||
-        (servicesRes.status === 'fulfilled' && servicesRes.value.length === 0)
-      ) {
+      if (isEmpty) {
         console.log("Database empty, syncing initial data...");
         await db.syncMockData(MOCK_CATEGORIES, MOCK_SERVICES, MOCK_PROFESSIONALS);
-        // Re-fetch after sync to update local state with DB IDs
-        if (isInitial) {
-          const [freshCats, freshSvcs, freshStaff] = await Promise.all([
-            db.getServiceCategories(),
-            db.getServices(),
-            db.getProfessionals()
-          ]);
-          setCategories(freshCats);
-          setServices(freshSvcs);
-          setStaff(freshStaff);
-        }
+        const [fCats, fSvcs, fStaff] = await Promise.all([
+          db.getServiceCategories(),
+          db.getServices(),
+          db.getProfessionals()
+        ]);
+        setCategories(fCats);
+        setServices(fSvcs);
+        setStaff(fStaff);
       }
+
+      // UPDATE CACHE
+      if (settingsRes.status === 'fulfilled' || !isEmpty) {
+        const cacheData = {
+          settings: settingsRes.status === 'fulfilled' ? settingsRes.value : undefined,
+          cats: catsRes.status === 'fulfilled' ? catsRes.value : undefined,
+          svcs: svcsRes.status === 'fulfilled' ? svcsRes.value : undefined,
+          profs: staffRes.status === 'fulfilled' ? staffRes.value : undefined,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('bella_startup_cache', JSON.stringify(cacheData));
+      }
+
+      // Priority 0 is DONE, allow UI interactions
+      setIsDataLoading(false);
+
+      // PHASE 2: PRIORITY 1 (BACKGROUND LOAD)
+      // These are not needed for the initial screen render
+      const backgroundTasks = async () => {
+        const [clientsRes, appointmentsRes, invRes, invCatsRes, transRes, suppRes] = await Promise.allSettled([
+          db.getClients(),
+          db.getAppointments(),
+          db.getInventoryItems(),
+          db.getInventoryCategories(),
+          db.getTransactions(),
+          db.getSuppliers()
+        ]);
+
+        if (clientsRes.status === 'fulfilled') setClients(clientsRes.value);
+        if (appointmentsRes.status === 'fulfilled') setAppointments(appointmentsRes.value);
+        if (invRes.status === 'fulfilled') setInventory(invRes.value);
+        if (invCatsRes.status === 'fulfilled') setInventoryCategories(invCatsRes.value);
+        if (transRes.status === 'fulfilled') setTransactions(transRes.value);
+        if (suppRes.status === 'fulfilled') setSuppliers(suppRes.value);
+      };
+
+      backgroundTasks();
+
     } catch (error) {
       console.error("Critical error in fetchData:", error);
+      setIsDataLoading(false);
     } finally {
       clearTimeout(safetyTimeout);
-      setIsDataLoading(false);
     }
-  }, [user]);
+  }, [user, initialParams.isBooking]);
 
   useEffect(() => {
     fetchData(true);
@@ -597,7 +616,11 @@ const MainLayout: React.FC = () => {
 
   const handlePrefilledBooking = (client: { name: string; phone: string }) => { setPrefilledClient(client); setCurrentView(View.CLIENT_BOOKING); };
 
-  if (isLoading || isDataLoading) return (
+  // Determine if we should show the full-screen loader
+  // We only show it if Auth is loading OR if it's the first ever load (no settings yet)
+  const isFirstLoad = isDataLoading && !settings.name;
+
+  if (isLoading || isFirstLoad) return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
       <div className="relative mb-8">
         <div className="absolute inset-0 bg-pink-100/50 blur-3xl rounded-full scale-150 animate-pulse"></div>
