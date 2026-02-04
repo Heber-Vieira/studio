@@ -193,13 +193,18 @@ const HelpSystem: React.FC<HelpSystemProps> = ({ currentView, onShowToast }) => 
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed right-0 top-1/2 -translate-y-1/2 z-[60] bg-white border border-r-0 border-gray-100 shadow-[-10px_0_30px_rgba(0,0,0,0.08)] pl-5 pr-2 py-8 rounded-l-[2.5rem] hover:pl-7 transition-all group flex flex-col items-center gap-3 text-[#FF69B4]"
+        className="fixed z-[60] transition-all group flex items-center justify-center 
+          /* Mobile style: Elegant Floating Circle */
+          bottom-6 left-6 w-14 h-14 rounded-full bg-white shadow-[0_15px_35px_rgba(0,0,0,0.15)] border border-gray-100
+          /* Desktop style: Minimalist side tab */
+          md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-0 md:left-auto md:w-auto md:h-auto md:flex-col md:pl-5 md:pr-2 md:py-8 md:rounded-l-[2.5rem] md:rounded-r-none md:border-r-0 md:hover:pl-7
+          text-[#FF69B4] hover:scale-110 active:scale-95"
       >
         <div className="relative">
           <HelpCircle size={26} className="group-hover:rotate-[15deg] transition-transform duration-500" />
           <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#40E0D0] rounded-full border-2 border-white animate-ping"></div>
         </div>
-        <span className="[writing-mode:vertical-lr] font-black text-[11px] uppercase tracking-[0.3em] mb-1">
+        <span className="hidden md:block [writing-mode:vertical-lr] font-black text-[11px] uppercase tracking-[0.3em] mb-1">
           CENTRAL AJUDA
         </span>
       </button>
@@ -208,9 +213,9 @@ const HelpSystem: React.FC<HelpSystemProps> = ({ currentView, onShowToast }) => 
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-500 backdrop-blur-xl bg-gray-900/40">
           <div className="absolute inset-0" onClick={closeHub}></div>
 
-          <div className="bg-white/95 w-full max-w-5xl max-h-[90vh] rounded-[4rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col border border-white relative animate-in zoom-in-95 duration-500">
+          <div className="bg-white/95 w-full md:max-w-5xl h-[95vh] md:h-auto md:max-h-[90vh] rounded-[2.5rem] md:rounded-[4rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col border border-white relative animate-in zoom-in-95 duration-500">
 
-            <div className="p-10 pb-6 flex justify-between items-center shrink-0 bg-gradient-to-b from-gray-50/50 to-transparent">
+            <div className="p-6 md:p-10 pb-4 md:pb-6 flex justify-between items-center shrink-0 bg-gradient-to-b from-gray-50/50 to-transparent">
               <div className="flex items-center gap-5">
                 {activeScreen !== 'hub' && (
                   <button onClick={goBack} className="p-4 bg-white shadow-sm hover:bg-gray-100 text-gray-600 rounded-[1.5rem] transition-all active:scale-90 border border-gray-100">
@@ -222,7 +227,7 @@ const HelpSystem: React.FC<HelpSystemProps> = ({ currentView, onShowToast }) => 
                     <Sparkles className="text-[#FF69B4]" size={18} />
                     <span className="text-[11px] font-black text-[#FF69B4] uppercase tracking-[0.3em]">BellaAI Knowledge Experience</span>
                   </div>
-                  <h2 className="text-3xl font-black text-gray-900 tracking-tight leading-none">
+                  <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight leading-none">
                     {activeScreen === 'hub' && (searchQuery ? "Resultados encontrados" : "Como podemos ajudar?")}
                     {activeScreen === 'docs' && "Biblioteca de Manuais"}
                     {activeScreen === 'doc-category' && selectedCategory?.title}
@@ -236,7 +241,7 @@ const HelpSystem: React.FC<HelpSystemProps> = ({ currentView, onShowToast }) => 
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-10 pb-10 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-6 md:pb-10 scrollbar-hide">
               {activeScreen === 'hub' && (
                 <div className="space-y-10 fade-in">
                   <div className="relative group">
@@ -430,7 +435,7 @@ const HelpSystem: React.FC<HelpSystemProps> = ({ currentView, onShowToast }) => 
               )}
             </div>
 
-            <div className="p-10 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8 shrink-0">
+            <div className="p-6 md:p-10 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8 shrink-0">
               <div className="flex items-center gap-6">
                 <div className={`w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center border text-[#FF69B4] border-pink-50`}>
                   <Shield size={28} />
