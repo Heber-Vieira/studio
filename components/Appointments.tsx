@@ -419,12 +419,12 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
   return (
     <div className="space-y-6 fade-in pb-10">
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-        <div className="flex flex-col md:flex-row md:items-center gap-4 w-full">
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold whitespace-nowrap">Agenda 📅</h2>
-            <div className="flex bg-gray-100 p-1 rounded-xl">
+        <div className="flex flex-col md:flex-row md:flex-wrap lg:flex-nowrap md:items-center gap-4 w-full min-w-0">
+          <div className="flex items-center gap-3 shrink-0">
+            <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">Agenda 📅</h2>
+            <div className="flex bg-gray-200/50 p-1 rounded-xl">
               {(['day', 'week', 'month'] as const).map(mode => (
-                <button key={mode} onClick={() => setViewMode(mode)} className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${viewMode === mode ? 'bg-white text-[#FF69B4] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
+                <button key={mode} onClick={() => setViewMode(mode)} className={`px-3 sm:px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${viewMode === mode ? 'bg-white text-[#FF69B4] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
                   {mode === 'day' ? 'Dia' : mode === 'week' ? 'Sem' : 'Mês'}
                 </button>
               ))}
@@ -432,7 +432,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
           </div>
 
           {/* Busca por Cliente com Lista Suspendida */}
-          <div className="relative flex-1 max-w-md" ref={searchRef}>
+          <div className="relative flex-1 min-w-[200px] max-w-full md:max-w-md" ref={searchRef}>
             <UserSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
