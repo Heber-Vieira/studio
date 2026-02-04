@@ -124,8 +124,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    // 1. Immediate local cleanup (Optimistic UI update)
     setUser(null);
+
+    try {
+      // 2. Attempt graceful server signout with a strict 2s timeout
+      // This prevents the app from hanging if the socket is disconnected/backgrounded
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise(resolve => setTimeout(resolve, 2000))
+      ]);
+    } catch (e) {
+      console.warn("Logout cleanup forced:", e);
+    }
   };
 
   return (
