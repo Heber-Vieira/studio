@@ -423,7 +423,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
   };
 
   const filteredClientsForSearch = useMemo(() => {
-    return clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase())).slice(0, 5);
+    return clients.filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()));
   }, [clients, clientSearch]);
 
   return (
