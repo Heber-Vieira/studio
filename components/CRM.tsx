@@ -51,10 +51,14 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
     return value.substr(0, 15);
   };
 
-  const filteredClients = clients.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.phone.includes(searchTerm)
-  );
+  const filteredClients = useMemo(() => {
+    return clients
+      .filter(c =>
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.phone.includes(searchTerm)
+      )
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+  }, [clients, searchTerm]);
 
   const handleAdd = () => {
     if (!newClient.name || !newClient.phone) return;

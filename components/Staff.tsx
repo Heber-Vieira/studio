@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Professional, BlockedPeriod, WorkSchedule, Service, Category } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/database';
@@ -260,6 +260,10 @@ const StaffView: React.FC<StaffProps> = ({
     setSelectedPro({ ...selectedPro, services: newServices });
   };
 
+  const sortedStaff = useMemo(() => {
+    return [...staff].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+  }, [staff]);
+
   return (
     <div className="space-y-8 fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -278,7 +282,7 @@ const StaffView: React.FC<StaffProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {staff.map((pro, index) => {
+        {sortedStaff.map((pro, index) => {
           const isLivia = pro.name === 'Lívia Nicolly';
 
           return (
