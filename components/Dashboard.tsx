@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid } from 'recharts';
 import { TrendingUp, Users, Calendar, Sparkles, ChevronDown, Clock, ArrowRight, Star, Gift, Scissors, LogOut, X, CheckCircle2, User } from 'lucide-react';
 import { COLORS } from '../constants';
-import { View, Appointment, UserRole, UserProfile, SalonSettings, Client, Professional } from '../types';
+import { View, Appointment, UserRole, UserProfile, SalonSettings, Client, Professional, Transaction } from '../types';
 
 interface DashboardProps {
    t: any;
@@ -14,27 +14,90 @@ interface DashboardProps {
    settings?: SalonSettings;
    clients?: Client[];
    staff?: Professional[];
+   transactions?: Transaction[];
    onLogout: () => void;
 }
 
 type RangeType = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 
-const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appointments, userRole, user, settings, clients = [], staff = [], onLogout }) => {
+const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appointments, userRole, user, settings, clients = [], staff = [], transactions = [], onLogout }) => {
    const [timeRange, setTimeRange] = useState<RangeType>('weekly');
    const [scheduleTab, setScheduleTab] = useState<'today' | 'tomorrow'>('today');
    const [isMyAppointmentsOpen, setIsMyAppointmentsOpen] = useState(false);
 
-   const getChartData = () => {
-      switch (timeRange) {
-         case 'weekly': return dataWeekly;
-         case 'monthly': return dataMonthly;
-         case 'quarterly': return dataQuarterly;
-         case 'yearly': return dataYearly;
-         default: return dataWeekly;
-      }
-   };
+   const chartData = useMemo(() => {
+      const today = new Date();
+      let data: { name: string; sales: number; appointments: number }[] = [];
 
-   const chartData = getChartData();
+      if (timeRange === 'weekly') {
+         // Last 7 days
+         for (let i = 6; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const dayName = d.toLocaleDateString('pt-BR', { weekday: 'short' });
+
+            const daySales = transactions
+               .filter(t => t.date.startsWith(dateStr) && t.type === 'income')
+               .reduce((sum, t) => sum + t.amount, 0);
+            const dayAppts = appointments.filter(a => a.date === dateStr).length;
+
+            data.push({ name: dayName, sales: daySales, appointments: dayAppts });
+         }
+      } else if (timeRange === 'monthly') {
+         // Last 30 days (per week approx or per 5 days to fit)
+         // Let's do last 4 weeks
+         for (let i = 3; i >= 0; i--) {
+            const end = new Date(today);
+            end.setDate(today.getDate() - (i * 7));
+            const start = new Date(end);
+            start.setDate(end.getDate() - 6);
+
+            const weekLabel = `${start.getDate()}/${start.getMonth() + 1}`;
+
+            let weekSales = 0;
+            let weekAppts = 0;
+
+            // Simple loop for the range
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+               const dStr = d.toISOString().split('T')[0];
+               weekSales += transactions.filter(t => t.date.startsWith(dStr) && t.type === 'income').reduce((s, t) => s + t.amount, 0);
+               weekAppts += appointments.filter(a => a.date === dStr).length;
+            }
+            data.push({ name: weekLabel, sales: weekSales, appointments: weekAppts });
+         }
+      } else if (timeRange === 'quarterly') {
+         // Last 3 months
+         for (let i = 2; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            const monthName = d.toLocaleDateString('pt-BR', { month: 'long' });
+
+            const monthSales = transactions
+               .filter(t => t.date.startsWith(monthKey) && t.type === 'income')
+               .reduce((s, t) => s + t.amount, 0);
+            const monthAppts = appointments.filter(a => a.date.startsWith(monthKey)).length;
+
+            data.push({ name: monthName, sales: monthSales, appointments: monthAppts });
+         }
+      } else if (timeRange === 'yearly') {
+         // Last 12 months
+         for (let i = 11; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
+            const monthName = d.toLocaleDateString('pt-BR', { month: 'short' });
+
+            const monthSales = transactions
+               .filter(t => t.date.startsWith(monthKey) && t.type === 'income')
+               .reduce((s, t) => s + t.amount, 0);
+            const monthAppts = appointments.filter(a => a.date.startsWith(monthKey)).length;
+
+            data.push({ name: monthName, sales: monthSales, appointments: monthAppts });
+         }
+      }
+
+      return data;
+   }, [timeRange, transactions, appointments]);
 
    const formatDateISO = (date: Date) => {
       const year = date.getFullYear();
@@ -487,43 +550,6 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
    );
 };
 
-const dataWeekly = [
-   { name: 'Seg', sales: 400, appointments: 24 },
-   { name: 'Ter', sales: 300, appointments: 18 },
-   { name: 'Qua', sales: 600, appointments: 32 },
-   { name: 'Qui', sales: 800, appointments: 40 },
-   { name: 'Sex', sales: 1200, appointments: 55 },
-   { name: 'Sab', sales: 1500, appointments: 62 },
-   { name: 'Dom', sales: 100, appointments: 5 },
-];
-
-const dataMonthly = [
-   { name: 'Sem 1', sales: 2500, appointments: 120 },
-   { name: 'Sem 2', sales: 3800, appointments: 180 },
-   { name: 'Sem 3', sales: 3100, appointments: 150 },
-   { name: 'Sem 4', sales: 4900, appointments: 210 },
-];
-
-const dataQuarterly = [
-   { name: 'Nov', sales: 12500, appointments: 680 },
-   { name: 'Dez', sales: 18900, appointments: 920 },
-   { name: 'Jan', sales: 14200, appointments: 740 },
-];
-
-const dataYearly = [
-   { name: 'Jan', sales: 14200, appointments: 740 },
-   { name: 'Fev', sales: 12800, appointments: 620 },
-   { name: 'Mar', sales: 15600, appointments: 810 },
-   { name: 'Abr', sales: 13900, appointments: 715 },
-   { name: 'Mai', sales: 17200, appointments: 890 },
-   { name: 'Jun', sales: 16100, appointments: 840 },
-   { name: 'Jul', sales: 18400, appointments: 950 },
-   { name: 'Ago', sales: 19800, appointments: 1020 },
-   { name: 'Set', sales: 18200, appointments: 930 },
-   { name: 'Out', sales: 21500, appointments: 1100 },
-   { name: 'Nov', sales: 24800, appointments: 1250 },
-   { name: 'Dez', sales: 32500, appointments: 1580 },
-];
 
 const StatCard: React.FC<{ title: string; value: string; change: string; bgColor: string; icon: React.ReactNode; onClick: () => void }> = ({ title, value, change, bgColor, icon, onClick }) => (
    <div

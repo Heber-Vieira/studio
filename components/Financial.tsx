@@ -80,14 +80,6 @@ interface FinancialProps {
 
 const COLORS_CHART = [COLORS.pink, COLORS.turquoise, COLORS.purple, COLORS.yellow, '#FF9F43'];
 
-const MOCK_MONTHLY_DATA = [
-   { name: 'Jan', income: 14200, expense: 8500 },
-   { name: 'Fev', income: 12800, expense: 7200 },
-   { name: 'Mar', income: 15600, expense: 9100 },
-   { name: 'Abr', income: 13900, expense: 8000 },
-   { name: 'Mai', income: 17200, expense: 9500 },
-   { name: 'Jun', income: 19800, expense: 10200 },
-];
 
 const FinancialView: React.FC<FinancialProps> = ({
    transactions,
@@ -215,7 +207,9 @@ const FinancialView: React.FC<FinancialProps> = ({
       baseTransactions.filter(t => t.type === 'income').forEach(t => {
          data[t.method] = (data[t.method] || 0) + t.amount;
       });
-      return Object.keys(data).map(key => ({ name: key, value: data[key] }));
+      return Object.keys(data)
+         .map(key => ({ name: key, value: data[key] }))
+         .sort((a, b) => b.value - a.value);
    }, [baseTransactions]);
 
    const categoryData = useMemo(() => {
@@ -256,6 +250,25 @@ const FinancialView: React.FC<FinancialProps> = ({
          .map(key => ({ name: key, value: data[key] }))
          .sort((a, b) => b.value - a.value);
    }, [baseTransactions, services, categories]);
+
+   const cashFlowData = useMemo(() => {
+      const today = new Date();
+      const data: { name: string; income: number; expense: number }[] = [];
+
+      // Generate last 6 months
+      for (let i = 5; i >= 0; i--) {
+         const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+         const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+         const monthName = d.toLocaleDateString('pt-BR', { month: 'short' });
+
+         const monthlyTransactions = baseTransactions.filter(t => t.date.startsWith(monthKey));
+         const income = monthlyTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+         const expense = monthlyTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+         data.push({ name: monthName, income, expense });
+      }
+      return data;
+   }, [baseTransactions]);
 
    const handleOpenReport = () => {
       setIsGenerating(true);
@@ -404,7 +417,7 @@ const FinancialView: React.FC<FinancialProps> = ({
                         </div>
                         <div className="h-[300px] w-full">
                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={MOCK_MONTHLY_DATA}>
+                              <AreaChart data={cashFlowData}>
                                  <defs>
                                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={COLORS.pink} stopOpacity={0.3} /><stop offset="95%" stopColor={COLORS.pink} stopOpacity={0} /></linearGradient>
                                     <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#FB7185" stopOpacity={0.3} /><stop offset="95%" stopColor="#FB7185" stopOpacity={0} /></linearGradient>

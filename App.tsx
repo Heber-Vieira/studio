@@ -633,7 +633,7 @@ const MainLayout: React.FC = () => {
     try {
       // SECURITY GUARD: Clients are strictly limited to Dashboard or Booking Portal
       if (user?.role === 'client' && currentView !== View.DASHBOARD && currentView !== View.CLIENT_BOOKING) {
-        return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user.role} user={user} settings={settings} clients={clients} staff={staff} onLogout={logout} />;
+        return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user.role} user={user} settings={settings} clients={clients} staff={staff} onLogout={logout} transactions={transactions} />;
       }
 
       const permissions = settings.permissions || {
@@ -642,7 +642,7 @@ const MainLayout: React.FC = () => {
 
       switch (currentView) {
         case View.DASHBOARD:
-          return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={handleLogout} />;
+          return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={handleLogout} transactions={transactions} />;
         case View.APPOINTMENTS:
           return <AppointmentsView appointments={appointments} clients={clients} staff={staff} services={services} onAdd={addAppointment} onDelete={deleteAppointment} onBlock={() => { }} lang={lang} initialDate={selectedDate} blockedPeriods={blockedPeriods} />;
         case View.CRM:
