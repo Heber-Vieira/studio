@@ -125,10 +125,20 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
 
   const parseDuration = (dur: string) => {
     let total = 0;
-    const hours = dur.match(/(\d+)h/);
-    const mins = dur.match(/(\d+)min/);
+    // Normalize separator
+    const normalized = dur.replace(';', ':');
+    const hours = normalized.match(/(\d+)h/);
+    const mins = normalized.match(/(\d+)min/);
     if (hours) total += parseInt(hours[1]) * 60;
     if (mins) total += parseInt(mins[1]);
+
+    // Fallback for simple HH:MM format without h/min labels
+    if (!hours && !mins && normalized.includes(':')) {
+      const [h, m] = normalized.split(':').map(Number);
+      if (!isNaN(h)) total += h * 60;
+      if (!isNaN(m)) total += m;
+    }
+
     return total || 60;
   };
 

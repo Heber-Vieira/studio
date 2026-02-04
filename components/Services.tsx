@@ -268,7 +268,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
                   <div className="text-right">
                     <span className="block text-xl font-black text-gray-900">R$ {svc.price}</span>
                     <div className="flex items-center gap-1 text-xs text-gray-400 font-medium justify-end">
-                      <Clock size={12} /> {svc.duration}
+                      <Clock size={12} /> {svc.duration.replace(';', ':')}
                     </div>
                   </div>
                 </div>

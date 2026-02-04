@@ -175,7 +175,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
             </div>
           )}
           <button
-            onClick={logout}
+            onClick={async () => { await logout(); onClose(); }}
             className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm"
           >
             <LogOut size={16} /> Sair
@@ -215,28 +215,37 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                   <p className="text-gray-500 font-medium">Selecione o serviço que deseja realizar.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
                   {services.map(svc => (
                     <div
                       key={svc.id}
                       onClick={() => { setSelectedService(svc); setStep(2); }}
-                      className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] hover:shadow-xl hover:border-[#FF69B4]/30 transition-all cursor-pointer flex justify-between items-center group active:scale-98"
+                      className="bg-white/80 backdrop-blur-sm p-5 rounded-[2rem] border border-gray-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:border-[#FF69B4]/40 transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98] relative overflow-hidden min-h-[130px]"
                     >
-                      <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 bg-[#F8F9FA] rounded-2xl flex items-center justify-center text-gray-400 group-hover:text-[#FF69B4] transition-all">
-                          <Scissors size={26} strokeWidth={1.5} />
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#FF69B4]/5 rounded-full -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                      <div className="flex items-start gap-4 mb-3 relative z-10">
+                        <div className="w-12 h-12 bg-gradient-to-br from-pink-50 to-white rounded-xl flex items-center justify-center text-[#FF69B4] shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                          <Scissors size={22} strokeWidth={1.5} />
                         </div>
-                        <div className="space-y-1">
-                          <h4 className="font-black text-gray-900 text-xl tracking-tight">{svc.name}</h4>
-                          <div className="flex items-center gap-1.5 text-gray-400 font-bold text-xs uppercase tracking-widest">
-                            <Clock size={14} className="text-gray-300" /> {svc.duration}
+                        <div className="flex-1 min-w-0 pr-1">
+                          <h4 className="font-black text-gray-900 text-base sm:text-lg tracking-tight leading-tight group-hover:text-[#FF69B4] transition-colors break-words">
+                            {svc.name}
+                          </h4>
+                          <div className="flex items-center gap-1.5 text-gray-400 font-bold text-[9px] uppercase tracking-widest mt-1">
+                            <Clock size={10} className="text-pink-300" /> {svc.duration.replace(';', ':')}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className="font-black text-2xl text-gray-900">R$ {svc.price}</span>
-                        <div className="p-2 text-gray-200 group-hover:text-[#FF69B4] group-hover:translate-x-1 transition-all">
-                          <ChevronRight size={24} strokeWidth={3} />
+
+                      <div className="flex items-center justify-between mt-auto pt-2 relative z-10">
+                        <div className="bg-[#2D2B4D] px-4 py-2 rounded-xl shadow-md shadow-indigo-100/50 group-hover:bg-[#FF69B4] group-hover:shadow-pink-100/50 transition-all">
+                          <span className="font-black text-base text-white whitespace-nowrap">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(svc.price)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 group-hover:translate-x-1 transition-all">
+                          <ChevronRight size={18} strokeWidth={4} className="text-gray-200 group-hover:text-[#FF69B4]" />
                         </div>
                       </div>
                     </div>
