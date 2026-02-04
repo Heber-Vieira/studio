@@ -66,6 +66,7 @@ const MainLayout: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: '', show: false });
   const [prefilledClient, setPrefilledClient] = useState<{ name: string; phone: string } | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
 
   const [lang, setLang] = useState<Language>(() => {
     const saved = localStorage.getItem('bella_lang');
@@ -83,6 +84,20 @@ const MainLayout: React.FC = () => {
       mainContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentView, user?.id]);
+
+  // System Recovery Timer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowRecovery(true);
+    }, 7000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleSystemRecovery = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.reload();
+  };
 
   useEffect(() => {
     if (initialParams.isBooking) {
@@ -562,7 +577,30 @@ const MainLayout: React.FC = () => {
 
   const handlePrefilledBooking = (client: { name: string; phone: string }) => { setPrefilledClient(client); setCurrentView(View.CLIENT_BOOKING); };
 
-  if (isLoading) return <div className="min-h-screen bg-white flex items-center justify-center"><Loader2 size={40} className="text-[#FF69B4] animate-spin" /></div>;
+  if (isLoading || isDataLoading) return (
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
+      <div className="relative mb-8">
+        <div className="absolute inset-0 bg-pink-100/50 blur-3xl rounded-full scale-150 animate-pulse"></div>
+        <Loader2 size={48} className="text-[#FF69B4] animate-spin relative z-10" />
+      </div>
+
+      <div className="space-y-4 max-w-xs animate-in fade-in slide-in-from-bottom-2 duration-700">
+        <h2 className="text-xl font-black text-gray-900">Iniciando Studio...</h2>
+        <p className="text-sm text-gray-400 font-medium leading-relaxed">Estamos preparando suas ferramentas de beleza e gestão. Só um instante! ✨</p>
+
+        {showRecovery && (
+          <div className="pt-8 animate-in zoom-in duration-500">
+            <button
+              onClick={handleSystemRecovery}
+              className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#FF69B4] transition-colors border-b border-transparent hover:border-[#FF69B4] pb-1"
+            >
+              Demorando demais? <span className="underline">Recuperar Sistema</span>
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
   if (!user && currentView !== View.CLIENT_BOOKING) return <LoginView />;
 
   const AccessRestricted = () => (
