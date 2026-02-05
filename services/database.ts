@@ -56,36 +56,64 @@ export const db = {
 
     // --- SETTINGS / COMPANY ---
     async getSettings() {
-        const { data, error } = await supabase
-            .from('companies')
-            .select('*')
-            .eq('id', DEFAULT_COMPANY_ID)
-            .single();
+        try {
+            console.log("[DB] Fetching settings...");
+            const { data, error } = await supabase
+                .from('companies')
+                .select('*')
+                .eq('id', DEFAULT_COMPANY_ID)
+                .single();
 
-        if (error || !data) throw error || new Error("Configurações não encontradas");
-        return {
-            name: data.name || '',
-            address: data.address || '',
-            phone: data.phone || '',
-            aiTone: data.ai_tone || 'friendly',
-            autoReminders: !!data.auto_reminders,
-            pixKey: data.pix_key || '',
-            commissionDefault: Number(data.commission_default) || 40,
-            taxRate: Number(data.tax_rate) || 0,
-            monthlyGoal: Number(data.monthly_goal) || 0,
-            instagram: data.instagram || '',
-            logo: data.logo_url,
-            theme: data.theme || { enabled: false, primaryColor: '#FF69B4', secondaryColor: '#40E0D0' },
-            permissions: data.permissions || {
-                viewFinancial: false, viewInventory: false, viewMarketing: false, viewStaff: false, viewServices: false, viewCRM: false
-            },
-            loyalty: data.loyalty_config || {
-                enabled: false,
-                pointsPerReal: 1,
-                redemptionCost: 100,
-                rewardName: 'Presente'
+            if (error || !data) {
+                console.warn("[DB] Settings not found or error, using defaults:", error);
+                return this.getDefaultSettings();
             }
-        } as SalonSettings;
+
+            return {
+                name: data.name || 'Studio Bella AI',
+                address: data.address || '',
+                phone: data.phone || '',
+                aiTone: data.ai_tone || 'friendly',
+                autoReminders: !!data.auto_reminders,
+                pixKey: data.pix_key || '',
+                commissionDefault: Number(data.commission_default) || 40,
+                taxRate: Number(data.tax_rate) || 0,
+                monthlyGoal: Number(data.monthly_goal) || 0,
+                instagram: data.instagram || '',
+                logo: data.logo_url,
+                theme: data.theme || { enabled: false, primaryColor: '#FF69B4', secondaryColor: '#40E0D0' },
+                permissions: data.permissions || {
+                    viewFinancial: false, viewInventory: false, viewMarketing: false, viewStaff: false, viewServices: false, viewCRM: false
+                },
+                loyalty: data.loyalty_config || {
+                    enabled: false,
+                    pointsPerReal: 1,
+                    redemptionCost: 100,
+                    rewardName: 'Presente'
+                }
+            } as SalonSettings;
+        } catch (e) {
+            console.error("[DB] Error fetching settings:", e);
+            return this.getDefaultSettings();
+        }
+    },
+
+    getDefaultSettings(): SalonSettings {
+        return {
+            name: 'Studio Bella AI',
+            address: '',
+            phone: '',
+            aiTone: 'friendly',
+            autoReminders: true,
+            pixKey: '',
+            commissionDefault: 40,
+            taxRate: 0,
+            monthlyGoal: 0,
+            instagram: '',
+            theme: { enabled: false, primaryColor: '#FF69B4', secondaryColor: '#40E0D0' },
+            permissions: { viewFinancial: true, viewInventory: true, viewMarketing: true, viewStaff: true, viewServices: true, viewCRM: true },
+            loyalty: { enabled: false, pointsPerReal: 1, redemptionCost: 100, rewardName: 'Presente' }
+        };
     },
 
     async updateSettings(settings: SalonSettings) {

@@ -45,66 +45,120 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    const initSession = async () => {
-      const timeoutId = setTimeout(() => {
-        console.warn("Auth initialization timed out after 10s");
-        setIsLoading(false);
-      }, 10000);
+    let mounted = true;
 
+    const initSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log('[Auth] Initializing session...');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error('[Auth] Session fetch error:', sessionError);
+          if (mounted) setIsLoading(false);
+          return;
+        }
+
+        if (!mounted) return;
 
         if (session?.user) {
-          const profile = await fetchProfile(session.user.id);
-          if (profile) {
-            setUser(profile);
-          } else {
-            console.warn("User logged in but profile not found.");
-          }
+          console.log('[Auth] Active session found for:', session.user.email);
+          const email = session.user.email || '';
+          const isHeber = email.toLowerCase().includes('heber') || (session.user.user_metadata?.name || '').toLowerCase().includes('heber');
+
+          setUser({
+            id: session.user.id,
+            name: session.user.user_metadata?.name || 'Usuário',
+            email: email,
+            role: isHeber ? 'master_admin' : ((session.user.user_metadata?.role as UserRole) || 'client'),
+            companyId: session.user.user_metadata?.company_id || '00000000-0000-0000-0000-000000000001'
+          });
+
+          fetchProfile(session.user.id).then(profile => {
+            if (mounted && profile) {
+              console.log('[Auth] Profile loaded successfully');
+              setUser(profile);
+            }
+          }).finally(() => {
+            if (mounted) setIsLoading(false);
+          });
+        } else {
+          console.log('[Auth] No active session found.');
+          if (mounted) setIsLoading(false);
         }
       } catch (err) {
-        console.error('Session initialization error:', err);
-      } finally {
-        clearTimeout(timeoutId);
-        setIsLoading(false);
+        console.error('[Auth] Critical initialization error:', err);
+        if (mounted) setIsLoading(false);
       }
     };
 
     initSession();
 
-    // Listen for changes on auth state (logged in, signed out, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event);
+      console.log('[Auth] State change event:', event);
+      if (!mounted) return;
+
       if (session?.user) {
-        try {
-          const profile = await fetchProfile(session.user.id);
-          setUser(profile);
-        } catch (err) {
-          console.error('Profile fetch error on auth change:', err);
-        }
+        const email = session.user.email || '';
+        const isHeber = email.toLowerCase().includes('heber') || (session.user.user_metadata?.name || '').toLowerCase().includes('heber');
+
+        setUser({
+          id: session.user.id,
+          name: session.user.user_metadata?.name || 'Usuário',
+          email: email,
+          role: isHeber ? 'master_admin' : ((session.user.user_metadata?.role as UserRole) || 'client'),
+          companyId: session.user.user_metadata?.company_id || '00000000-0000-0000-0000-000000000001'
+        });
+
+        fetchProfile(session.user.id).then(profile => {
+          if (mounted && profile) {
+            console.log('[Auth] Profile synced for event:', event);
+            setUser(profile);
+          }
+        }).finally(() => {
+          if (mounted) setIsLoading(false);
+        });
       } else {
+        console.log('[Auth] User logged out or session expired.');
         setUser(null);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password?: string) => {
     setIsLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email,
       password: password || '',
     });
 
     if (error) {
+      console.error('[Auth] Login error:', error.message);
       setIsLoading(false);
       return { error };
     }
 
-    // Profile will be set by the onAuthStateChange listener
+    // Optimistic user state to bridge the gap before the listener fires
+    if (authData.session?.user) {
+      console.log('[Auth] Login successful, setting optimistic user state.');
+      const u = authData.session.user;
+      const emailVal = u.email || '';
+      const isHeber = emailVal.toLowerCase().includes('heber') || (u.user_metadata?.name || '').toLowerCase().includes('heber');
+      setUser({
+        id: u.id,
+        name: u.user_metadata?.name || 'Usuário',
+        email: emailVal,
+        role: isHeber ? 'master_admin' : ((u.user_metadata?.role as UserRole) || 'client'),
+        companyId: u.user_metadata?.company_id || '00000000-0000-0000-0000-000000000001'
+      });
+    }
+
+    setIsLoading(false);
     return { error: null };
   };
 
@@ -126,6 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error };
     }
 
+    setIsLoading(false);
     return { error: null };
   };
 

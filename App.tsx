@@ -85,11 +85,11 @@ const MainLayout: React.FC = () => {
     }
   }, [currentView, user?.id]);
 
-  // System Recovery Timer
+  // System Recovery Timer - Show earlier (2s) if still loading
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowRecovery(true);
-    }, 7000);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -216,6 +216,7 @@ const MainLayout: React.FC = () => {
   }, []);
 
   const handleLogout = async () => {
+    localStorage.removeItem('bella_startup_cache'); // Clear cache on logout
     await logout();
     // Explicitly reset view to Dashboard on logout so next login starts fresh
     setCurrentView(View.DASHBOARD);
@@ -243,10 +244,12 @@ const MainLayout: React.FC = () => {
     }
 
     const safetyTimeout = setTimeout(() => {
+      console.warn("[FetchData] Safety timeout reached (15s). Forcing isDataLoading to false.");
       setIsDataLoading(false);
     }, 15000);
 
     try {
+      console.log("[FetchData] Starting sync...");
       // PHASE 1: PRIORITY 0 (ESSENTIAL FOR RENDER)
       const [settingsRes, catsRes, svcsRes, staffRes] = await Promise.allSettled([
         db.getSettings(),
@@ -255,7 +258,10 @@ const MainLayout: React.FC = () => {
         db.getProfessionals()
       ]);
 
-      if (settingsRes.status === 'fulfilled') setSettings(settingsRes.value);
+      if (settingsRes.status === 'fulfilled') {
+        setSettings(settingsRes.value);
+        console.log("[FetchData] Settings loaded:", settingsRes.value.name);
+      }
       if (catsRes.status === 'fulfilled') setCategories(catsRes.value);
       if (svcsRes.status === 'fulfilled') setServices(svcsRes.value);
       if (staffRes.status === 'fulfilled') setStaff(staffRes.value);
@@ -265,7 +271,7 @@ const MainLayout: React.FC = () => {
         (svcsRes.status === 'fulfilled' && svcsRes.value.length === 0);
 
       if (isEmpty) {
-        console.log("Database empty, syncing initial data...");
+        console.log("[FetchData] Database empty, syncing initial data...");
         await db.syncMockData(MOCK_CATEGORIES, MOCK_SERVICES, MOCK_PROFESSIONALS);
         const [fCats, fSvcs, fStaff] = await Promise.all([
           db.getServiceCategories(),
@@ -290,11 +296,13 @@ const MainLayout: React.FC = () => {
       }
 
       // Priority 0 is DONE, allow UI interactions
+      console.log("[FetchData] Core data phase complete.");
       setIsDataLoading(false);
 
       // PHASE 2: PRIORITY 1 (BACKGROUND LOAD)
       // These are not needed for the initial screen render
       const backgroundTasks = async () => {
+        console.log("[FetchData] Background load started...");
         const [clientsRes, appointmentsRes, invRes, invCatsRes, transRes, suppRes] = await Promise.allSettled([
           db.getClients(),
           db.getAppointments(),
@@ -310,12 +318,13 @@ const MainLayout: React.FC = () => {
         if (invCatsRes.status === 'fulfilled') setInventoryCategories(invCatsRes.value);
         if (transRes.status === 'fulfilled') setTransactions(transRes.value);
         if (suppRes.status === 'fulfilled') setSuppliers(suppRes.value);
+        console.log("[FetchData] Background load complete.");
       };
 
       backgroundTasks();
 
     } catch (error) {
-      console.error("Critical error in fetchData:", error);
+      console.error("[FetchData] Critical error in fetchData:", error);
       setIsDataLoading(false);
     } finally {
       clearTimeout(safetyTimeout);
@@ -616,11 +625,9 @@ const MainLayout: React.FC = () => {
 
   const handlePrefilledBooking = (client: { name: string; phone: string }) => { setPrefilledClient(client); setCurrentView(View.CLIENT_BOOKING); };
 
-  // Determine if we should show the full-screen loader
-  // We only show it if Auth is loading OR if it's the first ever load (no settings yet)
-  const isFirstLoad = isDataLoading && !settings.name;
-
-  if (isLoading || isFirstLoad) return (
+  // Handle full-screen loading state
+  // We only show the full splash if Auth is strictly loading OR if we have NO settings and NO cache
+  if (isLoading || (!settings.name && isDataLoading)) return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
       <div className="relative mb-8">
         <div className="absolute inset-0 bg-pink-100/50 blur-3xl rounded-full scale-150 animate-pulse"></div>
