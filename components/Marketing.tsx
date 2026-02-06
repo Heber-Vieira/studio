@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { COLORS } from '../constants';
-import { MessageSquare, Gift, Heart, Send, Sparkles, CheckCircle, X, Bell, Zap, Clock, Smartphone, ChevronRight, Loader2, User, ArrowRight, SkipForward } from 'lucide-react';
+import { MessageSquare, Gift, Heart, Send, Sparkles, CheckCircle, X, Bell, Zap, Clock, Smartphone, ChevronRight, Loader2, User, ArrowRight, SkipForward, Copy } from 'lucide-react';
 import { getBellaAIResponse } from '../services/geminiService';
 import { Client, Appointment, SalonSettings } from '../types';
 
@@ -25,6 +25,7 @@ const MarketingView: React.FC<MarketingViewProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedObjective, setSelectedObjective] = useState('Promoção');
   const [campaignSent, setCampaignSent] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   // States for the sequence sender
   const [isAutomationModalOpen, setIsAutomationModalOpen] = useState(false);
@@ -403,14 +404,14 @@ const MarketingView: React.FC<MarketingViewProps> = ({
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(generatedCopy);
-                    const btn = document.getElementById('copy-btn');
-                    if (btn) btn.innerText = 'Copiado!';
-                    setTimeout(() => { if (btn) btn.innerText = 'Copiar'; }, 2000);
+                    setIsCopied(true);
+                    if (onShowToast) onShowToast("Texto copiado! ✨");
+                    setTimeout(() => setIsCopied(false), 2000);
                   }}
-                  id="copy-btn"
-                  className="flex-1 py-4 bg-white text-gray-500 border border-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-50 transition-all active:scale-90"
+                  className={`flex-1 py-4 border rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 ${isCopied ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
                 >
-                  Copiar
+                  {isCopied ? <CheckCircle size={14} /> : <Copy size={14} />}
+                  {isCopied ? 'Copiado!' : 'Copiar'}
                 </button>
               </div>
             )}

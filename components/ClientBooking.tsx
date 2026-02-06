@@ -1,8 +1,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Service, Professional, Appointment, BlockedPeriod, SalonSettings } from '../types';
-import { ChevronLeft, ChevronRight, Clock, Star, Scissors, Check, Calendar, Sparkles, X, Phone, User, Tag, LogOut, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Service, Professional, Appointment, BlockedPeriod, SalonSettings, AnamnesisTemplate, AnamnesisRecord } from '../types';
+import { ChevronLeft, ChevronRight, Clock, Star, Scissors, Check, Calendar, Sparkles, X, Phone, User, Tag, LogOut, AlertTriangle, ShieldCheck, Signature, FileText, Send } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+// @ts-ignore
+import SignatureCanvas from 'react-signature-canvas';
 
 interface ClientBookingProps {
   settings: SalonSettings;
@@ -13,9 +15,11 @@ interface ClientBookingProps {
   onBook: (apt: Appointment) => void;
   onClose: () => void;
   initialClientData?: { name: string; phone: string };
+  templates: AnamnesisTemplate[];
+  onAddAnamnesisRecord: (record: AnamnesisRecord) => void;
 }
 
-const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff, appointments, blockedPeriods, onBook, onClose, initialClientData }) => {
+const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff, appointments, blockedPeriods, onBook, onClose, initialClientData, templates, onAddAnamnesisRecord }) => {
   const { logout, user } = useAuth();
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -27,6 +31,11 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
     phone: initialClientData?.phone || ''
   });
   const [bookingFinished, setBookingFinished] = useState(false);
+
+  // Anamnesis State
+  const [anamnesisStep, setAnamnesisStep] = useState(0);
+  const [anamnesisAnswers, setAnamnesisAnswers] = useState<Record<string, any>>({});
+  const sigCanvas = React.useRef<any>(null);
 
   // Sync with initialClientData if provided late or updated
   useEffect(() => {
@@ -49,7 +58,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
     return value.substr(0, 15);
   };
 
-  const isPhoneValid = clientInfo.phone.replace(/\D/g, '').length === 11;
+  const isPhoneValid = clientInfo.phone.replace(/\D/g, '').length >= 10;
   const isNameValid = clientInfo.name.trim().split(/\s+/).length >= 2;
 
   const qualifiedStaff = useMemo(() => {
@@ -127,8 +136,36 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
 
   const handleFinish = () => {
     if (!selectedService || !selectedPro || !selectedTime || !isNameValid || !isPhoneValid) return;
+
+    // Check if anamnesis is required
+    const serviceHasTemplate = selectedService.anamnesisTemplateId && templates.find(t => t.id === selectedService.anamnesisTemplateId);
+    if (serviceHasTemplate && step < 5) {
+      setStep(5);
+      return;
+    }
+
+    const appointmentId = Math.random().toString(36).substr(2, 9);
+
+    // Save Anamnesis if filled
+    if (serviceHasTemplate) {
+      const template = templates.find(t => t.id === selectedService.anamnesisTemplateId)!;
+      const signatureData = sigCanvas.current?.toDataURL('image/png');
+
+      const anamnesisRecord: AnamnesisRecord = {
+        id: Math.random().toString(36).substr(2, 9),
+        templateId: template.id,
+        clientId: 'external',
+        clientName: clientInfo.name,
+        answers: anamnesisAnswers,
+        signatureUrl: signatureData,
+        signedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+      onAddAnamnesisRecord(anamnesisRecord);
+    }
+
     onBook({
-      id: Math.random().toString(36).substr(2, 9),
+      id: appointmentId,
       clientId: 'external',
       clientName: clientInfo.name,
       serviceId: selectedService.id,
@@ -411,6 +448,153 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                     Agendar Agora <Sparkles size={20} className="text-[#FF69B4]" />
                   </button>
                 </div>
+              </div>
+            )}
+
+            {step === 5 && selectedService?.anamnesisTemplateId && (
+              <div className="space-y-10 fade-in max-w-2xl mx-auto pb-20">
+                {(() => {
+                  const template = templates.find(t => t.id === selectedService.anamnesisTemplateId);
+                  if (!template) return null;
+
+                  const totalAnamnesisSteps = template.fields.length + 1;
+                  const currentField = anamnesisStep < template.fields.length ? template.fields[anamnesisStep] : null;
+                  const isSignatureStep = anamnesisStep === template.fields.length;
+
+                  return (
+                    <div className="space-y-8 min-h-[600px] flex flex-col">
+                      <div className="flex items-center justify-between bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                            <FileText size={20} />
+                          </div>
+                          <div>
+                            <h3 className="font-black text-gray-900 text-sm">{template.title}</h3>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Ficha de Segurança</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          {Array.from({ length: totalAnamnesisSteps }).map((_, i) => (
+                            <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i === anamnesisStep ? 'w-6 bg-indigo-600' : (i < anamnesisStep ? 'w-3 bg-indigo-200' : 'w-3 bg-gray-100')}`} />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex-1 bg-white p-10 rounded-[4rem] shadow-2xl border border-gray-50 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/30 rounded-full -translate-y-1/2 translate-x-1/2 -z-10"></div>
+
+                        {currentField && (
+                          <div className="w-full space-y-10" key={anamnesisStep}>
+                            <div className="space-y-3">
+                              <h4 className="text-3xl font-black text-gray-800 tracking-tight leading-tight">{currentField.label}</h4>
+                              {currentField.description && <p className="text-sm text-gray-400 font-medium px-4">{currentField.description}</p>}
+                            </div>
+
+                            <div className="w-full max-w-lg mx-auto">
+                              {currentField.type === 'boolean' ? (
+                                <div className="flex gap-4 max-w-xs mx-auto">
+                                  <button
+                                    onClick={() => { setAnamnesisAnswers({ ...anamnesisAnswers, [currentField.id]: true }); setAnamnesisStep(anamnesisStep + 1); }}
+                                    className="flex-1 py-10 bg-emerald-50 text-emerald-600 rounded-[2.5rem] font-black text-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95 flex flex-col items-center gap-2"
+                                  >
+                                    <Check size={32} />
+                                    <span>SIM</span>
+                                  </button>
+                                  <button
+                                    onClick={() => { setAnamnesisAnswers({ ...anamnesisAnswers, [currentField.id]: false }); setAnamnesisStep(anamnesisStep + 1); }}
+                                    className="flex-1 py-10 bg-rose-50 text-rose-600 rounded-[2.5rem] font-black text-xl hover:bg-rose-600 hover:text-white transition-all shadow-sm active:scale-95 flex flex-col items-center gap-2"
+                                  >
+                                    <X size={32} />
+                                    <span>NÃO</span>
+                                  </button>
+                                </div>
+                              ) : currentField.type === 'select' ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">
+                                  {currentField.options?.map(opt => (
+                                    <button
+                                      key={opt}
+                                      onClick={() => { setAnamnesisAnswers({ ...anamnesisAnswers, [currentField.id]: opt }); setAnamnesisStep(anamnesisStep + 1); }}
+                                      className="py-5 px-6 bg-gray-50 text-gray-700 rounded-3xl font-bold text-sm hover:bg-indigo-600 hover:text-white transition-all active:scale-95 border-2 border-transparent hover:border-white shadow-sm"
+                                    >
+                                      {opt}
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="space-y-8">
+                                  {currentField.type === 'textarea' ? (
+                                    <textarea
+                                      autoFocus
+                                      className="w-full bg-gray-50 border-none rounded-[3rem] p-10 text-xl font-bold text-gray-800 focus:ring-4 focus:ring-indigo-100 outline-none transition-all shadow-inner min-h-[200px]"
+                                      placeholder="Digite sua resposta..."
+                                      value={anamnesisAnswers[currentField.id] || ''}
+                                      onChange={e => setAnamnesisAnswers({ ...anamnesisAnswers, [currentField.id]: e.target.value })}
+                                    />
+                                  ) : (
+                                    <input
+                                      autoFocus
+                                      type={currentField.type === 'number' ? 'number' : 'text'}
+                                      className="w-full bg-gray-50 border-none rounded-full p-10 text-3xl font-black text-center text-indigo-600 focus:ring-4 focus:ring-indigo-100 outline-none transition-all placeholder:text-gray-200 shadow-inner"
+                                      placeholder="Sua resposta..."
+                                      value={anamnesisAnswers[currentField.id] || ''}
+                                      onChange={e => setAnamnesisAnswers({ ...anamnesisAnswers, [currentField.id]: e.target.value })}
+                                      onKeyDown={e => e.key === 'Enter' && setAnamnesisStep(anamnesisStep + 1)}
+                                    />
+                                  )}
+                                  <button
+                                    onClick={() => setAnamnesisStep(anamnesisStep + 1)}
+                                    className="px-12 py-5 bg-indigo-600 text-white rounded-full font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-100 transition-all flex items-center justify-center gap-3 mx-auto"
+                                  >
+                                    Próxima Pergunta <ChevronRight size={18} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {isSignatureStep && (
+                          <div className="w-full space-y-10">
+                            <div className="space-y-4">
+                              <h4 className="text-3xl font-black text-gray-800 tracking-tight leading-tight">Assinatura Digital</h4>
+                              <p className="text-sm text-gray-400 font-medium px-8">Para finalizar o agendamento, assine digitalmente no campo abaixo.</p>
+                            </div>
+
+                            <div className="bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200 overflow-hidden relative group max-w-lg mx-auto shadow-inner">
+                              <SignatureCanvas
+                                ref={sigCanvas}
+                                penColor='#4F46E5'
+                                canvasProps={{ className: 'w-full h-56 cursor-crosshair' }}
+                              />
+                              <button
+                                onClick={() => sigCanvas.current.clear()}
+                                className="absolute bottom-6 right-6 p-4 bg-white/90 backdrop-blur-sm text-gray-400 rounded-2xl hover:text-rose-500 transition-all shadow-sm"
+                              >
+                                <AlertTriangle size={16} /> Limpar
+                              </button>
+                            </div>
+
+                            <button
+                              onClick={handleFinish}
+                              className="w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-xl shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4"
+                            >
+                              Finalizar Agendamento <Send size={24} />
+                            </button>
+                          </div>
+                        )}
+
+                        {anamnesisStep > 0 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setAnamnesisStep(anamnesisStep - 1); }}
+                            className="absolute bottom-10 left-10 flex items-center gap-2 text-gray-400 font-bold text-xs hover:text-indigo-600 transition-colors"
+                          >
+                            <ChevronLeft size={16} /> Voltar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </>

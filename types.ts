@@ -110,6 +110,7 @@ export interface Service {
   price: number;
   description: string;
   color: string;
+  anamnesisTemplateId?: string;
 }
 
 export interface SalonTheme {

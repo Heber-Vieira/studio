@@ -288,7 +288,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
     }
   }, [isModalOpen, TODAY]);
 
-  const PIXELS_PER_MINUTE = 1.8;
+  const PIXELS_PER_MINUTE = 2.4;
   const schedulerHeight = (endHour - startHour) * 60 * PIXELS_PER_MINUTE;
 
   const getPositionStyle = (time: string, durationStr: string) => {
@@ -730,8 +730,8 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                             if (parseFloat(style.top) < 0 || parseFloat(style.top) > schedulerHeight) return null;
                             return (
                               <div key={apt.id} onClick={() => { setSelectedAppointment(apt); setIsDetailsModalOpen(true); }}
-                                className="absolute left-2 right-2 rounded-2xl p-3 shadow-md border-l-4 cursor-pointer hover:scale-[1.02] transition-all z-20 overflow-hidden flex flex-col justify-center"
-                                style={{ ...style, backgroundColor: `${color}10`, borderLeftColor: color }}>
+                                className="absolute left-2 right-2 rounded-2xl p-2.5 shadow-md border-l-4 cursor-pointer hover:scale-[1.02] transition-all z-20 flex flex-col justify-center overflow-hidden"
+                                style={{ ...style, backgroundColor: `${color}12`, borderLeftColor: color }}>
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1" style={{ color }}><Clock size={10} /> {apt.time}</span>
                                   <div className="w-4 h-4 bg-white/50 rounded-full flex items-center justify-center"><CheckCircle2 size={10} className="text-emerald-500" /></div>
@@ -785,8 +785,8 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
 
       {/* Modal: Novo Agendamento */}
       {isModalOpen && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-xl rounded-[3rem] p-6 sm:p-10 shadow-2xl space-y-6 sm:space-y-8 animate-in zoom-in duration-300 border border-white/20 relative overflow-hidden">
+        <div className="fixed inset-0 z-[9999] p-4 bg-black/60 backdrop-blur-md overflow-y-auto flex items-center justify-center">
+          <div className="bg-white w-full max-w-xl rounded-[3rem] p-6 sm:p-10 shadow-2xl space-y-6 sm:space-y-8 animate-in zoom-in duration-300 border border-white/20 relative m-auto">
             <div className="absolute top-0 right-0 w-32 h-32 bg-pink-50 rounded-full -translate-y-1/2 translate-x-1/2 -z-10"></div>
 
             <div className="flex justify-between items-center gap-4">
@@ -982,8 +982,8 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
 
       {/* MODAL DETALHES */}
       {isDetailsModalOpen && selectedAppointment && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300">
+        <div className="fixed inset-0 z-[9999] p-4 bg-black/60 backdrop-blur-md overflow-y-auto flex items-center justify-center">
+          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 m-auto">
             <div className="flex justify-between items-center gap-4">
               <h3 className="text-xl font-black truncate min-w-0">Detalhes do Agendamento</h3>
               <button onClick={() => setIsDetailsModalOpen(false)} className="p-2 bg-gray-100 rounded-full shrink-0 flex items-center justify-center">
@@ -1024,8 +1024,8 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
 
       {/* MODAL REAGENDAMENTO (WhatsApp Notifier) */}
       {isRescheduleOpen && selectedAppointment && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 border border-white/20 relative overflow-hidden">
+        <div className="fixed inset-0 z-[9999] p-4 bg-black/60 backdrop-blur-md overflow-y-auto flex items-center justify-center">
+          <div className="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 border border-white/20 relative m-auto">
             <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-full -translate-y-1/2 translate-x-1/2 -z-10"></div>
 
             <div className="flex justify-between items-center gap-4">
@@ -1099,8 +1099,8 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
 
       {/* MODAL CONFIRMAÇÃO DE CANCELAMENTO */}
       {isConfirmCancelOpen && selectedAppointment && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center">
+        <div className="fixed inset-0 z-[9999] p-4 bg-black/70 backdrop-blur-md overflow-y-auto flex items-center justify-center">
+          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center m-auto">
             <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm mb-2">
               <AlertTriangle size={32} />
             </div>

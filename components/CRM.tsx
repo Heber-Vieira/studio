@@ -38,6 +38,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
 
   // States for Contact API Help
   const [isContactInstructionsOpen, setIsContactInstructionsOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -108,7 +109,9 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
+      setIsCopied(true);
       onShowToast("Link copiado com sucesso! ✨");
+      setTimeout(() => setIsCopied(false), 2000);
     }).catch(err => {
       console.error("Copy failed", err);
       onShowToast("Link gerado! Por favor, copie manualmente.");
@@ -439,9 +442,10 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => copyToClipboard(generatedMagicLink)}
-                  className="py-4 bg-[#40E0D0] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-teal-100 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                  className={`py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-2 ${isCopied ? 'bg-emerald-500 text-white shadow-emerald-100' : 'bg-[#40E0D0] text-white shadow-teal-100 hover:scale-[1.02] active:scale-95'}`}
                 >
-                  <Copy size={16} /> Copiar Link
+                  {isCopied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
+                  {isCopied ? 'Copiado!' : 'Copiar Link'}
                 </button>
                 <a
                   href={generatedMagicLink}

@@ -18,6 +18,7 @@ interface ServicesProps {
   onDelete: (id: string) => void;
   onAddCategory: (cat: Omit<Category, 'id'>) => Promise<void> | void;
   onDeleteCategory: (id: string) => void;
+  anamnesisTemplates?: any[];
 }
 
 const IconMap: Record<string, any> = {
@@ -49,7 +50,7 @@ const BELLA_PALETTE = [
   '#10B981', // Emerald
 ];
 
-const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, onUpdate, onDelete, onAddCategory, onDeleteCategory }) => {
+const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, onUpdate, onDelete, onAddCategory, onDeleteCategory, anamnesisTemplates }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,7 +70,8 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
     price: 0,
     duration: '1h',
     description: '',
-    color: BELLA_PALETTE[0]
+    color: BELLA_PALETTE[0],
+    anamnesisTemplateId: ''
   });
 
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
@@ -94,10 +96,11 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
         price: newSvc.price,
         duration: newSvc.duration,
         description: newSvc.description,
-        color: newSvc.color
+        color: newSvc.color,
+        anamnesisTemplateId: newSvc.anamnesisTemplateId || undefined
       });
       setIsModalOpen(false);
-      setNewSvc({ name: '', category: categories[0]?.id || '', price: 0, duration: '1h', description: '', color: BELLA_PALETTE[0] });
+      setNewSvc({ name: '', category: categories[0]?.id || '', price: 0, duration: '1h', description: '', color: BELLA_PALETTE[0], anamnesisTemplateId: '' });
     } catch (error) {
       console.error("Error adding service:", error);
     }
@@ -425,6 +428,22 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
                 value={isEditModalOpen ? selectedService?.description : newSvc.description}
                 onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, description: e.target.value }) : setNewSvc({ ...newSvc, description: e.target.value })}
               ></textarea>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Anamnese Obrigatória</label>
+              <select
+                className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none text-sm font-bold"
+                value={isEditModalOpen ? (selectedService?.anamnesisTemplateId || '') : newSvc.anamnesisTemplateId}
+                onChange={e => isEditModalOpen
+                  ? setSelectedService({ ...selectedService!, anamnesisTemplateId: e.target.value || undefined })
+                  : setNewSvc({ ...newSvc, anamnesisTemplateId: e.target.value })
+                }
+              >
+                <option value="">Nenhuma</option>
+                {anamnesisTemplates?.map(t => (
+                  <option key={t.id} value={t.id}>{t.title}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
