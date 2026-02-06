@@ -284,7 +284,14 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                                     <div className="p-2 bg-teal-50 rounded-xl text-[#40E0D0]"><Scissors size={18} /></div>
                                     <div>
                                        <p className="font-bold text-gray-900 text-sm">{apt.service}</p>
-                                       <p className="text-[10px] text-gray-400 font-medium uppercase">{new Date(apt.date + 'T12:00:00').toLocaleDateString('pt-BR')} às {apt.time}</p>
+                                       <div className="flex items-center gap-2">
+                                          <p className="text-[10px] text-gray-400 font-medium uppercase">{new Date(apt.date + 'T12:00:00').toLocaleDateString('pt-BR')} às {apt.time}</p>
+                                          {staff.find(p => p.id === apt.professionalId) && (
+                                             <span className="text-[9px] font-black text-[#FF69B4] uppercase tracking-tighter bg-pink-50 px-1.5 py-0.5 rounded-md border border-pink-100/30 line-clamp-1">
+                                                {staff.find(p => p.id === apt.professionalId)?.name.split(' ')[0]}
+                                             </span>
+                                          )}
+                                       </div>
                                     </div>
                                  </div>
                                  <div className="w-2 h-2 rounded-full bg-[#40E0D0] animate-pulse"></div>
@@ -577,13 +584,15 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                            </div>
                            <div className="flex-1 min-w-0">
                               <h4 className="font-bold text-sm text-gray-900 truncate group-hover:text-[#FF69B4] transition-colors">{apt.clientName}</h4>
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                 <p className="text-xs text-gray-400 truncate">{apt.service}</p>
+                              <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                                 <p className="text-xs text-gray-400 font-medium truncate">{apt.service}</p>
                                  {professional && (
-                                    <span className="text-[10px] font-bold text-[#FF69B4]/50 flex items-center gap-1">
-                                       <span className="w-1 h-1 rounded-full bg-pink-200"></span>
-                                       {professional.name.split(' ')[0]}
-                                    </span>
+                                    <div className="flex items-center gap-1 px-2 py-0.5 bg-pink-50 rounded-full border border-pink-100/50">
+                                       <User size={10} className="text-[#FF69B4]" />
+                                       <span className="text-[9px] font-black text-[#FF69B4] uppercase tracking-wider">
+                                          {professional.name.split(' ')[0]}
+                                       </span>
+                                    </div>
                                  )}
                               </div>
                            </div>

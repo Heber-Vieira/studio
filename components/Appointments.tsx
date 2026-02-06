@@ -728,7 +728,14 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                                 <h5 className="font-bold text-[9px] text-gray-900 leading-none truncate">{apt.service}</h5>
                                 <div className="flex items-center gap-1 mt-0.5">
                                   <p className="text-[8px] text-gray-400 truncate flex-1 min-w-0">{apt.clientName}</p>
-                                  {pro && <span className="text-[7px] font-bold text-[#FF69B4]/60 shrink-0">· {pro.name.split(' ')[0]}</span>}
+                                  {pro && (
+                                    <div className="flex items-center gap-0.5 px-1 py-0.5 bg-white/50 rounded-full border border-pink-100/30 shrink-0">
+                                      <User size={8} className="text-[#FF69B4]" />
+                                      <span className="text-[7px] font-black text-[#FF69B4] uppercase tracking-tighter">
+                                        {pro.name.split(' ')[0]}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -755,7 +762,17 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                                   <div className="w-4 h-4 bg-white/50 rounded-full flex items-center justify-center"><CheckCircle2 size={10} className="text-emerald-500" /></div>
                                 </div>
                                 <h5 className="font-bold text-[11px] text-gray-900 leading-tight truncate">{apt.service}</h5>
-                                <p className="text-[10px] text-gray-400 font-medium truncate mt-0.5">{apt.clientName}</p>
+                                <div className="flex items-center justify-between gap-1 mt-0.5">
+                                  <p className="text-[10px] text-gray-400 font-medium truncate">{apt.clientName}</p>
+                                  {pro && (
+                                    <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-white/40 rounded-full border border-pink-100/20 shrink-0">
+                                      <User size={8} className="text-[#FF69B4]" />
+                                      <span className="text-[8px] font-black text-[#FF69B4] uppercase tracking-tighter">
+                                        {pro.name.split(' ')[0]}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             );
                           })}
@@ -787,8 +804,17 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                             onClick={(e) => { e.stopPropagation(); setSelectedAppointment(a); setIsDetailsModalOpen(true); }}
                             className="text-[9px] truncate bg-gray-50 p-1.5 rounded-lg border border-gray-100 font-bold text-gray-600 flex items-center gap-1 cursor-pointer hover:bg-white hover:shadow-sm hover:border-[#FF69B4]/30 transition-all active:scale-95"
                           >
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#40E0D0]"></div>
-                            {a.time} {a.clientName.split(' ')[0]}
+                            <div className="flex flex-col min-w-0">
+                              <div className="flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#40E0D0]"></div>
+                                <span className="truncate">{a.time} {a.clientName.split(' ')[0]}</span>
+                              </div>
+                              {staff.find(p => p.id === a.professionalId) && (
+                                <span className="text-[7px] text-[#FF69B4] font-black uppercase tracking-tighter ml-2.5 truncate">
+                                  • {staff.find(p => p.id === a.professionalId)?.name.split(' ')[0]}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>

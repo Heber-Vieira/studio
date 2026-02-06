@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import { Client, Appointment, SalonSettings, Professional } from '../types';
-import { UserPlus, Search, Phone, History, Star, X, CheckCircle2, Calendar, Sparkles, Trash2, AlertTriangle, Gift, Smartphone, Upload, Edit3, Save, Link2, ExternalLink, Copy, MessageCircle } from 'lucide-react';
+import { User, UserPlus, Search, Phone, History, Star, X, CheckCircle2, Calendar, Sparkles, Trash2, AlertTriangle, Gift, Smartphone, Upload, Edit3, Save, Link2, ExternalLink, Copy, MessageCircle } from 'lucide-react';
 import { Modal, Button, InputField } from './ui';
 
 interface CRMProps {
@@ -643,10 +643,12 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
                         <Calendar size={10} /> {new Date(apt.date).toLocaleDateString()} • {apt.time}
                       </span>
                       {staff.find(p => p.id === apt.professionalId) && (
-                        <span className="text-[10px] text-[#FF69B4]/60 font-bold flex items-center gap-1">
-                          <span className="w-1 h-1 rounded-full bg-pink-100"></span>
-                          {staff.find(p => p.id === apt.professionalId)?.name.split(' ')[0]}
-                        </span>
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-pink-50 rounded-full border border-pink-100/50 mt-1 w-fit">
+                          <User size={10} className="text-[#FF69B4]" />
+                          <span className="text-[9px] font-black text-[#FF69B4] uppercase tracking-wider">
+                            {staff.find(p => p.id === apt.professionalId)?.name.split(' ')[0]}
+                          </span>
+                        </div>
                       )}
                     </div>
                   </div>
