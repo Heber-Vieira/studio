@@ -16,10 +16,11 @@ interface CRMProps {
   settings: SalonSettings;
   t: any;
   onShowToast: (msg: string) => void;
+  initialSearchTerm?: string;
 }
 
-const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDelete, onRedeem, onPrefilledBooking, appointments, settings, t, onShowToast }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDelete, onRedeem, onPrefilledBooking, appointments, settings, t, onShowToast, initialSearchTerm = '' }) => {
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [viewingHistory, setViewingHistory] = useState<Client | null>(null);
@@ -53,10 +54,14 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
 
   const filteredClients = useMemo(() => {
     return clients
-      .filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.phone.includes(searchTerm)
-      )
+      .filter(c => {
+        const search = searchTerm.toLowerCase();
+        return (
+          c.name.toLowerCase().includes(search) ||
+          c.phone.includes(searchTerm) ||
+          c.tags.some(tag => tag.toLowerCase().includes(search))
+        );
+      })
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
   }, [clients, searchTerm]);
 

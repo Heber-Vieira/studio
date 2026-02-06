@@ -6,7 +6,7 @@ import { View, Appointment, UserRole, UserProfile, SalonSettings, Client, Profes
 
 interface DashboardProps {
    t: any;
-   onAction: (view: View) => void;
+   onAction: (view: View, filter?: string) => void;
    onNavigateDate: (date: string) => void;
    appointments: Appointment[];
    userRole: UserRole;
@@ -448,7 +448,7 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                change="+2"
                bgColor="bg-teal-50 dark:bg-teal-500/10"
                icon={<Users size={20} className="text-teal-500" />}
-               onClick={() => onAction(View.CRM)}
+               onClick={() => onAction(View.CRM, 'Novo')}
             />
 
             <StatCard
@@ -505,7 +505,7 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                            dataKey="name"
                            axisLine={false}
                            tickLine={false}
-                           tick={{ fill: '#9CA3AF', fontSize: 10, fontBold: 500 }}
+                           tick={{ fill: '#9CA3AF', fontSize: 10, fontWeight: 500 }}
                            dy={10}
                            interval={timeRange === 'yearly' ? 0 : 'preserveStartEnd'}
                         />

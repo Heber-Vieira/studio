@@ -68,6 +68,7 @@ const MainLayout: React.FC = () => {
   const [prefilledClient, setPrefilledClient] = useState<{ name: string; phone: string } | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
+  const [crmSearchTerm, setCrmSearchTerm] = useState('');
 
   const [lang, setLang] = useState<Language>(() => {
     const saved = localStorage.getItem('bella_lang');
@@ -641,6 +642,15 @@ const MainLayout: React.FC = () => {
   };
 
   const handlePrefilledBooking = (client: { name: string; phone: string }) => { setPrefilledClient(client); setCurrentView(View.CLIENT_BOOKING); };
+  const handleViewAction = (view: View, filter?: string) => {
+    setCurrentView(view);
+    if (view === View.CRM) {
+      setCrmSearchTerm(filter || '');
+    } else {
+      // Clear filter when leaving CRM to avoid confusion next time
+      setCrmSearchTerm('');
+    }
+  };
 
   // Handle full-screen loading state
   // We only show the full splash if Auth is strictly loading OR if we have NO settings and NO cache
@@ -682,7 +692,7 @@ const MainLayout: React.FC = () => {
     try {
       // SECURITY GUARD: Clients are strictly limited to Dashboard or Booking Portal
       if (user?.role === 'client' && currentView !== View.DASHBOARD && currentView !== View.CLIENT_BOOKING) {
-        return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user.role} user={user} settings={settings} clients={clients} staff={staff} onLogout={logout} transactions={transactions} />;
+        return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user.role} user={user} settings={settings} clients={clients} staff={staff} onLogout={logout} transactions={transactions} />;
       }
 
       const permissions = settings.permissions || {
@@ -691,12 +701,12 @@ const MainLayout: React.FC = () => {
 
       switch (currentView) {
         case View.DASHBOARD:
-          return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={handleLogout} transactions={transactions} />;
+          return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={handleLogout} transactions={transactions} />;
         case View.APPOINTMENTS:
           return <AppointmentsView appointments={appointments} clients={clients} staff={staff} services={services} onAdd={addAppointment} onDelete={deleteAppointment} onBlock={() => { }} lang={lang} initialDate={selectedDate} blockedPeriods={blockedPeriods} />;
         case View.CRM:
           if (user?.role === 'attendant' && !permissions.viewCRM) return <AccessRestricted />;
-          return <CRMView clients={clients} onAdd={addClient} onImport={importClients} onUpdate={updateClient} onDelete={deleteClient} onRedeem={() => { }} onPrefilledBooking={handlePrefilledBooking} appointments={appointments} settings={settings} t={t} onShowToast={showToast} />;
+          return <CRMView clients={clients} onAdd={addClient} onImport={importClients} onUpdate={updateClient} onDelete={deleteClient} onRedeem={() => { }} onPrefilledBooking={handlePrefilledBooking} appointments={appointments} settings={settings} t={t} onShowToast={showToast} initialSearchTerm={crmSearchTerm} />;
         case View.STAFF: if (user?.role === 'attendant' && !permissions.viewStaff) return <AccessRestricted />; return <StaffView staff={staff} services={services} onAdd={addStaff} onUpdate={updateStaff} onDelete={deleteStaff} blockedPeriods={blockedPeriods} onBlock={() => { }} onUnblock={() => { }} onViewSchedule={() => setCurrentView(View.APPOINTMENTS)} categories={categories} onShowToast={showToast} />;
         case View.SERVICES: if (user?.role === 'attendant' && !permissions.viewServices) return <AccessRestricted />; return <ServicesView services={services} categories={categories} onAdd={addService} onUpdate={updateService} onDelete={deleteService} onAddCategory={addServiceCategory} onDeleteCategory={deleteServiceCategory} />;
         case View.INVENTORY:
@@ -708,7 +718,7 @@ const MainLayout: React.FC = () => {
         case View.SETTINGS: if (user?.role === 'attendant' || user?.role === 'client') return <AccessRestricted />; return <SettingsView t={t} lang={lang} setLang={setLang} settings={settings} onUpdate={setSettingsAndPersist} onExportData={handleExportData} onImportData={handleImportData} onShowToast={showToast} />;
         case View.CLIENT_BOOKING:
           return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} />;
-        default: return <Dashboard t={t} onAction={(v) => setCurrentView(v)} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={logout} />;
+        default: return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={logout} />;
       }
     } catch (err) {
       console.error("Render error:", err);
