@@ -47,6 +47,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
+    // SAFETY TIMEOUT: Garantir que isLoading seja false após 10 segundos
+    const safetyTimeout = setTimeout(() => {
+      if (mounted) {
+        console.warn('[Auth] Safety timeout triggered - forcing isLoading to false');
+        setIsLoading(false);
+      }
+    }, 10000);
+
     const initSession = async () => {
       try {
         console.log('[Auth] Initializing session...');
@@ -65,21 +73,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const email = session.user.email || '';
           const isHeber = email.toLowerCase().includes('heber') || (session.user.user_metadata?.name || '').toLowerCase().includes('heber');
 
-          setUser({
+          // Definir usuario otimista imediatamente e desabilitar loading
+          const optimisticUser = {
             id: session.user.id,
             name: session.user.user_metadata?.name || 'Usuário',
             email: email,
             role: isHeber ? 'master_admin' : ((session.user.user_metadata?.role as UserRole) || 'client'),
             companyId: session.user.user_metadata?.company_id || '00000000-0000-0000-0000-000000000001'
-          });
+          };
 
+          setUser(optimisticUser);
+          // CRITICAL FIX: Definir isLoading como false IMEDIATAMENTE após ter um usuario otimista
+          // O fetchProfile vai atualizar os dados em background
+          if (mounted) setIsLoading(false);
+
+          // Fetch profile em background para atualizar dados
           fetchProfile(session.user.id).then(profile => {
             if (mounted && profile) {
               console.log('[Auth] Profile loaded successfully');
               setUser(profile);
             }
-          }).finally(() => {
-            if (mounted) setIsLoading(false);
+          }).catch(err => {
+            console.error('[Auth] Profile fetch error (non-blocking):', err);
           });
         } else {
           console.log('[Auth] No active session found.');
@@ -101,21 +116,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const email = session.user.email || '';
         const isHeber = email.toLowerCase().includes('heber') || (session.user.user_metadata?.name || '').toLowerCase().includes('heber');
 
-        setUser({
+        const optimisticUser = {
           id: session.user.id,
           name: session.user.user_metadata?.name || 'Usuário',
           email: email,
           role: isHeber ? 'master_admin' : ((session.user.user_metadata?.role as UserRole) || 'client'),
           companyId: session.user.user_metadata?.company_id || '00000000-0000-0000-0000-000000000001'
-        });
+        };
 
+        setUser(optimisticUser);
+        // CRITICAL FIX: Definir isLoading como false IMEDIATAMENTE
+        if (mounted) setIsLoading(false);
+
+        // Fetch profile em background
         fetchProfile(session.user.id).then(profile => {
           if (mounted && profile) {
             console.log('[Auth] Profile synced for event:', event);
             setUser(profile);
           }
-        }).finally(() => {
-          if (mounted) setIsLoading(false);
+        }).catch(err => {
+          console.error('[Auth] Profile sync error (non-blocking):', err);
         });
       } else {
         console.log('[Auth] User logged out or session expired.');
@@ -126,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, []);
