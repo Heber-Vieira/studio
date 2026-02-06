@@ -111,22 +111,40 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
     }
 
     const dayAppointments = appointments.filter(a => a.professionalId === selectedPro.id && a.date === selectedDate && a.status !== 'cancelled');
-    const dayBlocks = blockedPeriods.filter(b => b.professionalId === selectedPro.id && b.date === selectedDate);
+    const dayBlocks = (blockedPeriods || []).filter(b => b.professionalId === selectedPro.id && b.date === selectedDate);
+
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const isToday = selectedDate === todayStr;
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
     return slots.filter(slotTime => {
       const slotStart = timeToMinutes(slotTime);
       const slotEnd = slotStart + newServiceDuration;
+
+      // 1. Future check
+      if (isToday && slotStart <= currentMinutes + 30) return false;
+
+      // 2. Work hours check
       if (slotEnd > workEnd) return false;
+
+      // 3. Lunch check
       if (lunchStart !== -1 && lunchEnd !== -1 && isColliding(slotStart, slotEnd, lunchStart, lunchEnd)) return false;
+
+      // 4. Break check
       if (breakStart !== -1 && breakEnd !== -1 && isColliding(slotStart, slotEnd, breakStart, breakEnd)) return false;
+
+      // 5. Appointment collision
       const hasAppointmentConflict = dayAppointments.some(apt => {
-        const aptService = services.find(s => s.name === apt.service);
+        const aptService = services.find(s => s.id === apt.serviceId || s.name === apt.service);
         const aptDuration = aptService ? parseDuration(aptService.duration) : 60;
         const aptStart = timeToMinutes(apt.time);
         const aptEnd = aptStart + aptDuration;
         return isColliding(slotStart, slotEnd, aptStart, aptEnd);
       });
       if (hasAppointmentConflict) return false;
+
+      // 6. Block conflict
       const hasBlockConflict = dayBlocks.some(block => {
         const blockStart = timeToMinutes(block.startTime);
         const blockEnd = timeToMinutes(block.endTime);
@@ -364,7 +382,11 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                       )) : (
                         <div className="col-span-full py-10 text-center text-gray-300 italic text-sm flex flex-col items-center gap-3">
                           <div className="p-4 bg-gray-50 rounded-full"><Calendar size={32} strokeWidth={1} /></div>
-                          <p className="font-bold">Sem horários nesta data.</p>
+                          <p className="font-bold">
+                            {selectedPro && selectedPro.schedule?.[new Date(selectedDate + 'T12:00:00').getDay()]?.isOff
+                              ? 'Dia de descanso do especialista.'
+                              : 'Sem horários disponíveis nesta data.'}
+                          </p>
                         </div>
                       )}
                     </div>

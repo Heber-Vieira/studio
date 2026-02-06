@@ -173,6 +173,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
     const lunchEnd = daySchedule.lunchEnd ? timeToMinutes(daySchedule.lunchEnd) : -1;
 
     const slots = [];
+    // We increment by 15 or 30 mins to scan, but 30 is cleaner for display
     for (let m = workStart; m < workEnd; m += 30) {
       const h = Math.floor(m / 60);
       const min = m % 60;
@@ -180,22 +181,35 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
     }
 
     const dayAppointments = appointments.filter(a => a.professionalId === proId && a.date === date && a.status !== 'cancelled');
-    const dayBlocks = blockedPeriods.filter(b => b.professionalId === proId && b.date === date);
+    const dayBlocks = (blockedPeriods || []).filter(b => b.professionalId === proId && b.date === date);
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const isToday = date === TODAY;
 
     return slots.filter(slotTime => {
       const slotStart = timeToMinutes(slotTime);
       const slotEnd = slotStart + duration;
-      if (slotEnd > workEnd) return false;
-      if (lunchStart !== -1 && isColliding(slotStart, slotEnd, lunchStart, lunchEnd)) return false;
 
+      // Rule 1: Must be in the future if today
+      if (isToday && slotStart <= currentMinutes + 15) return false;
+
+      // Rule 2: Must fit in work hours
+      if (slotEnd > workEnd) return false;
+
+      // Rule 3: Must not collide with lunch
+      if (lunchStart !== -1 && lunchEnd !== -1 && isColliding(slotStart, slotEnd, lunchStart, lunchEnd)) return false;
+
+      // Rule 4: Must not collide with other appointments
       const hasConflict = dayAppointments.some(apt => {
-        const aptSvc = services.find(s => s.name === apt.service);
+        const aptSvc = services.find(s => s.id === apt.serviceId || s.name === apt.service);
         const aptDur = aptSvc ? parseDuration(aptSvc.duration) : 60;
         const aptStart = timeToMinutes(apt.time);
         return isColliding(slotStart, slotEnd, aptStart, aptStart + aptDur);
       });
       if (hasConflict) return false;
 
+      // Rule 5: Must not collide with blocks
       return !dayBlocks.some(b => isColliding(slotStart, slotEnd, timeToMinutes(b.startTime), timeToMinutes(b.endTime)));
     });
   };
@@ -940,34 +954,36 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="md:col-span-2 space-y-3">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
-                  Horário
-                  {availableTimesForForm.length > 0 && <span className="text-[#40E0D0] ml-1 lowercase">({availableTimesForForm.length} slots)</span>}
+                  Horários Disponíveis
+                  {availableTimesForForm.length > 0 && <span className="text-[#40E0D0] ml-1 lowercase">({availableTimesForForm.length} livres)</span>}
                 </label>
-                <div className="relative group">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const timeStr = newApt.time || '12:00';
-                      const parts = timeStr.split(':');
-                      const h = parts[0] ? Number(parts[0]) : 12;
-                      const m = parts[1] ? Number(parts[1]) : 0;
 
-                      setTimePickerConfig({
-                        isOpen: true,
-                        label: "Escolher Horário",
-                        initialH: h,
-                        initialM: m,
-                        onConfirm: (nh, nm) => setNewApt(prev => ({ ...prev, time: `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')}` }))
-                      });
-                    }}
-                    className="w-full bg-[#F5F5F5] border-none rounded-2xl pl-12 pr-4 py-4 font-bold text-left hover:bg-gray-100 transition-all"
-                  >
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                    <span>{newApt.time || '--:--'}</span>
-                  </button>
-                </div>
+                {!newApt.professionalId || !newApt.serviceId ? (
+                  <div className="bg-gray-50 border-2 border-dashed border-gray-100 rounded-3xl p-6 text-center">
+                    <p className="text-xs font-bold text-gray-300">Selecione o especialista e serviço para ver horários.</p>
+                  </div>
+                ) : availableTimesForForm.length === 0 ? (
+                  <div className="bg-rose-50 border-2 border-dashed border-rose-100 rounded-3xl p-6 text-center">
+                    <p className="text-xs font-bold text-rose-300">Sem horários para esta data.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-48 overflow-y-auto pr-2 scrollbar-hide">
+                    {availableTimesForForm.map(time => (
+                      <button
+                        key={time}
+                        type="button"
+                        onClick={() => setNewApt({ ...newApt, time })}
+                        className={`py-3 rounded-[1.2rem] font-black text-xs transition-all active:scale-95 ${newApt.time === time
+                          ? 'bg-[#FF69B4] text-white shadow-lg shadow-pink-100 border-[#FF69B4]'
+                          : 'bg-[#F5F5F5] text-gray-500 hover:bg-gray-100 border-transparent'} border-2`}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="md:col-span-2 pt-4">
