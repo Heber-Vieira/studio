@@ -635,21 +635,21 @@ const FinancialView: React.FC<FinancialProps> = ({
             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in">
                <div className="bg-white w-full max-w-4xl rounded-[2rem] sm:rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-white/20 animate-in zoom-in duration-300 printable-area">
 
-                  <div className="p-5 sm:p-8 border-b border-gray-100 flex justify-between items-center shrink-0 print:hidden">
-                     <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="p-4 sm:p-8 border-b border-gray-100 flex justify-between items-center shrink-0 print:hidden gap-4">
+                     <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gray-900 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
                            <FileText className="w-5 h-5 sm:w-7 sm:h-7" />
                         </div>
                         <div className="min-w-0">
-                           <h3 className="text-lg sm:text-2xl font-black text-gray-900 tracking-tight truncate">Fechamento Financeiro ✨</h3>
+                           <h3 className="text-base sm:text-2xl font-black text-gray-900 tracking-tight truncate">Fechamento Financeiro ✨</h3>
                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">Snapshot do Studio</p>
                         </div>
                      </div>
-                     <div className="flex gap-2 shrink-0">
+                     <div className="flex items-center gap-2 shrink-0">
                         <button onClick={() => window.print()} className="p-2.5 sm:p-3 bg-gray-900 hover:bg-black text-white rounded-xl sm:rounded-2xl transition-all shadow-xl flex items-center gap-2 font-bold text-xs">
-                           <Printer size={18} /> <span className="hidden sm:inline">Imprimir Report</span>
+                           <Printer size={18} /> <span className="hidden sm:inline">Relatório</span>
                         </button>
-                        <button onClick={() => setIsReportModalOpen(false)} className="p-2.5 sm:p-3 bg-gray-50 hover:bg-gray-100 text-gray-400 rounded-xl sm:rounded-2xl transition-all">
+                        <button onClick={() => setIsReportModalOpen(false)} className="p-2.5 sm:p-3 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-xl sm:rounded-2xl transition-all shrink-0 flex items-center justify-center">
                            <X size={20} />
                         </button>
                      </div>
@@ -763,7 +763,9 @@ const FinancialView: React.FC<FinancialProps> = ({
             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
                <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-8 animate-in zoom-in duration-300 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-gray-50 to-white -z-10"></div>
-                  <button onClick={() => setSelectedDetailTransaction(null)} className="absolute top-6 right-6 p-2 bg-gray-100 rounded-full hover:rotate-90 transition-transform"><X size={20} /></button>
+                  <button onClick={() => setSelectedDetailTransaction(null)} className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 bg-gray-100 rounded-full hover:rotate-90 transition-transform shrink-0 flex items-center justify-center z-10">
+                     <X size={20} />
+                  </button>
 
                   <div className="space-y-4">
                      <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto shadow-xl ${selectedDetailTransaction.type === 'income' ? 'bg-[#40E0D0] text-white shadow-teal-100' : 'bg-rose-500 text-white shadow-rose-100'}`}>
