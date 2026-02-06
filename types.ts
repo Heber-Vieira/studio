@@ -13,6 +13,7 @@ export interface Appointment {
   id: string;
   clientId: string;
   clientName: string;
+  clientPhone?: string; // Identificação para clientes 'external'
   service: string; // O nome do serviço para exibição
   serviceId?: string; // O ID do serviço no banco
   date: string; // ISO string

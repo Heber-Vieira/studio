@@ -14,7 +14,7 @@ interface ClientBookingProps {
   blockedPeriods: BlockedPeriod[];
   onBook: (apt: Appointment) => void;
   onClose: () => void;
-  initialClientData?: { name: string; phone: string };
+  initialClientData?: { name: string; phone: string; id?: string };
   templates: AnamnesisTemplate[];
   onAddAnamnesisRecord: (record: AnamnesisRecord) => void;
 }
@@ -28,7 +28,8 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [clientInfo, setClientInfo] = useState({
     name: initialClientData?.name || '',
-    phone: initialClientData?.phone || ''
+    phone: initialClientData?.phone || '',
+    id: initialClientData?.id
   });
   const [bookingFinished, setBookingFinished] = useState(false);
 
@@ -42,7 +43,8 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
     if (initialClientData) {
       setClientInfo({
         name: initialClientData.name,
-        phone: initialClientData.phone
+        phone: initialClientData.phone,
+        id: initialClientData.id
       });
     }
   }, [initialClientData]);
@@ -166,8 +168,9 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
 
     onBook({
       id: appointmentId,
-      clientId: 'external',
+      clientId: clientInfo.id || 'external',
       clientName: clientInfo.name,
+      clientPhone: clientInfo.phone,
       serviceId: selectedService.id,
       service: selectedService.name,
       date: selectedDate,
@@ -186,7 +189,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
     setSelectedDate(new Date().toISOString().split('T')[0]);
     setSelectedTime(null);
     if (!initialClientData) {
-      setClientInfo({ name: '', phone: '' });
+      setClientInfo({ name: '', phone: '', id: undefined });
     }
     setBookingFinished(false);
   };

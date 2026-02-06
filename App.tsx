@@ -41,10 +41,11 @@ const MainLayout: React.FC = () => {
 
       const pn = searchParams.get('pn') || hashParams.get('pn');
       const pp = searchParams.get('pp') || hashParams.get('pp');
+      const cid = searchParams.get('cid') || hashParams.get('cid');
       const ref = searchParams.get('ref') || hashParams.get('ref');
 
-      if (pn || pp || ref || hashIsBooking) {
-        return { isBooking: true, pn, pp, ref };
+      if (pn || pp || ref || cid || hashIsBooking) {
+        return { isBooking: true, pn, pp, ref, cid };
       }
     } catch (e) {
       console.warn("Route parsing error:", e);
@@ -103,19 +104,20 @@ const MainLayout: React.FC = () => {
 
   useEffect(() => {
     if (initialParams.isBooking) {
-      let clientData: { name: string; phone: string } | null = null;
+      let clientData: { name: string; phone: string; id?: string } | null = null;
 
       if (initialParams.ref) {
         try {
           const decoded = JSON.parse(atob(initialParams.ref));
           if (decoded.n && decoded.p) {
-            clientData = { name: decoded.n, phone: decoded.p };
+            clientData = { name: decoded.n, phone: decoded.p, id: decoded.id };
           }
         } catch (e) { console.error("Error decoding ref:", e); }
-      } else if (initialParams.pn || initialParams.pp) {
+      } else if (initialParams.pn || initialParams.pp || initialParams.cid) {
         clientData = {
           name: initialParams.pn ? decodeURIComponent(initialParams.pn) : '',
-          phone: initialParams.pp ? decodeURIComponent(initialParams.pp) : ''
+          phone: initialParams.pp ? decodeURIComponent(initialParams.pp) : '',
+          id: initialParams.cid ? decodeURIComponent(initialParams.cid) : undefined
         };
       }
 
@@ -389,10 +391,44 @@ const MainLayout: React.FC = () => {
 
   const addAppointment = async (apt: Omit<Appointment, 'id'>) => {
     try {
-      await db.addAppointment(apt);
+      let finalClientId = apt.clientId;
+
+      // Handle external/anonymous bookings by finding or creating the client
+      if (apt.clientId === 'external') {
+        const phoneToMatch = apt.clientPhone || (prefilledClient?.phone);
+        // Note: ClientBooking should ideally pass the phone in the apt object if it's external
+        // Let's check if it does. Looking at ClientBooking, it doesn't currently add phone to the apt object.
+        // We need to fix ClientBooking to pass the phone/name if it's external.
+
+        // Finding client in memory first
+        const existing = clients.find(c => c.phone.replace(/\D/g, '') === (phoneToMatch || '').replace(/\D/g, ''));
+
+        if (existing) {
+          finalClientId = existing.id;
+        } else {
+          // Create client if not found
+          const newC = await db.addClient({
+            name: apt.clientName || 'Cliente Web',
+            phone: apt.clientPhone || '',
+            lastVisit: new Date().toISOString().split('T')[0],
+            totalSpent: 0,
+            loyaltyPoints: 0,
+            tags: ['Portal Web']
+          });
+          finalClientId = newC.id;
+        }
+      }
+
+      await db.addAppointment({
+        ...apt,
+        clientId: finalClientId
+      });
       showToast("Agendado! ✨");
       fetchData();
-    } catch (e) { showToast("Erro ao agendar."); }
+    } catch (e) {
+      console.error("Booking error:", e);
+      showToast("Erro ao agendar.");
+    }
   };
 
   const deleteAppointment = async (id: string) => {

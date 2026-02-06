@@ -104,18 +104,43 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
     const baseUrl = window.location.href.split('#')[0].split('?')[0];
     const nameParam = encodeURIComponent(activeMagicClient.name);
     const phoneParam = encodeURIComponent(activeMagicClient.phone);
-    return `${baseUrl}#booking?pn=${nameParam}&pp=${phoneParam}`;
+    const clientId = encodeURIComponent(activeMagicClient.id);
+    return `${baseUrl}#booking?cid=${clientId}&pn=${nameParam}&pp=${phoneParam}`;
   }, [activeMagicClient]);
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
+    if (!text) return;
+
+    const successful = () => {
       setIsCopied(true);
       onShowToast("Link copiado com sucesso! ✨");
       setTimeout(() => setIsCopied(false), 2000);
-    }).catch(err => {
-      console.error("Copy failed", err);
-      onShowToast("Link gerado! Por favor, copie manualmente.");
-    });
+    };
+
+    const fallback = (content: string) => {
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = content;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        if (ok) successful();
+        else onShowToast("Erro ao copiar. Tente selecionar o texto.");
+      } catch (err) {
+        onShowToast("Erro ao copiar automaticamente.");
+      }
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(successful).catch(() => fallback(text));
+    } else {
+      fallback(text);
+    }
   };
 
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -442,9 +467,12 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => copyToClipboard(generatedMagicLink)}
-                  className={`py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-2 ${isCopied ? 'bg-emerald-500 text-white shadow-emerald-100' : 'bg-[#40E0D0] text-white shadow-teal-100 hover:scale-[1.02] active:scale-95'}`}
+                  className={`py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 ${isCopied
+                    ? 'bg-emerald-500 text-white shadow-emerald-100 scale-105'
+                    : 'bg-[#FF69B4] text-white shadow-pink-100 hover:scale-[1.02] active:scale-95'
+                    }`}
                 >
-                  {isCopied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
+                  {isCopied ? <CheckCircle2 size={18} /> : <Copy size={18} />}
                   {isCopied ? 'Copiado!' : 'Copiar Link'}
                 </button>
                 <a

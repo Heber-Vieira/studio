@@ -403,10 +403,36 @@ const MarketingView: React.FC<MarketingViewProps> = ({
                 </button>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(generatedCopy);
-                    setIsCopied(true);
-                    if (onShowToast) onShowToast("Texto copiado! ✨");
-                    setTimeout(() => setIsCopied(false), 2000);
+                    const text = generatedCopy;
+                    const successful = () => {
+                      setIsCopied(true);
+                      if (onShowToast) onShowToast("Texto copiado! ✨");
+                      setTimeout(() => setIsCopied(false), 2000);
+                    };
+
+                    const fallback = (content: string) => {
+                      try {
+                        const textArea = document.createElement("textarea");
+                        textArea.value = content;
+                        textArea.style.position = "fixed";
+                        textArea.style.left = "-9999px";
+                        textArea.style.top = "0";
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        const ok = document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        if (ok) successful();
+                      } catch (err) {
+                        if (onShowToast) onShowToast("Erro ao copiar automaticamente.");
+                      }
+                    };
+
+                    if (navigator.clipboard && window.isSecureContext) {
+                      navigator.clipboard.writeText(text).then(successful).catch(() => fallback(text));
+                    } else {
+                      fallback(text);
+                    }
                   }}
                   className={`flex-1 py-4 border rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2 ${isCopied ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
                 >
