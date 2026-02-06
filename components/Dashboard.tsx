@@ -327,19 +327,19 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
                   <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in duration-300 border border-white/20">
 
-                     <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                        <div className="flex items-center gap-4">
-                           <div className="w-12 h-12 bg-gray-900 rounded-2xl flex items-center justify-center text-white shadow-lg">
-                              <Calendar size={24} />
+                     <div className="p-6 sm:p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 gap-4">
+                        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-900 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
+                              <Calendar size={20} className="sm:size-6" />
                            </div>
-                           <div>
-                              <h3 className="text-2xl font-black text-gray-900 tracking-tight">Meus Agendamentos 🌸</h3>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Confira seus horários marcados</p>
+                           <div className="min-w-0">
+                              <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight truncate">Meus Agendamentos 🌸</h3>
+                              <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest truncate">Confira seus horários marcados</p>
                            </div>
                         </div>
                         <button
                            onClick={() => setIsMyAppointmentsOpen(false)}
-                           className="p-3 bg-white border border-gray-100 text-gray-400 hover:text-rose-500 rounded-2xl transition-all shadow-sm active:scale-90"
+                           className="p-2 sm:p-3 bg-white border border-gray-100 text-gray-400 hover:text-rose-500 rounded-2xl transition-all shadow-sm active:scale-90 shrink-0 flex items-center justify-center"
                         >
                            <X size={20} />
                         </button>

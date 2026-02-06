@@ -760,20 +760,22 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       {/* Modal: Novo Agendamento */}
       {isModalOpen && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-xl rounded-[3rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 border border-white/20 relative overflow-hidden">
+          <div className="bg-white w-full max-w-xl rounded-[3rem] p-6 sm:p-10 shadow-2xl space-y-6 sm:space-y-8 animate-in zoom-in duration-300 border border-white/20 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-pink-50 rounded-full -translate-y-1/2 translate-x-1/2 -z-10"></div>
 
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#FF69B4] rounded-2xl flex items-center justify-center text-white shadow-lg">
-                  <CalendarIcon size={24} />
+            <div className="flex justify-between items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#FF69B4] rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
+                  <CalendarIcon size={20} className="sm:size-6" />
                 </div>
-                <div>
-                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">Novo Agendamento 🌸</h3>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Reserva de horário rápida</p>
+                <div className="min-w-0">
+                  <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight truncate">Novo Agendamento 🌸</h3>
+                  <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest truncate">Reserva de horário rápida</p>
                 </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 bg-gray-100 rounded-full hover:rotate-90 transition-transform"><X size={20} /></button>
+              <button onClick={() => setIsModalOpen(false)} className="p-2 sm:p-2.5 bg-gray-100 rounded-full hover:rotate-90 transition-transform shrink-0 flex items-center justify-center">
+                <X size={20} />
+              </button>
             </div>
 
             <form onSubmit={handleAddAppointment} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -911,9 +913,11 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       {isDetailsModalOpen && selectedAppointment && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
           <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-black">Detalhes do Agendamento</h3>
-              <button onClick={() => setIsDetailsModalOpen(false)} className="p-2 bg-gray-100 rounded-full"><X size={20} /></button>
+            <div className="flex justify-between items-center gap-4">
+              <h3 className="text-xl font-black truncate min-w-0">Detalhes do Agendamento</h3>
+              <button onClick={() => setIsDetailsModalOpen(false)} className="p-2 bg-gray-100 rounded-full shrink-0 flex items-center justify-center">
+                <X size={20} />
+              </button>
             </div>
             <div className="space-y-4">
               <div className="bg-gray-50 p-6 rounded-[2rem]">
@@ -953,17 +957,19 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
           <div className="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 border border-white/20 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-full -translate-y-1/2 translate-x-1/2 -z-10"></div>
 
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#40E0D0] rounded-2xl flex items-center justify-center text-white shadow-lg">
-                  <RefreshCw size={24} />
+            <div className="flex justify-between items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#40E0D0] rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
+                  <RefreshCw size={20} className="sm:size-6" />
                 </div>
-                <div>
-                  <h3 className="text-xl font-black text-gray-900 tracking-tight">{t.appointments.rescheduleTitle}</h3>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{t.appointments.rescheduleSubtitle}</p>
+                <div className="min-w-0">
+                  <h3 className="text-lg sm:text-xl font-black text-gray-900 tracking-tight truncate">{t.appointments.rescheduleTitle}</h3>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">{t.appointments.rescheduleSubtitle}</p>
                 </div>
               </div>
-              <button onClick={() => setIsRescheduleOpen(false)} className="p-2 bg-gray-50 rounded-full hover:rotate-90 transition-transform"><X size={20} /></button>
+              <button onClick={() => setIsRescheduleOpen(false)} className="p-2 bg-gray-50 rounded-full hover:rotate-90 transition-transform shrink-0 flex items-center justify-center">
+                <X size={20} />
+              </button>
             </div>
 
             <div className="space-y-6">
