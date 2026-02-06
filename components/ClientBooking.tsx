@@ -174,7 +174,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
       const anamnesisRecord: AnamnesisRecord = {
         id: Math.random().toString(36).substr(2, 9),
         templateId: template.id,
-        clientId: 'external',
+        clientId: clientInfo.id || 'external',
         clientName: clientInfo.name,
         answers: anamnesisAnswers,
         signatureUrl: signatureData,
@@ -238,9 +238,11 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
           >
             <LogOut size={16} /> Sair
           </button>
-          <button onClick={onClose} className="p-2.5 bg-gray-50 rounded-xl hover:bg-gray-100 text-gray-500 transition-all">
-            <X size={20} />
-          </button>
+          {!initialClientData && (
+            <button onClick={onClose} className="p-2.5 bg-gray-50 rounded-xl hover:bg-gray-100 text-gray-500 transition-all">
+              <X size={20} />
+            </button>
+          )}
         </div>
       </header>
 
@@ -582,7 +584,20 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                           <div className="w-full space-y-10">
                             <div className="space-y-4">
                               <h4 className="text-3xl font-black text-gray-800 tracking-tight leading-tight">Assinatura Digital</h4>
-                              <p className="text-sm text-gray-400 font-medium px-8">Para finalizar o agendamento, assine digitalmente no campo abaixo.</p>
+                              <p className="text-sm text-gray-400 font-medium px-8">Confirme o serviço e assine digitalmente no campo abaixo.</p>
+                            </div>
+
+                            {/* Recap do Serviço no Final da Anamnese */}
+                            <div className="max-w-xs mx-auto bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 flex flex-col gap-2">
+                              <div className="flex items-center justify-between text-[10px] font-black uppercase text-indigo-400 tracking-widest">
+                                <span>Serviço Selecionado</span>
+                                <Scissors size={12} />
+                              </div>
+                              <h5 className="text-xl font-black text-gray-900">{selectedService?.name}</h5>
+                              <div className="flex items-center gap-3 mt-1 text-xs font-bold text-gray-400">
+                                <div className="flex items-center gap-1"><Calendar size={12} /> {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR')}</div>
+                                <div className="flex items-center gap-1"><Clock size={12} /> {selectedTime}</div>
+                              </div>
                             </div>
 
                             <div className="bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200 overflow-hidden relative group max-w-lg mx-auto shadow-inner">
