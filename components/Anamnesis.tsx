@@ -173,12 +173,16 @@ const AnamnesisView: React.FC<AnamnesisProps> = ({
 
             onAddRecord(fullRecord);
             onShowToast('Ficha de Anamnese salva com sucesso!', 'success');
+
+            // Transition first, then clean up state
             setActiveTab('manager');
-            setPlayingRecord({}); // Reset
-            setPlayerTemplate(null);
-        } catch (error) {
+            setTimeout(() => {
+                setPlayingRecord({});
+                setPlayerTemplate(null);
+            }, 300);
+        } catch (error: any) {
             console.error('Error saving record:', error);
-            onShowToast('Erro ao salvar ficha. Tente novamente.', 'error');
+            onShowToast('Erro ao salvar ficha: ' + (error?.message || 'Erro desconhecido'), 'error');
         }
     };
 
@@ -719,11 +723,12 @@ const FormPlayer: React.FC<{
         }
 
         try {
-            const signatureData = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
+            // Using toDataURL directly on the component for better compatibility
+            const signatureData = sigCanvas.current.toDataURL('image/png');
             onSave(signatureData);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Finalize error:', error);
-            onShowToast('Erro ao processar assinatura.', 'error');
+            onShowToast('Erro ao processar assinatura: ' + (error?.message || 'Erro no Canvas'), 'error');
         }
     };
 
