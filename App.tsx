@@ -159,22 +159,10 @@ const MainLayout: React.FC = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [anamnesisTemplates, setAnamnesisTemplates] = useState<AnamnesisTemplate[]>(() => {
-    const saved = localStorage.getItem('anamnesis_templates');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [anamnesisRecords, setAnamnesisRecords] = useState<AnamnesisRecord[]>(() => {
-    const saved = localStorage.getItem('anamnesis_records');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [anamnesisTemplates, setAnamnesisTemplates] = useState<AnamnesisTemplate[]>([]);
+  const [anamnesisRecords, setAnamnesisRecords] = useState<AnamnesisRecord[]>([]);
 
-  useEffect(() => {
-    localStorage.setItem('anamnesis_templates', JSON.stringify(anamnesisTemplates));
-  }, [anamnesisTemplates]);
-
-  useEffect(() => {
-    localStorage.setItem('anamnesis_records', JSON.stringify(anamnesisRecords));
-  }, [anamnesisRecords]);
+  // Anamnesis database persistence handled via db service now
 
   const [settings, setSettings] = useState<SalonSettings>(() => {
     const saved = localStorage.getItem('salon_settings');
@@ -338,6 +326,15 @@ const MainLayout: React.FC = () => {
         if (invCatsRes.status === 'fulfilled') setInventoryCategories(invCatsRes.value);
         if (transRes.status === 'fulfilled') setTransactions(transRes.value);
         if (suppRes.status === 'fulfilled') setSuppliers(suppRes.value);
+
+        // Fetch Anamnesis Data
+        const [templatesRes, recordsRes] = await Promise.allSettled([
+          db.getAnamnesisTemplates(),
+          db.getAnamnesisRecords()
+        ]);
+        if (templatesRes.status === 'fulfilled') setAnamnesisTemplates(templatesRes.value);
+        if (recordsRes.status === 'fulfilled') setAnamnesisRecords(recordsRes.value);
+
         console.log("[FetchData] Background load complete.");
       };
 
@@ -652,6 +649,60 @@ const MainLayout: React.FC = () => {
     }
   };
 
+  // --- ANAMNESIS ACTIONS ---
+  const addAnamnesisTemplate = async (template: AnamnesisTemplate) => {
+    try {
+      const companyId = user?.companyId || '00000000-0000-0000-0000-000000000001';
+      await db.addAnamnesisTemplate(template, companyId);
+      showToast("Modelo de anamnese criado!");
+      fetchData();
+    } catch (e: any) {
+      console.error("Error creating template:", e);
+      showToast(`Erro ao criar modelo: ${e.message || 'Erro de conexão'}`);
+    }
+  };
+
+  const updateAnamnesisTemplate = async (template: AnamnesisTemplate) => {
+    try {
+      await db.updateAnamnesisTemplate(template);
+      showToast("Modelo atualizado!");
+      fetchData();
+    } catch (e: any) {
+      console.error("Error updating template:", e);
+      showToast("Erro ao atualizar modelo.");
+    }
+  };
+
+  const deleteAnamnesisTemplate = async (id: string) => {
+    try {
+      await db.deleteAnamnesisTemplate(id);
+      showToast("Modelo excluído.");
+      fetchData();
+    } catch (e: any) {
+      console.error("Error deleting template:", e);
+      showToast("Erro ao excluir modelo.");
+    }
+  };
+
+  const addAnamnesisRecord = async (record: AnamnesisRecord) => {
+    try {
+      await db.addAnamnesisRecord(record);
+      showToast("Ficha de anamnese salva no banco! ✨");
+      fetchData();
+    } catch (e) {
+      console.error("Error saving anamnesis record:", e);
+      showToast("Erro ao salvar anamnese no banco.");
+    }
+  };
+
+  const deleteAnamnesisRecord = async (id: string) => {
+    try {
+      await db.deleteAnamnesisRecord(id);
+      showToast("Ficha excluída.");
+      fetchData();
+    } catch (e) { showToast("Erro ao excluir ficha."); }
+  };
+
   const handleExportData = () => {
     const backup: BackupData = { version: '1.0', timestamp: new Date().toISOString(), settings, clients, appointments, staff, services, categories, blockedPeriods, transactions, inventory };
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup));
@@ -750,10 +801,10 @@ const MainLayout: React.FC = () => {
           return <InventoryView inventory={inventory} categories={inventoryCategories} onAddItem={addInventoryItem} onUpdateItem={updateInventoryItem} onDeleteItem={deleteInventoryItem} onStockMovement={handleStockMovement} onAddTransaction={addTransaction} onAddCategory={addInventoryCategory} onDeleteCategory={deleteInventoryCategory} onShowToast={showToast} />;
         case View.FINANCIAL: if (user?.role === 'attendant' && !permissions.viewFinancial) return <AccessRestricted />; return <FinancialView transactions={transactions} appointments={appointments} categories={categories} onProcessPayment={processPayment} onAddTransaction={addTransaction} onDeleteTransaction={deleteTransaction} clients={clients} services={services} inventory={inventory} suppliers={suppliers} onAddSupplier={addSupplier} onUpdateSupplier={updateSupplier} onDeleteSupplier={deleteSupplier} user={user!} onShowToast={showToast} />;
         case View.MARKETING: if (user?.role === 'attendant' && !permissions.viewMarketing) return <AccessRestricted />; return <MarketingView clients={clients} appointments={appointments} settings={settings} onUpdateSettings={setSettingsAndPersist} onShowToast={showToast} />;
-        case View.ANAMNESIS: return <AnamnesisView clients={clients} templates={anamnesisTemplates} records={anamnesisRecords} onAddTemplate={(t) => setAnamnesisTemplates([...anamnesisTemplates, t])} onUpdateTemplate={(t) => setAnamnesisTemplates(anamnesisTemplates.map(item => item.id === t.id ? t : item))} onDeleteTemplate={(id) => setAnamnesisTemplates(anamnesisTemplates.filter(t => t.id !== id))} onAddRecord={(r) => setAnamnesisRecords([...anamnesisRecords, r])} onDeleteRecord={(id) => setAnamnesisRecords(anamnesisRecords.filter(r => r.id !== id))} onShowToast={showToast} />;
+        case View.ANAMNESIS: return <AnamnesisView clients={clients} templates={anamnesisTemplates} records={anamnesisRecords} onAddTemplate={addAnamnesisTemplate} onUpdateTemplate={updateAnamnesisTemplate} onDeleteTemplate={deleteAnamnesisTemplate} onAddRecord={addAnamnesisRecord} onDeleteRecord={deleteAnamnesisRecord} onShowToast={showToast} />;
         case View.SETTINGS: if (user?.role === 'attendant' || user?.role === 'client') return <AccessRestricted />; return <SettingsView t={t} lang={lang} setLang={setLang} settings={settings} onUpdate={setSettingsAndPersist} onExportData={handleExportData} onImportData={handleImportData} onShowToast={showToast} />;
         case View.CLIENT_BOOKING:
-          return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} templates={anamnesisTemplates} onAddAnamnesisRecord={(r) => setAnamnesisRecords([...anamnesisRecords, r])} onShowToast={showToast} />;
+          return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} templates={anamnesisTemplates} onAddAnamnesisRecord={addAnamnesisRecord} onShowToast={showToast} />;
         default: return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={logout} />;
       }
     } catch (err) {

@@ -357,6 +357,21 @@ const TemplateManager: React.FC<{
 }> = ({ templates, records, onStartPlayer, onEditTemplate, onDeleteTemplate, onAddQuickTemplate, onExportPDF, onDeleteRecord }) => {
     const [recordToDelete, setRecordToDelete] = useState<AnamnesisRecord | null>(null);
     const [viewingRecord, setViewingRecord] = useState<{ record: AnamnesisRecord, template: AnamnesisTemplate } | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredRecords = useMemo(() => {
+        return records
+            .filter(r => {
+                const template = templates.find(temp => temp.id === r.templateId);
+                const searchLower = searchTerm.toLowerCase();
+                return (
+                    r.clientName.toLowerCase().includes(searchLower) ||
+                    (template?.title || '').toLowerCase().includes(searchLower) ||
+                    (template?.category || '').toLowerCase().includes(searchLower)
+                );
+            })
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }, [records, searchTerm, templates]);
 
     return (
         <motion.div
@@ -391,20 +406,40 @@ const TemplateManager: React.FC<{
 
                 {/* Latest Records (History) */}
                 <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-4">
-                    <h3 className="font-black text-gray-900 text-sm uppercase tracking-widest flex items-center gap-2">
-                        <FileText size={16} className="text-emerald-500" /> Histórico Recente
-                    </h3>
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-black text-gray-900 text-sm uppercase tracking-widest flex items-center gap-2">
+                            <FileText size={16} className="text-emerald-500" /> Arquivo Digital
+                        </h3>
+                        <span className="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full font-black">{filteredRecords.length}</span>
+                    </div>
+
+                    {/* Search Input for Records */}
+                    <div className="relative group/search">
+                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-300 group-focus-within/search:text-indigo-500 transition-colors">
+                            <Search size={14} />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Buscar por cliente ou serviço..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-gray-50 border-none rounded-2xl py-3 pl-10 pr-4 text-xs font-bold text-gray-700 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300"
+                        />
+                    </div>
+
                     {records.length === 0 ? (
                         <p className="text-[10px] text-gray-400 font-medium text-center py-4 italic">Nenhuma ficha preenchida ainda.</p>
+                    ) : filteredRecords.length === 0 ? (
+                        <p className="text-[10px] text-gray-400 font-medium text-center py-4 italic">Nenhum resultado encontrado.</p>
                     ) : (
                         <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
-                            {records.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map(r => {
+                            {filteredRecords.map(r => {
                                 const t = templates.find(temp => temp.id === r.templateId);
                                 return (
-                                    <div key={r.id} className="p-4 bg-gray-50 rounded-2xl border border-transparent flex items-center justify-between group">
+                                    <div key={r.id} className="p-4 bg-gray-50 rounded-2xl border border-transparent flex items-center justify-between group hover:border-indigo-100 hover:bg-white transition-all">
                                         <div className="min-w-0 flex-1">
-                                            <p className="font-bold text-gray-800 text-xs">{r.clientName}</p>
-                                            <p className="text-[9px] text-gray-400 uppercase tracking-widest leading-tight">{t?.title || 'Modelo Removido'}</p>
+                                            <p className="font-bold text-gray-800 text-xs truncate">{r.clientName}</p>
+                                            <p className="text-[9px] text-gray-400 uppercase tracking-widest leading-tight truncate">{t?.title || 'Modelo Removido'}</p>
                                             <p className="text-[8px] text-gray-300 font-bold">{new Date(r.createdAt).toLocaleDateString()}</p>
                                         </div>
                                         <div className="flex items-center gap-1 shrink-0">

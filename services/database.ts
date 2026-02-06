@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Client, Appointment, Professional, Service, Category, InventoryItem, Transaction, BlockedPeriod, SalonSettings, Supplier } from '../types';
+import { Client, Appointment, Professional, Service, Category, InventoryItem, Transaction, BlockedPeriod, SalonSettings, Supplier, AnamnesisTemplate, AnamnesisRecord } from '../types';
 
 const DEFAULT_COMPANY_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -716,6 +716,128 @@ export const db = {
 
     async deleteServiceCategory(id: string) {
         const { error } = await supabase.from('service_categories').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    // --- ANAMNESIS ---
+    async getAnamnesisTemplates() {
+        const { data, error } = await supabase
+            .from('anamnesis_templates')
+            .select('*')
+            .or(`company_id.eq.${DEFAULT_COMPANY_ID},company_id.is.null`);
+
+        if (error) throw error;
+        return (data || []).map(t => ({
+            id: t.id,
+            title: t.title,
+            description: t.description,
+            category: t.category,
+            fields: t.fields,
+            updatedAt: t.updated_at
+        } as AnamnesisTemplate));
+    },
+
+    async addAnamnesisTemplate(template: AnamnesisTemplate, companyId?: string) {
+        const { data, error } = await supabase
+            .from('anamnesis_templates')
+            .insert([{
+                company_id: companyId || DEFAULT_COMPANY_ID,
+                title: template.title,
+                description: template.description,
+                category: template.category,
+                fields: template.fields
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return {
+            id: data.id,
+            title: data.title,
+            description: data.description,
+            category: data.category,
+            fields: data.fields,
+            updatedAt: data.updated_at
+        } as AnamnesisTemplate;
+    },
+
+    async updateAnamnesisTemplate(template: AnamnesisTemplate) {
+        const { error } = await supabase
+            .from('anamnesis_templates')
+            .update({
+                title: template.title,
+                description: template.description,
+                category: template.category,
+                fields: template.fields
+            })
+            .eq('id', template.id);
+
+        if (error) throw error;
+    },
+
+    async deleteAnamnesisTemplate(id: string) {
+        const { error } = await supabase
+            .from('anamnesis_templates')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+
+    async getAnamnesisRecords() {
+        const { data, error } = await supabase
+            .from('anamnesis_records')
+            .select('*')
+            .eq('company_id', DEFAULT_COMPANY_ID)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return (data || []).map(r => ({
+            id: r.id,
+            templateId: r.template_id,
+            clientId: r.client_id,
+            clientName: r.client_name,
+            answers: r.answers,
+            signatureUrl: r.signature_url,
+            signedAt: r.signed_at,
+            createdAt: r.created_at
+        } as AnamnesisRecord));
+    },
+
+    async addAnamnesisRecord(record: AnamnesisRecord) {
+        const { data, error } = await supabase
+            .from('anamnesis_records')
+            .insert([{
+                company_id: DEFAULT_COMPANY_ID,
+                template_id: record.templateId,
+                client_id: record.clientId,
+                client_name: record.clientName,
+                answers: record.answers,
+                signature_url: record.signatureUrl,
+                signed_at: record.signedAt
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return {
+            id: data.id,
+            templateId: data.template_id,
+            clientId: data.client_id,
+            clientName: data.client_name,
+            answers: data.answers,
+            signatureUrl: data.signature_url,
+            signedAt: data.signed_at,
+            createdAt: data.created_at
+        } as AnamnesisRecord;
+    },
+
+    async deleteAnamnesisRecord(id: string) {
+        const { error } = await supabase
+            .from('anamnesis_records')
+            .delete()
+            .eq('id', id);
+
         if (error) throw error;
     },
 
