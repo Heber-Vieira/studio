@@ -37,29 +37,29 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-      <div className={`bg-white w-full ${maxWidthClasses[maxWidth]} rounded-[3rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 border border-white/20 relative overflow-hidden`}>
+      <div className={`bg-white w-full ${maxWidthClasses[maxWidth]} rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 shadow-2xl space-y-6 sm:space-y-8 animate-in zoom-in duration-300 border border-white/20 relative overflow-hidden`}>
         {/* Decorative circle */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-pink-50 rounded-full -translate-y-1/2 translate-x-1/2 -z-10"></div>
-        
+
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
+        <div className="flex justify-between items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             {icon && (
-              <div className={`w-12 h-12 ${iconBgColor} rounded-2xl flex items-center justify-center text-white shadow-lg`}>
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 ${iconBgColor} rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0`}>
                 {icon}
               </div>
             )}
-            <div>
-              <h3 className="text-2xl font-black text-gray-900 tracking-tight">{title}</h3>
+            <div className="min-w-0">
+              <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight truncate">{title}</h3>
               {subtitle && (
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{subtitle}</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">{subtitle}</p>
               )}
             </div>
           </div>
           {showCloseButton && (
-            <button 
-              onClick={onClose} 
-              className="p-2 bg-gray-100 rounded-full hover:rotate-90 transition-transform"
+            <button
+              onClick={onClose}
+              className="p-2 sm:p-2.5 bg-gray-100 rounded-full hover:rotate-90 transition-transform shrink-0"
             >
               <X size={20} />
             </button>

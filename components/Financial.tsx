@@ -633,29 +633,29 @@ const FinancialView: React.FC<FinancialProps> = ({
          {/* Modal: Relatório Financeiro Detalhado */}
          {isReportModalOpen && (
             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in">
-               <div className="bg-white w-full max-w-4xl rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-white/20 animate-in zoom-in duration-300 printable-area">
+               <div className="bg-white w-full max-w-4xl rounded-[2rem] sm:rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-white/20 animate-in zoom-in duration-300 printable-area">
 
-                  <div className="p-8 border-b border-gray-100 flex justify-between items-center shrink-0 print:hidden">
-                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-gray-900 rounded-2xl flex items-center justify-center text-white shadow-lg">
-                           <FileText size={28} />
+                  <div className="p-5 sm:p-8 border-b border-gray-100 flex justify-between items-center shrink-0 print:hidden">
+                     <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gray-900 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
+                           <FileText className="w-5 h-5 sm:w-7 sm:h-7" />
                         </div>
-                        <div>
-                           <h3 className="text-2xl font-black text-gray-900 tracking-tight">Fechamento Financeiro ✨</h3>
-                           <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Snapshot consolidado do Studio</p>
+                        <div className="min-w-0">
+                           <h3 className="text-lg sm:text-2xl font-black text-gray-900 tracking-tight truncate">Fechamento Financeiro ✨</h3>
+                           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">Snapshot do Studio</p>
                         </div>
                      </div>
-                     <div className="flex gap-2">
-                        <button onClick={() => window.print()} className="p-3 bg-gray-900 hover:bg-black text-white rounded-2xl transition-all shadow-xl flex items-center gap-2 font-bold text-xs">
-                           <Printer size={18} /> Imprimir Report
+                     <div className="flex gap-2 shrink-0">
+                        <button onClick={() => window.print()} className="p-2.5 sm:p-3 bg-gray-900 hover:bg-black text-white rounded-xl sm:rounded-2xl transition-all shadow-xl flex items-center gap-2 font-bold text-xs">
+                           <Printer size={18} /> <span className="hidden sm:inline">Imprimir Report</span>
                         </button>
-                        <button onClick={() => setIsReportModalOpen(false)} className="p-3 bg-gray-50 hover:bg-gray-100 text-gray-400 rounded-2xl transition-all">
+                        <button onClick={() => setIsReportModalOpen(false)} className="p-2.5 sm:p-3 bg-gray-50 hover:bg-gray-100 text-gray-400 rounded-xl sm:rounded-2xl transition-all">
                            <X size={20} />
                         </button>
                      </div>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto p-10 space-y-12 scrollbar-hide">
+                  <div className="flex-1 overflow-y-auto p-5 sm:p-10 space-y-8 sm:space-y-12 scrollbar-hide">
                      {/* Branding p/ Impressão */}
                      <div className="hidden print:flex flex-col gap-2 mb-10 border-b-2 border-gray-900 pb-8">
                         <div className="flex justify-between items-end">
@@ -671,22 +671,22 @@ const FinancialView: React.FC<FinancialProps> = ({
                      </div>
 
                      {/* Top Cards Resumo */}
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-emerald-50 p-8 rounded-[2.5rem] border border-emerald-100 text-center">
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                        <div className="bg-emerald-50 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-emerald-100 text-center">
                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest block mb-1">Entradas Totais</span>
                            <h4 className="text-4xl font-black text-emerald-700">R$ {totalIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h4>
                         </div>
-                        <div className="bg-rose-50 p-8 rounded-[2.5rem] border border-rose-100 text-center">
+                        <div className="bg-rose-50 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-rose-100 text-center">
                            <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest block mb-1">Saídas Totais</span>
                            <h4 className="text-4xl font-black text-rose-700">R$ {totalExpense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h4>
                         </div>
-                        <div className="bg-gray-900 p-8 rounded-[2.5rem] text-center shadow-xl shadow-gray-200">
+                        <div className="bg-gray-900 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] text-center shadow-xl shadow-gray-200">
                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Saldo Líquido</span>
                            <h4 className="text-4xl font-black text-white">R$ {netResult.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h4>
                         </div>
                      </div>
 
-                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
                         {/* Performance por Categoria */}
                         <div className="space-y-6">
                            <h5 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -807,8 +807,11 @@ const FinancialView: React.FC<FinancialProps> = ({
          {/* Modal: Filtros */}
          {isFilterOpen && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-               <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                  <div className="flex justify-between items-center"><h3 className="text-2xl font-black">Filtrar Histórico 🔍</h3><button onClick={() => setIsFilterOpen(false)}><X /></button></div>
+               <div className="bg-white w-full max-w-md rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                  <div className="flex justify-between items-center">
+                     <h3 className="text-xl sm:text-2xl font-black">Filtrar Histórico 🔍</h3>
+                     <button onClick={() => setIsFilterOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={20} /></button>
+                  </div>
                   <div className="space-y-4">
                      <div>
                         <label className="text-[10px] font-black text-gray-400 uppercase mb-2 block tracking-widest">Tipo</label>
