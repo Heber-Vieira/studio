@@ -13,9 +13,10 @@ import ClientBooking from './components/ClientBooking';
 import ChatBellaAI from './components/ChatBellaAI';
 import LoginView from './components/Login';
 import InventoryView from './components/Inventory';
+import AnamnesisView from './components/Anamnesis';
 import HelpSystem from './components/HelpSystem';
 import ReleaseNotesPopup from './components/ReleaseNotesPopup';
-import { View, Client, Appointment, Professional, SalonSettings, Service, Category, BlockedPeriod, BackupData, InventoryItem, Transaction, Supplier } from './types';
+import { View, Client, Appointment, Professional, SalonSettings, Service, Category, BlockedPeriod, BackupData, InventoryItem, Transaction, Supplier, AnamnesisTemplate, AnamnesisRecord } from './types';
 import { MOCK_CLIENTS, MOCK_APPOINTMENTS, MOCK_PROFESSIONALS, MOCK_SERVICES, MOCK_CATEGORIES, MOCK_INVENTORY, MOCK_INVENTORY_CATEGORIES } from './constants';
 import { Language, translations } from './i18n';
 import { CheckCircle2, LogOut, Loader2, Lock, Sparkles } from 'lucide-react';
@@ -155,6 +156,22 @@ const MainLayout: React.FC = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [anamnesisTemplates, setAnamnesisTemplates] = useState<AnamnesisTemplate[]>(() => {
+    const saved = localStorage.getItem('anamnesis_templates');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [anamnesisRecords, setAnamnesisRecords] = useState<AnamnesisRecord[]>(() => {
+    const saved = localStorage.getItem('anamnesis_records');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('anamnesis_templates', JSON.stringify(anamnesisTemplates));
+  }, [anamnesisTemplates]);
+
+  useEffect(() => {
+    localStorage.setItem('anamnesis_records', JSON.stringify(anamnesisRecords));
+  }, [anamnesisRecords]);
 
   const [settings, setSettings] = useState<SalonSettings>(() => {
     const saved = localStorage.getItem('salon_settings');
@@ -687,6 +704,7 @@ const MainLayout: React.FC = () => {
           return <InventoryView inventory={inventory} categories={inventoryCategories} onAddItem={addInventoryItem} onUpdateItem={updateInventoryItem} onDeleteItem={deleteInventoryItem} onStockMovement={handleStockMovement} onAddTransaction={addTransaction} onAddCategory={addInventoryCategory} onDeleteCategory={deleteInventoryCategory} onShowToast={showToast} />;
         case View.FINANCIAL: if (user?.role === 'attendant' && !permissions.viewFinancial) return <AccessRestricted />; return <FinancialView transactions={transactions} appointments={appointments} categories={categories} onProcessPayment={processPayment} onAddTransaction={addTransaction} onDeleteTransaction={deleteTransaction} clients={clients} services={services} inventory={inventory} suppliers={suppliers} onAddSupplier={addSupplier} onUpdateSupplier={updateSupplier} onDeleteSupplier={deleteSupplier} user={user!} onShowToast={showToast} />;
         case View.MARKETING: if (user?.role === 'attendant' && !permissions.viewMarketing) return <AccessRestricted />; return <MarketingView clients={clients} appointments={appointments} settings={settings} onUpdateSettings={setSettingsAndPersist} onShowToast={showToast} />;
+        case View.ANAMNESIS: return <AnamnesisView clients={clients} templates={anamnesisTemplates} records={anamnesisRecords} onAddTemplate={(t) => setAnamnesisTemplates([...anamnesisTemplates, t])} onUpdateTemplate={(t) => setAnamnesisTemplates(anamnesisTemplates.map(item => item.id === t.id ? t : item))} onDeleteTemplate={(id) => setAnamnesisTemplates(anamnesisTemplates.filter(t => t.id !== id))} onAddRecord={(r) => setAnamnesisRecords([...anamnesisRecords, r])} onShowToast={showToast} />;
         case View.SETTINGS: if (user?.role === 'attendant' || user?.role === 'client') return <AccessRestricted />; return <SettingsView t={t} lang={lang} setLang={setLang} settings={settings} onUpdate={setSettingsAndPersist} onExportData={handleExportData} onImportData={handleImportData} onShowToast={showToast} />;
         case View.CLIENT_BOOKING:
           return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} />;

@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   Scissors,
+  ClipboardList,
   Settings2,
   Sparkles,
   ChevronLeft,
@@ -57,6 +58,12 @@ const Sidebar: React.FC<SidebarProps> = ({ t, activeView, onViewChange, isOpen, 
       icon: UsersRound,
       roles: ['master_admin', 'company_admin', 'attendant'],
       permissionKey: 'viewCRM'
+    },
+    {
+      id: View.ANAMNESIS,
+      label: 'Anamnese',
+      icon: ClipboardList,
+      roles: ['master_admin', 'company_admin', 'attendant']
     },
     {
       id: View.STAFF,

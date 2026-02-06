@@ -224,5 +224,38 @@ export enum View {
   MARKETING = 'marketing',
   INVENTORY = 'inventory',
   SETTINGS = 'settings',
-  CLIENT_BOOKING = 'client_booking'
+  CLIENT_BOOKING = 'client_booking',
+  ANAMNESIS = 'anamnesis'
+}
+
+export type AnamnesisFieldType = 'text' | 'number' | 'boolean' | 'select' | 'textarea' | 'heading';
+
+export interface AnamnesisField {
+  id: string;
+  label: string;
+  type: AnamnesisFieldType;
+  placeholder?: string;
+  required: boolean;
+  options?: string[]; // Para 'select'
+  description?: string;
+}
+
+export interface AnamnesisTemplate {
+  id: string;
+  title: string;
+  description: string;
+  category: string; // Ex: Sobrancelha, Cílios, Estética
+  fields: AnamnesisField[];
+  updatedAt: string;
+}
+
+export interface AnamnesisRecord {
+  id: string;
+  templateId: string;
+  clientId: string;
+  clientName: string;
+  answers: Record<string, any>;
+  signatureUrl?: string; // Data URL do Canvas
+  signedAt: string;
+  createdAt: string;
 }
