@@ -27,7 +27,8 @@ import {
     FileDown,
     Sparkles,
     Cloud,
-    Search
+    Search,
+    Eye
 } from 'lucide-react';
 // @ts-ignore
 import SignatureCanvas from 'react-signature-canvas';
@@ -50,6 +51,7 @@ interface AnamnesisProps {
     onUpdateTemplate: (template: AnamnesisTemplate) => void;
     onDeleteTemplate: (id: string) => void;
     onAddRecord: (record: AnamnesisRecord) => void;
+    onDeleteRecord: (id: string) => void;
     onShowToast: (msg: string, type: 'success' | 'error' | 'info') => void;
 }
 
@@ -87,6 +89,7 @@ const AnamnesisView: React.FC<AnamnesisProps> = ({
     onUpdateTemplate,
     onDeleteTemplate,
     onAddRecord,
+    onDeleteRecord,
     onShowToast
 }) => {
     const [activeTab, setActiveTab] = useState<'manager' | 'builder' | 'player'>('manager');
@@ -300,6 +303,7 @@ const AnamnesisView: React.FC<AnamnesisProps> = ({
                         onDeleteTemplate={onDeleteTemplate}
                         onAddQuickTemplate={(t) => onAddTemplate(t as AnamnesisTemplate)}
                         onExportPDF={exportRecordToPDF}
+                        onDeleteRecord={onDeleteRecord}
                     />
                 )}
 
@@ -349,7 +353,11 @@ const TemplateManager: React.FC<{
     onDeleteTemplate: (id: string) => void;
     onAddQuickTemplate: (t: Partial<AnamnesisTemplate>) => void;
     onExportPDF: (r: AnamnesisRecord, t: AnamnesisTemplate) => void;
-}> = ({ templates, records, onStartPlayer, onEditTemplate, onDeleteTemplate, onAddQuickTemplate, onExportPDF }) => {
+    onDeleteRecord: (id: string) => void;
+}> = ({ templates, records, onStartPlayer, onEditTemplate, onDeleteTemplate, onAddQuickTemplate, onExportPDF, onDeleteRecord }) => {
+    const [recordToDelete, setRecordToDelete] = useState<AnamnesisRecord | null>(null);
+    const [viewingRecord, setViewingRecord] = useState<{ record: AnamnesisRecord, template: AnamnesisTemplate } | null>(null);
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -395,17 +403,35 @@ const TemplateManager: React.FC<{
                                 return (
                                     <div key={r.id} className="p-4 bg-gray-50 rounded-2xl border border-transparent flex items-center justify-between group">
                                         <div className="min-w-0 flex-1">
-                                            <p className="font-bold text-gray-800 text-xs truncate">{r.clientName}</p>
-                                            <p className="text-[9px] text-gray-400 uppercase tracking-widest truncate">{t?.title || 'Modelo Removido'}</p>
+                                            <p className="font-bold text-gray-800 text-xs">{r.clientName}</p>
+                                            <p className="text-[9px] text-gray-400 uppercase tracking-widest leading-tight">{t?.title || 'Modelo Removido'}</p>
                                             <p className="text-[8px] text-gray-300 font-bold">{new Date(r.createdAt).toLocaleDateString()}</p>
                                         </div>
-                                        <button
-                                            onClick={() => t && onExportPDF(r, t)}
-                                            className="p-2 bg-white text-gray-400 rounded-xl hover:text-indigo-600 shadow-sm transition-all shrink-0"
-                                            title="Exportar PDF"
-                                        >
-                                            <FileDown size={14} />
-                                        </button>
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            <button
+                                                onClick={() => {
+                                                    if (t) setViewingRecord({ record: r, template: t });
+                                                }}
+                                                className="p-2 bg-white text-gray-400 rounded-xl hover:text-emerald-600 shadow-sm transition-all"
+                                                title="Visualizar Detalhes"
+                                            >
+                                                <Eye size={14} />
+                                            </button>
+                                            <button
+                                                onClick={() => t && onExportPDF(r, t)}
+                                                className="p-2 bg-white text-gray-400 rounded-xl hover:text-indigo-600 shadow-sm transition-all"
+                                                title="Exportar PDF"
+                                            >
+                                                <FileDown size={14} />
+                                            </button>
+                                            <button
+                                                onClick={() => setRecordToDelete(r)}
+                                                className="p-2 bg-white text-gray-400 rounded-xl hover:text-rose-600 shadow-sm transition-all"
+                                                title="Excluir Registro"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -464,6 +490,142 @@ const TemplateManager: React.FC<{
                     </div>
                 )}
             </div>
+
+            {/* Confirmation Modal */}
+            {recordToDelete && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+                    <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center">
+                        <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm mb-2">
+                            <Trash2 size={32} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <h3 className="text-xl font-black text-gray-900">Excluir Ficha?</h3>
+                            <p className="text-sm text-gray-500 leading-relaxed">
+                                Você está prestes a remover a ficha de <span className="font-bold text-gray-800">{recordToDelete.clientName}</span>. Esta ação não pode ser desfeita.
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col gap-3 pt-2">
+                            <button
+                                onClick={() => {
+                                    onDeleteRecord(recordToDelete.id);
+                                    setRecordToDelete(null);
+                                }}
+                                className="w-full py-4 bg-rose-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-rose-100 hover:scale-[1.02] active:scale-95 transition-all"
+                            >
+                                Sim, Excluir
+                            </button>
+                            <button
+                                onClick={() => setRecordToDelete(null)}
+                                className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white hover:shadow-sm transition-all"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View Details Modal */}
+            {viewingRecord && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto">
+                    <div className="bg-white w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative my-8 animate-in zoom-in duration-300">
+                        <button
+                            onClick={() => setViewingRecord(null)}
+                            className="absolute top-8 right-8 p-3 bg-gray-50 text-gray-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <div className="space-y-10">
+                            {/* Modal Header */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm">
+                                        <FileText size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-black text-gray-900 tracking-tight">Detalhes da Anamnese</h3>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{viewingRecord.template.title}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Client Info Grid */}
+                            <div className="grid grid-cols-2 gap-6 p-6 bg-gray-50 rounded-[2rem]">
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Cliente</p>
+                                    <p className="font-bold text-gray-900">{viewingRecord.record.clientName}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Assinado em</p>
+                                    <p className="font-bold text-gray-900">{new Date(viewingRecord.record.signedAt).toLocaleString()}</p>
+                                </div>
+                            </div>
+
+                            {/* Questions & Answers */}
+                            <div className="space-y-6">
+                                <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest border-b border-gray-100 pb-2">Respostas</h4>
+                                <div className="space-y-6 max-h-[400px] overflow-y-auto pr-4 scrollbar-hide">
+                                    {viewingRecord.template.fields.map(field => {
+                                        if (field.type === 'heading') {
+                                            return (
+                                                <div key={field.id} className="pt-4 border-t border-gray-50">
+                                                    <p className="text-xs font-black text-indigo-600 uppercase tracking-widest">{field.label}</p>
+                                                </div>
+                                            );
+                                        }
+                                        const answer = viewingRecord.record.answers[field.id];
+                                        const displayAnswer = typeof answer === 'boolean' ? (answer ? 'Sim ✅' : 'Não ❌') : (answer || 'Não informado');
+
+                                        return (
+                                            <div key={field.id} className="space-y-1">
+                                                <p className="text-xs text-gray-400 font-medium">{field.label}</p>
+                                                <p className="text-sm font-bold text-gray-800 bg-white border border-gray-100 p-4 rounded-2xl shadow-sm">
+                                                    {displayAnswer}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Signature Visualization */}
+                            {viewingRecord.record.signatureUrl && (
+                                <div className="space-y-4 pt-4 border-t border-gray-100">
+                                    <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Assinatura Digital</p>
+                                    <div className="bg-gray-50 rounded-[2rem] p-6 border-2 border-dashed border-gray-200">
+                                        <img
+                                            src={viewingRecord.record.signatureUrl}
+                                            alt="Assinatura"
+                                            className="w-full h-32 object-contain"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex gap-4 pt-4">
+                                <button
+                                    onClick={() => {
+                                        onExportPDF(viewingRecord.record, viewingRecord.template);
+                                        setViewingRecord(null);
+                                    }}
+                                    className="flex-1 py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                                >
+                                    <FileDown size={16} /> Baixar PDF
+                                </button>
+                                <button
+                                    onClick={() => setViewingRecord(null)}
+                                    className="flex-1 py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white hover:shadow-sm transition-all"
+                                >
+                                    Fechar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </motion.div>
     );
 };
