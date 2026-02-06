@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useMemo } from 'react';
-import { Client, Appointment, SalonSettings } from '../types';
+import { Client, Appointment, SalonSettings, Professional } from '../types';
 import { UserPlus, Search, Phone, History, Star, X, CheckCircle2, Calendar, Sparkles, Trash2, AlertTriangle, Gift, Smartphone, Upload, Edit3, Save, Link2, ExternalLink, Copy, MessageCircle } from 'lucide-react';
 import { Modal, Button, InputField } from './ui';
 
@@ -13,13 +13,14 @@ interface CRMProps {
   onRedeem: (clientId: string) => void;
   onPrefilledBooking: (client: { name: string; phone: string }) => void;
   appointments: Appointment[];
+  staff: Professional[];
   settings: SalonSettings;
   t: any;
   onShowToast: (msg: string) => void;
   initialSearchTerm?: string;
 }
 
-const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDelete, onRedeem, onPrefilledBooking, appointments, settings, t, onShowToast, initialSearchTerm = '' }) => {
+const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDelete, onRedeem, onPrefilledBooking, appointments, staff, settings, t, onShowToast, initialSearchTerm = '' }) => {
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -635,13 +636,21 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
               <p className="font-bold text-gray-400 uppercase text-[10px] tracking-widest ml-1">{viewingHistory.name}</p>
               {getClientHistory(viewingHistory.id).length > 0 ? getClientHistory(viewingHistory.id).map(apt => (
                 <div key={apt.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between hover:bg-white transition-colors">
-                  <div>
-                    <span className="block font-bold text-gray-800">{apt.service}</span>
-                    <span className="text-[10px] text-gray-400 flex items-center gap-1 uppercase font-black">
-                      <Calendar size={10} /> {new Date(apt.date).toLocaleDateString()} • {apt.time}
-                    </span>
+                  <div className="flex-1 min-w-0 pr-4">
+                    <span className="block font-bold text-gray-800 truncate">{apt.service}</span>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <span className="text-[10px] text-gray-400 flex items-center gap-1 uppercase font-black">
+                        <Calendar size={10} /> {new Date(apt.date).toLocaleDateString()} • {apt.time}
+                      </span>
+                      {staff.find(p => p.id === apt.professionalId) && (
+                        <span className="text-[10px] text-[#FF69B4]/60 font-bold flex items-center gap-1">
+                          <span className="w-1 h-1 rounded-full bg-pink-100"></span>
+                          {staff.find(p => p.id === apt.professionalId)?.name.split(' ')[0]}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <span className="font-black text-[#FF69B4]">R$ {apt.price}</span>
+                  <span className="font-black text-[#FF69B4] shrink-0">R$ {apt.price}</span>
                 </div>
               )) : (
                 <div className="py-20 text-center text-gray-300 italic">

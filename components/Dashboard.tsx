@@ -564,24 +564,35 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                </div>
 
                <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-hide mb-4 max-h-[300px]">
-                  {currentList.length > 0 ? currentList.map(apt => (
-                     <div
-                        key={apt.id}
-                        onClick={() => handleGoToSchedule(currentDate)}
-                        className={`flex items-center gap-4 p-4 rounded-2xl border transition-all group cursor-pointer hover:scale-[1.02] ${scheduleTab === 'today' ? 'bg-pink-50/30 border-pink-100 hover:bg-white hover:shadow-md' : 'bg-[#F9FAFB] border-gray-50 hover:bg-white hover:shadow-md'}`}
-                     >
-                        <div className={`p-2.5 rounded-xl font-black text-xs shadow-sm border text-center min-w-[50px] transition-colors ${scheduleTab === 'today' ? 'bg-[#FF69B4] text-white border-[#FF69B4]' : 'bg-white text-[#FF69B4] border-gray-100 group-hover:bg-[#FF69B4] group-hover:text-white'}`}>
-                           {apt.time}
+                  {currentList.length > 0 ? currentList.map(apt => {
+                     const professional = staff.find(p => p.id === apt.professionalId);
+                     return (
+                        <div
+                           key={apt.id}
+                           onClick={() => handleGoToSchedule(currentDate)}
+                           className={`flex items-center gap-4 p-4 rounded-2xl border transition-all group cursor-pointer hover:scale-[1.02] ${scheduleTab === 'today' ? 'bg-pink-50/30 border-pink-100 hover:bg-white hover:shadow-md' : 'bg-[#F9FAFB] border-gray-50 hover:bg-white hover:shadow-md'}`}
+                        >
+                           <div className={`p-2.5 rounded-xl font-black text-xs shadow-sm border text-center min-w-[50px] transition-colors ${scheduleTab === 'today' ? 'bg-[#FF69B4] text-white border-[#FF69B4]' : 'bg-white text-[#FF69B4] border-gray-100 group-hover:bg-[#FF69B4] group-hover:text-white'}`}>
+                              {apt.time}
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-sm text-gray-900 truncate group-hover:text-[#FF69B4] transition-colors">{apt.clientName}</h4>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                 <p className="text-xs text-gray-400 truncate">{apt.service}</p>
+                                 {professional && (
+                                    <span className="text-[10px] font-bold text-[#FF69B4]/50 flex items-center gap-1">
+                                       <span className="w-1 h-1 rounded-full bg-pink-200"></span>
+                                       {professional.name.split(' ')[0]}
+                                    </span>
+                                 )}
+                              </div>
+                           </div>
+                           <div className="text-right">
+                              <span className="font-bold text-xs text-gray-700 block">R$ {apt.price}</span>
+                           </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                           <h4 className="font-bold text-sm text-gray-900 truncate group-hover:text-[#FF69B4] transition-colors">{apt.clientName}</h4>
-                           <p className="text-xs text-gray-400 truncate">{apt.service}</p>
-                        </div>
-                        <div className="text-right">
-                           <span className="font-bold text-xs text-gray-700 block">R$ {apt.price}</span>
-                        </div>
-                     </div>
-                  )) : (
+                     );
+                  }) : (
                      <div className="h-full flex flex-col items-center justify-center text-center text-gray-300 italic p-4">
                         <Calendar size={40} className="mb-3 opacity-20" />
                         <p>Nenhum agendamento para {scheduleTab === 'today' ? 'hoje' : 'amanhã'}.</p>

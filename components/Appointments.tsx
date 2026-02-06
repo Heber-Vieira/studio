@@ -716,6 +716,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                         <div key={dateStr} className="min-w-[150px] flex-1 relative border-r border-gray-50 last:border-0">
                           {dayAppts.map(apt => {
                             const svc = services.find(s => s.name === apt.service);
+                            const pro = staff.find(p => p.id === apt.professionalId);
                             const color = svc?.color || COLORS.pink;
                             const style = getPositionStyle(apt.time, svc?.duration || '1h');
                             if (parseFloat(style.top) < 0 || parseFloat(style.top) > schedulerHeight) return null;
@@ -725,7 +726,10 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                                 style={{ ...style, backgroundColor: `${color}10`, borderLeftColor: color }}>
                                 <span className="text-[8px] font-black uppercase tracking-tight mb-0.5" style={{ color }}>{apt.time}</span>
                                 <h5 className="font-bold text-[9px] text-gray-900 leading-none truncate">{apt.service}</h5>
-                                <p className="text-[8px] text-gray-400 truncate mt-0.5">{apt.clientName}</p>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <p className="text-[8px] text-gray-400 truncate flex-1 min-w-0">{apt.clientName}</p>
+                                  {pro && <span className="text-[7px] font-bold text-[#FF69B4]/60 shrink-0">· {pro.name.split(' ')[0]}</span>}
+                                </div>
                               </div>
                             );
                           })}
@@ -1010,9 +1014,12 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
               <div className="bg-gray-50 p-6 rounded-[2rem]">
                 <p className="text-[10px] font-black text-[#FF69B4] uppercase tracking-widest mb-1">{selectedAppointment.service}</p>
                 <h4 className="text-2xl font-black text-gray-900">{selectedAppointment.clientName}</h4>
-                <div className="flex items-center gap-4 mt-4 text-sm font-bold text-gray-500">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 text-sm font-bold text-gray-500">
                   <div className="flex items-center gap-1"><CalendarIcon size={14} /> {new Date(selectedAppointment.date + 'T12:00:00').toLocaleDateString()}</div>
                   <div className="flex items-center gap-1"><Clock size={14} /> {selectedAppointment.time}</div>
+                  {staff.find(p => p.id === selectedAppointment.professionalId) && (
+                    <div className="flex items-center gap-1 text-[#FF69B4]"><Scissors size={14} /> {staff.find(p => p.id === selectedAppointment.professionalId)?.name.split(' ')[0]}</div>
+                  )}
                 </div>
               </div>
 
