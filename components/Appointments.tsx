@@ -111,6 +111,14 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
     date: TODAY,
     time: ''
   });
+  const [formClientSearch, setFormClientSearch] = useState('');
+  const [isFormSearchFocused, setIsFormSearchFocused] = useState(false);
+  const formSearchRef = useRef<HTMLDivElement>(null);
+
+  const filteredClientsForForm = useMemo(() => {
+    return clients.filter(c => c.name.toLowerCase().includes(formClientSearch.toLowerCase()));
+  }, [clients, formClientSearch]);
+
 
   const sortedStaff = useMemo(() => {
     return [...staff].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
@@ -241,6 +249,9 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setIsSearchFocused(false);
       }
+      if (formSearchRef.current && !formSearchRef.current.contains(event.target as Node)) {
+        setIsFormSearchFocused(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -261,6 +272,21 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       }
     }
   }, [isSmartFocus, selectedDate, viewDate, appointments, viewMode]);
+
+  // Reset do formulário ao fechar modal
+  useEffect(() => {
+    if (!isModalOpen) {
+      setFormClientSearch('');
+      setIsFormSearchFocused(false);
+      setNewApt({
+        clientId: '',
+        serviceId: '',
+        professionalId: '',
+        date: TODAY,
+        time: ''
+      });
+    }
+  }, [isModalOpen, TODAY]);
 
   const PIXELS_PER_MINUTE = 1.8;
   const schedulerHeight = (endHour - startHour) * 60 * PIXELS_PER_MINUTE;
@@ -781,17 +807,62 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
             <form onSubmit={handleAddAppointment} className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2 space-y-2">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Selecionar Cliente</label>
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-[#FF69B4]" size={18} />
-                  <select
-                    required
-                    value={newApt.clientId}
-                    onChange={e => setNewApt({ ...newApt, clientId: e.target.value })}
-                    className="w-full bg-[#F5F5F5] border-none rounded-2xl pl-12 pr-4 py-4 outline-none focus:ring-2 focus:ring-[#FF69B4]/20 font-bold appearance-none transition-all"
-                  >
-                    <option value="">Buscar cliente...</option>
-                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                <div className="relative group" ref={formSearchRef}>
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-[#FF69B4]" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Buscar cliente pelo nome..."
+                    className={`w-full bg-[#F5F5F5] border-none rounded-2xl pl-12 pr-10 py-4 outline-none focus:ring-2 focus:ring-[#FF69B4]/20 font-bold transition-all ${newApt.clientId ? 'text-[#FF69B4]' : 'text-gray-900'}`}
+                    value={formClientSearch}
+                    onChange={(e) => {
+                      setFormClientSearch(e.target.value);
+                      setIsFormSearchFocused(true);
+                      if (newApt.clientId) setNewApt({ ...newApt, clientId: '' });
+                    }}
+                    onFocus={() => setIsFormSearchFocused(true)}
+                    required={!newApt.clientId}
+                  />
+
+                  {/* Dropdown de Sugestões de Clientes */}
+                  {isFormSearchFocused && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-3xl shadow-2xl border border-gray-100 z-[110] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="p-3 border-b border-gray-50 flex items-center gap-2">
+                        <Users size={14} className="text-[#FF69B4]" />
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Resultados da Busca</span>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto scrollbar-hide">
+                        {filteredClientsForForm.length > 0 ? (
+                          filteredClientsForForm.map(client => (
+                            <button
+                              key={client.id}
+                              type="button"
+                              onClick={() => {
+                                setNewApt({ ...newApt, clientId: client.id });
+                                setFormClientSearch(client.name);
+                                setIsFormSearchFocused(false);
+                              }}
+                              className="w-full px-5 py-4 flex items-center justify-between hover:bg-pink-50 transition-colors text-left group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 font-bold text-xs group-hover:bg-white transition-colors">
+                                  {client.name.charAt(0)}
+                                </div>
+                                <div>
+                                  <p className="font-bold text-gray-900 text-sm">{client.name}</p>
+                                  <p className="text-[10px] text-gray-400">{client.phone}</p>
+                                </div>
+                              </div>
+                              {newApt.clientId === client.id && <CheckCircle2 size={16} className="text-[#FF69B4]" />}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-8 text-center text-gray-300 italic text-sm">
+                            Nenhum cliente encontrado...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
