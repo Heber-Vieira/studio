@@ -3,6 +3,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Service, Professional, Appointment, BlockedPeriod, SalonSettings, AnamnesisTemplate, AnamnesisRecord } from '../types';
 import { ChevronLeft, ChevronRight, Clock, Star, Scissors, Check, Calendar, Sparkles, X, Phone, User, Tag, LogOut, AlertTriangle, ShieldCheck, Signature, FileText, Send } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { queueService } from '../services/queueService';
+import { WaitingListWidget } from './WaitingListWidget';
 // @ts-ignore
 import SignatureCanvas from 'react-signature-canvas';
 
@@ -17,9 +19,10 @@ interface ClientBookingProps {
   initialClientData?: { name: string; phone: string; id?: string };
   templates: AnamnesisTemplate[];
   onAddAnamnesisRecord: (record: AnamnesisRecord) => void;
+  onShowToast: (msg: string, type?: 'success' | 'error') => void;
 }
 
-const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff, appointments, blockedPeriods, onBook, onClose, initialClientData, templates, onAddAnamnesisRecord }) => {
+const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff, appointments, blockedPeriods, onBook, onClose, initialClientData, templates, onAddAnamnesisRecord, onShowToast }) => {
   const { logout, user } = useAuth();
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -37,6 +40,35 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
   const [anamnesisStep, setAnamnesisStep] = useState(0);
   const [anamnesisAnswers, setAnamnesisAnswers] = useState<Record<string, any>>({});
   const sigCanvas = React.useRef<any>(null);
+
+  // Waiting List State
+  const [waitingListEntryId, setWaitingListEntryId] = useState<string | null>(null);
+  const [isJoiningQueue, setIsJoiningQueue] = useState(false);
+
+  const handleJoinWaitingList = async () => {
+    if (!selectedService || !selectedPro || !selectedDate || !clientInfo.name || !clientInfo.phone) {
+      onShowToast("Por favor, preencha seus dados (Nome e Telefone) nas etapas anteriores.", 'error');
+      return;
+    }
+
+    setIsJoiningQueue(true);
+    try {
+      const entry = await queueService.joinWaitingList(
+        clientInfo,
+        selectedService,
+        selectedPro.id,
+        selectedPro.name,
+        selectedDate
+      );
+      setWaitingListEntryId(entry.id);
+      onShowToast("Você entrou na fila de espera!", 'success');
+    } catch (error) {
+      console.error("Failed to join queue", error);
+      onShowToast("Erro ao entrar na fila. Tente novamente.", 'error');
+    } finally {
+      setIsJoiningQueue(false);
+    }
+  };
 
   // Sync with initialClientData if provided late or updated
   useEffect(() => {
@@ -382,18 +414,36 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                           {time}
                         </button>
                       )) : (
-                        <div className="col-span-full py-10 text-center text-gray-300 italic text-sm flex flex-col items-center gap-3">
-                          <div className="p-4 bg-gray-50 rounded-full"><Calendar size={32} strokeWidth={1} /></div>
-                          <p className="font-bold">
+                        <div className="col-span-full py-8 text-center flex flex-col items-center gap-4">
+                          <div className="p-4 bg-gray-50 rounded-full text-gray-300"><Calendar size={32} strokeWidth={1} /></div>
+                          <p className="font-bold text-gray-400 text-sm max-w-xs mx-auto">
                             {selectedPro && selectedPro.schedule?.[new Date(selectedDate + 'T12:00:00').getDay()]?.isOff
                               ? 'Dia de descanso do especialista.'
-                              : 'Sem horários disponíveis nesta data.'}
+                              : 'Sem horários disponíveis para esta data.'}
                           </p>
+
+                          {/* Waiting List CTA */}
+                          {!waitingListEntryId && (
+                            <button
+                              onClick={handleJoinWaitingList}
+                              disabled={isJoiningQueue}
+                              className="mt-2 px-8 py-3 bg-gradient-to-r from-[#2D2B4D] to-[#4B4870] text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                            >
+                              {isJoiningQueue ? <span className="animate-spin">⏳</span> : <Sparkles size={14} className="text-[#FF69B4]" />}
+                              Entrar na Fila de Espera
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
+
+                {waitingListEntryId && (
+                  <div className="mt-8">
+                    <WaitingListWidget entryId={waitingListEntryId} />
+                  </div>
+                )}
 
                 {selectedTime && (
                   <button

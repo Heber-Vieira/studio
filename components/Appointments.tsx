@@ -34,6 +34,8 @@ import {
 import { COLORS } from '../constants';
 import { translations } from '../i18n';
 import { Modal, Button, SelectField, InputField, TimePicker } from './ui';
+import { queueService } from '../services/queueService';
+import { WaitingListWidget } from './WaitingListWidget';
 
 interface AppointmentsProps {
   appointments: Appointment[];
@@ -46,11 +48,12 @@ interface AppointmentsProps {
   lang?: any;
   initialDate?: string;
   blockedPeriods?: BlockedPeriod[];
+  onShowToast: (msg: string, type?: 'success' | 'error') => void;
 }
 
 type ViewMode = 'day' | 'week' | 'month';
 
-const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, staff, services, onAdd, onDelete, onBlock, lang = 'pt', initialDate, blockedPeriods = [] }) => {
+const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, staff, services, onAdd, onDelete, onBlock, lang = 'pt', initialDate, blockedPeriods = [], onShowToast }) => {
   const t = translations[lang as keyof typeof translations];
   const [viewMode, setViewMode] = useState<ViewMode>('day');
 
@@ -78,6 +81,45 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
 
   // Estado de Reagendamento
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
+
+  // Waiting List State
+  const [waitingListEntryId, setWaitingListEntryId] = useState<string | null>(null);
+  const [isJoiningQueue, setIsJoiningQueue] = useState(false);
+
+  const handleJoinWaitingList = async (clientName: string, serviceId: string, proId: string, date: string) => {
+    // Busca informações completas para a fila
+    const service = services.find(s => s.id === serviceId);
+    const pro = staff.find(p => p.id === proId);
+
+    // Tenta encontrar o cliente real ou cria objeto temporário
+    let clientInfo = { name: clientName, phone: '', id: newApt.clientId || 'external' };
+
+    // Se selecionou cliente da lista, pega o telefone
+    if (newApt.clientId) {
+      const existingClient = clients.find(c => c.id === newApt.clientId);
+      if (existingClient) clientInfo = { ...clientInfo, phone: existingClient.phone };
+    }
+
+    if (!service || !pro || !clientName) return;
+
+    setIsJoiningQueue(true);
+    try {
+      const entry = await queueService.joinWaitingList(
+        clientInfo,
+        service,
+        pro.id,
+        pro.name,
+        date
+      );
+      setWaitingListEntryId(entry.id);
+      onShowToast("Adicionado à fila de espera!", "success");
+    } catch (error) {
+      console.error("Failed to join queue", error);
+      onShowToast("Erro ao entrar na fila. Verifique os dados.", "error");
+    } finally {
+      setIsJoiningQueue(false);
+    }
+  };
 
   const [timePickerConfig, setTimePickerConfig] = useState<{
     isOpen: boolean;
@@ -843,7 +885,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                   <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest truncate">Reserva de horário rápida</p>
                 </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 sm:p-2.5 bg-gray-100 rounded-full hover:rotate-90 transition-transform shrink-0 flex items-center justify-center">
+              <button onClick={() => { setIsModalOpen(false); setWaitingListEntryId(null); }} className="p-2 sm:p-2.5 bg-gray-100 rounded-full hover:rotate-90 transition-transform shrink-0 flex items-center justify-center">
                 <X size={20} />
               </button>
             </div>
@@ -995,8 +1037,24 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                     <p className="text-xs font-bold text-gray-300">Selecione o especialista e serviço para ver horários.</p>
                   </div>
                 ) : availableTimesForForm.length === 0 ? (
-                  <div className="bg-rose-50 border-2 border-dashed border-rose-100 rounded-3xl p-6 text-center">
+                  <div className="bg-rose-50 border-2 border-dashed border-rose-100 rounded-3xl p-6 text-center space-y-3">
                     <p className="text-xs font-bold text-rose-300">Sem horários para esta data.</p>
+
+                    {!waitingListEntryId ? (
+                      <button
+                        type="button"
+                        onClick={() => handleJoinWaitingList(formClientSearch, newApt.serviceId, newApt.professionalId, newApt.date)}
+                        disabled={isJoiningQueue || !formClientSearch}
+                        className="w-full py-3 bg-white border border-rose-200 text-rose-500 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center justify-center gap-2"
+                      >
+                        {isJoiningQueue ? <span className="animate-spin">⏳</span> : <Sparkles size={14} />}
+                        Entrar na Fila de Espera
+                      </button>
+                    ) : (
+                      <div className="text-[10px] font-black uppercase text-emerald-500 bg-emerald-100/50 py-2 rounded-lg">
+                        Nome adicionado à fila!
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-48 overflow-y-auto pr-2 scrollbar-hide">

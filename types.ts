@@ -261,3 +261,24 @@ export interface AnamnesisRecord {
   signedAt: string;
   createdAt: string;
 }
+
+export type WaitingListStatus = 'active' | 'notified' | 'converted' | 'cancelled' | 'expired';
+
+export interface WaitingListEntry {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientPhone: string;
+  serviceId: string;
+  serviceName: string;
+  professionalId?: string;
+  professionalName?: string;
+  preferredDate: string; // YYYY-MM-DD
+  status: WaitingListStatus;
+  priorityScore: number;
+  createdAt: string;
+  notifiedAt?: string;
+  expiresAt?: string;
+  position?: number; // Calculated field for frontend
+  estimatedWaitTime?: string; // Calculated field for frontend
+}

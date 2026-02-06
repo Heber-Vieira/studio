@@ -739,7 +739,7 @@ const MainLayout: React.FC = () => {
         case View.DASHBOARD:
           return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={handleLogout} transactions={transactions} />;
         case View.APPOINTMENTS:
-          return <AppointmentsView appointments={appointments} clients={clients} staff={staff} services={services} onAdd={addAppointment} onDelete={deleteAppointment} onBlock={() => { }} lang={lang} initialDate={selectedDate} blockedPeriods={blockedPeriods} />;
+          return <AppointmentsView appointments={appointments} clients={clients} staff={staff} services={services} onAdd={addAppointment} onDelete={deleteAppointment} onBlock={() => { }} lang={lang} initialDate={selectedDate} blockedPeriods={blockedPeriods} onShowToast={showToast} />;
         case View.CRM:
           if (user?.role === 'attendant' && !permissions.viewCRM) return <AccessRestricted />;
           return <CRMView clients={clients} onAdd={addClient} onImport={importClients} onUpdate={updateClient} onDelete={deleteClient} onRedeem={() => { }} onPrefilledBooking={handlePrefilledBooking} appointments={appointments} staff={staff} settings={settings} t={t} onShowToast={showToast} initialSearchTerm={crmSearchTerm} />;
@@ -753,7 +753,7 @@ const MainLayout: React.FC = () => {
         case View.ANAMNESIS: return <AnamnesisView clients={clients} templates={anamnesisTemplates} records={anamnesisRecords} onAddTemplate={(t) => setAnamnesisTemplates([...anamnesisTemplates, t])} onUpdateTemplate={(t) => setAnamnesisTemplates(anamnesisTemplates.map(item => item.id === t.id ? t : item))} onDeleteTemplate={(id) => setAnamnesisTemplates(anamnesisTemplates.filter(t => t.id !== id))} onAddRecord={(r) => setAnamnesisRecords([...anamnesisRecords, r])} onDeleteRecord={(id) => setAnamnesisRecords(anamnesisRecords.filter(r => r.id !== id))} onShowToast={showToast} />;
         case View.SETTINGS: if (user?.role === 'attendant' || user?.role === 'client') return <AccessRestricted />; return <SettingsView t={t} lang={lang} setLang={setLang} settings={settings} onUpdate={setSettingsAndPersist} onExportData={handleExportData} onImportData={handleImportData} onShowToast={showToast} />;
         case View.CLIENT_BOOKING:
-          return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} templates={anamnesisTemplates} onAddAnamnesisRecord={(r) => setAnamnesisRecords([...anamnesisRecords, r])} />;
+          return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} templates={anamnesisTemplates} onAddAnamnesisRecord={(r) => setAnamnesisRecords([...anamnesisRecords, r])} onShowToast={showToast} />;
         default: return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={logout} />;
       }
     } catch (err) {
