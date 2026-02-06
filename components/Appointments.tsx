@@ -100,6 +100,12 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       if (existingClient) clientInfo = { ...clientInfo, phone: existingClient.phone };
     }
 
+    // Validar se temos o telefone (essencial para notificação)
+    if (!clientInfo.phone) {
+      onShowToast("Para entrar na fila, o cliente precisa ter um telefone cadastrado.", "error");
+      return;
+    }
+
     if (!service || !pro || !clientName) return;
 
     setIsJoiningQueue(true);

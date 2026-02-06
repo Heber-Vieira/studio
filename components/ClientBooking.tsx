@@ -44,24 +44,21 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
   // Waiting List State
   const [waitingListEntryId, setWaitingListEntryId] = useState<string | null>(null);
   const [isJoiningQueue, setIsJoiningQueue] = useState(false);
+  const [isWaitlistMode, setIsWaitlistMode] = useState(false);
 
   const handleJoinWaitingList = async () => {
-    if (!selectedService || !selectedPro || !selectedDate || !clientInfo.name || !clientInfo.phone) {
-      onShowToast("Por favor, preencha seus dados (Nome e Telefone) nas etapas anteriores.", 'error');
-      return;
-    }
-
     setIsJoiningQueue(true);
     try {
       const entry = await queueService.joinWaitingList(
         clientInfo,
-        selectedService,
-        selectedPro.id,
-        selectedPro.name,
+        selectedService!,
+        selectedPro!.id,
+        selectedPro!.name,
         selectedDate
       );
       setWaitingListEntryId(entry.id);
       onShowToast("Você entrou na fila de espera!", 'success');
+      setStep(6);
     } catch (error) {
       console.error("Failed to join queue", error);
       onShowToast("Erro ao entrar na fila. Tente novamente.", 'error');
@@ -69,6 +66,29 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
       setIsJoiningQueue(false);
     }
   };
+
+  const handleWaitlistClickStep3 = () => {
+    if (clientInfo.name && clientInfo.phone) {
+      // Data ready, join immediately
+      handleJoinWaitingList();
+    } else {
+      // Need data, go to step 4
+      setIsWaitlistMode(true);
+      setStep(4);
+    }
+  };
+
+  const selectedTimeDisplay = selectedTime || (isWaitlistMode ? 'Fila de Espera' : '');
+
+  // ... (rest of code) ...
+
+  // IN STEP 3 RENDER:
+  // Update the button onClick to handleWaitlistClickStep3
+
+  // IN STEP 4 RENDER:
+  // Update texts and button action based on isWaitlistMode.
+
+
 
   // Sync with initialClientData if provided late or updated
   useEffect(() => {
@@ -425,7 +445,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                           {/* Waiting List CTA */}
                           {!waitingListEntryId && (
                             <button
-                              onClick={handleJoinWaitingList}
+                              onClick={handleWaitlistClickStep3}
                               disabled={isJoiningQueue}
                               className="mt-2 px-8 py-3 bg-gradient-to-r from-[#2D2B4D] to-[#4B4870] text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                             >
@@ -459,8 +479,12 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
             {step === 4 && (
               <div className="space-y-10 fade-in max-w-md mx-auto pb-20">
                 <div className="text-center space-y-2">
-                  <h2 className="text-4xl font-black text-gray-900 tracking-tight">Só mais um detalhe... 🌸</h2>
-                  <p className="text-gray-500 font-medium">Identifique-se para confirmarmos o horário.</p>
+                  <h2 className="text-4xl font-black text-gray-900 tracking-tight">
+                    {isWaitlistMode ? 'Entrar na Fila ⏳' : 'Só mais um detalhe... 🌸'}
+                  </h2>
+                  <p className="text-gray-500 font-medium">
+                    {isWaitlistMode ? 'Informe seus dados para avisarmos quando surgir uma vaga.' : 'Identifique-se para confirmarmos o horário.'}
+                  </p>
                 </div>
 
                 <div className="space-y-6 bg-white p-10 rounded-[4rem] shadow-2xl border border-gray-50 relative overflow-hidden">
@@ -509,7 +533,12 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-[10px] text-gray-400 font-black uppercase">Quando</span>
-                      <span className="text-gray-900 font-black text-sm">{new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR')} às {selectedTime}</span>
+                      <span className="text-gray-900 font-black text-sm">
+                        {isWaitlistMode
+                          ? `Aguardando Vaga em ${new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR')}`
+                          : `${new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR')} às ${selectedTime}`
+                        }
+                      </span>
                     </div>
                     <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                       <span className="text-gray-900 font-black uppercase text-xs">Total</span>
@@ -518,13 +547,48 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                   </div>
 
                   <button
-                    onClick={handleFinish}
-                    disabled={!isNameValid || !isPhoneValid}
+                    onClick={isWaitlistMode ? handleJoinWaitingList : handleFinish}
+                    disabled={!isNameValid || !isPhoneValid || isJoiningQueue}
                     className="w-full py-6 bg-[#2D2B4D] text-white rounded-[2rem] font-black text-lg shadow-2xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-3 relative z-10"
                   >
-                    Agendar Agora <Sparkles size={20} className="text-[#FF69B4]" />
+                    {isWaitlistMode
+                      ? (isJoiningQueue ? "Entrando..." : "Confirmar Fila")
+                      : (isJoiningQueue ? "Agendando..." : "Agendar Agora")
+                    }
+                    {!isJoiningQueue && <Sparkles size={20} className="text-[#FF69B4]" />}
                   </button>
                 </div>
+              </div>
+            )}
+
+
+
+            {step === 6 && (
+              <div className="space-y-10 fade-in max-w-md mx-auto pb-20 text-center">
+                <div className="w-32 h-32 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in duration-500">
+                  <Sparkles size={48} className="text-emerald-500" />
+                </div>
+
+                <div className="space-y-4">
+                  <h2 className="text-4xl font-black text-gray-900 tracking-tight">Você está na fila! 🎉</h2>
+                  <p className="text-gray-500 font-medium text-lg px-4">
+                    Já salvamos seu lugar. Assim que surgir uma vaga para <strong>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR')}</strong>, avisaremos no WhatsApp:
+                  </p>
+                  <p className="text-2xl font-black text-[#40E0D0]">{clientInfo.phone}</p>
+                </div>
+
+                {waitingListEntryId && (
+                  <div className="py-8">
+                    <WaitingListWidget entryId={waitingListEntryId} />
+                  </div>
+                )}
+
+                <button
+                  onClick={onClose}
+                  className="w-full py-6 bg-gray-100 text-gray-500 rounded-[2rem] font-black text-lg hover:bg-gray-200 transition-all"
+                >
+                  Voltar ao Início
+                </button>
               </div>
             )}
 
