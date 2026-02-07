@@ -98,17 +98,11 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
     const pro = staff.find(p => p.id === proId);
 
     // Tenta encontrar o cliente real ou cria objeto temporário
-    let clientInfo = { name: clientName, phone: waitlistPhone, id: newApt.clientId || 'external' };
+    const client = clients.find(c => c.name === clientName);
 
-    // Se selecionou cliente da lista, pega o telefone se não tiver inserido manual
-    if (newApt.clientId) {
-      const existingClient = clients.find(c => c.id === newApt.clientId);
-      if (existingClient) {
-        clientInfo = { ...clientInfo, phone: waitlistPhone || existingClient.phone || '' };
-      }
-    }
+    const phoneToUse = client?.phone || waitlistPhone;
 
-    if (!clientInfo.phone || clientInfo.phone.replace(/\D/g, '').length < 10) {
+    if (!phoneToUse || phoneToUse.replace(/\D/g, '').length < 10) {
       onShowToast("Por favor, informe um telefone válido para entrar na fila.", "error");
       return;
     }
@@ -122,6 +116,10 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       onShowToast("Dados do serviço ou profissional inválidos.", "error");
       return;
     }
+
+    const clientInfo = client
+      ? { name: client.name, phone: phoneToUse, id: client.id }
+      : { name: clientName, phone: phoneToUse };
 
     setIsJoiningQueue(true);
     try {
@@ -153,9 +151,9 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       // Reset states
       setWaitlistPhone('');
       setWaitlistTimes([]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to join queue", error);
-      onShowToast("Erro ao entrar na fila. Verifique os dados.", "error");
+      onShowToast(error.message || "Erro ao entrar na fila. Verifique os dados.", "error");
     } finally {
       setIsJoiningQueue(false);
     }
@@ -586,6 +584,23 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       time: rescheduleData.time,
       status: 'confirmed'
     });
+
+    // Check waitlist for the slot that just became FREE (the old one)
+    const checkWaitlist = async () => {
+      const candidate = await queueService.checkWaitlistForCancellation(selectedAppointment.date, selectedAppointment.time, selectedAppointment.professionalId);
+      if (candidate) {
+        onShowAlert(
+          "Vaga Disponível na Fila! 🔊",
+          `O reagendamento de ${selectedAppointment.clientName} liberou o horário de ${selectedAppointment.time} no dia ${new Date(selectedAppointment.date + 'T12:00:00').toLocaleDateString()}.\n\n` +
+          `CLIENTE NA FILA:\n` +
+          `👤 ${candidate.clientName}\n` +
+          `📞 ${candidate.clientPhone}\n` +
+          `✂️ ${candidate.serviceName}\n\n` +
+          `Entre em contato para confirmar o agendamento!`
+        );
+      }
+    };
+    checkWaitlist();
 
     // 3. Fechar modais
     setIsRescheduleOpen(false);
@@ -1222,11 +1237,13 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                 )}
               </div>
 
-              <div className="md:col-span-2 pt-4">
-                <button type="submit" className="w-full py-5 bg-[#FF69B4] text-white rounded-[1.8rem] font-black text-lg shadow-xl shadow-pink-100 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3">
-                  <Save size={20} /> Agendar Agora ✨
-                </button>
-              </div>
+              {availableTimesForForm.length > 0 && (
+                <div className="md:col-span-2 pt-4">
+                  <button type="submit" className="w-full py-5 bg-[#FF69B4] text-white rounded-[1.8rem] font-black text-lg shadow-xl shadow-pink-100 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3">
+                    <Save size={20} /> Agendar Agora ✨
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         </div>, document.body

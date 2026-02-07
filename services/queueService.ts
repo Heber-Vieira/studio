@@ -16,24 +16,28 @@ export const calculatePriorityScore = (client: Client, servicePrice: number, set
     let score = 0;
 
     // A. Spending Power (1 point per R$ 100 spent)
-    score += Math.floor(client.totalSpent / 100);
+    const totalSpent = Number(client.totalSpent) || 0;
+    score += Math.floor(totalSpent / 100);
 
     // B. Loyalty Points (Direct correlation)
-    score += (client.loyaltyPoints || 0) * 0.5;
+    const loyaltyPoints = Number(client.loyaltyPoints) || 0;
+    score += loyaltyPoints * 0.5;
 
-    // C. Frequency (Visits in last 90 days - Simulated by existing data or Recency)
-    // Here we use Recency: Fresh clients get a small boost to hook them, Loyal gets more.
-    const lastVisit = new Date(client.lastVisit);
+    // C. Frequency
+    const lastVisitDate = client.lastVisit ? new Date(client.lastVisit) : new Date();
     const now = new Date();
-    const daysSinceLastVisit = Math.floor((now.getTime() - lastVisit.getTime()) / (1000 * 3600 * 24));
+    const daysSinceLastVisit = Math.floor((now.getTime() - lastVisitDate.getTime()) / (1000 * 3600 * 24));
 
-    if (daysSinceLastVisit < 30) score += 10; // Active this month
-    else if (daysSinceLastVisit < 90) score += 5;
+    if (!isNaN(daysSinceLastVisit)) {
+        if (daysSinceLastVisit < 30) score += 10;
+        else if (daysSinceLastVisit < 90) score += 5;
+    }
 
-    // D. Ticket Value (Higher value service = Higher priority to fill)
-    score += Math.floor(servicePrice / 50);
+    // D. Ticket Value
+    const price = Number(servicePrice) || 0;
+    score += Math.floor(price / 50);
 
-    return Math.floor(score);
+    return Math.floor(score) || 0;
 };
 
 // --- 2. BACKEND OPERATIONS (Simulating Server-Side Logic) ---
@@ -85,13 +89,13 @@ export const queueService = {
 
         // 3. Insert into DB
         const entry: Omit<WaitingListEntry, 'id' | 'position' | 'estimatedWaitTime'> = {
-            clientId: clientId || 'external',
+            clientId: (clientId && clientId !== 'temp' && clientId !== 'external') ? clientId : null,
             clientName: clientData.name,
             clientPhone: clientData.phone,
             serviceId: service.id,
             serviceName: service.name,
-            professionalId,
-            professionalName,
+            professionalId: professionalId || null,
+            professionalName: professionalName || null,
             preferredDate: date,
             preferredTimes: preferredTimes || [],
             status: 'active',
@@ -102,7 +106,7 @@ export const queueService = {
         const { data, error } = await supabase
             .from('waiting_list')
             .insert([{
-                company_id: '00000000-0000-0000-0000-000000000001', // Default ID from database.ts
+                company_id: '00000000-0000-0000-0000-000000000001',
                 client_id: entry.clientId,
                 client_name: entry.clientName,
                 client_phone: entry.clientPhone,
@@ -119,8 +123,12 @@ export const queueService = {
             .single();
 
         if (error) {
-            console.error("Error joining waiting list:", error);
-            throw error;
+            console.error("[QueueService] DB Insert Error:", error);
+            // If it's a conflict or specific constraint, provide more info
+            if (error.code === '23505') {
+                throw new Error("Este cliente já está na fila de espera para este serviço nesta data.");
+            }
+            throw new Error(`Erro ao salvar na fila: ${error.message}`);
         }
 
         return this.mapEntry(data);

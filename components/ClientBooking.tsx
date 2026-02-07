@@ -51,6 +51,12 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
   const [waitlistTimes, setWaitlistTimes] = useState<string[]>([]);
 
   const handleJoinWaitingList = async () => {
+    if (!clientInfo.name || !clientInfo.phone || clientInfo.phone.replace(/\D/g, '').length < 10) {
+      onShowToast("Por favor, preencha seu nome e um telefone válido (WhatsApp) para avisos.", 'error');
+      if (step !== 4) setStep(4); // Force go to data entry step
+      return;
+    }
+
     setIsJoiningQueue(true);
     try {
       const entry = await queueService.joinWaitingList(
@@ -564,7 +570,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                     onClick={() => setStep(4)}
                     className="w-full py-6 bg-[#FF69B4] text-white rounded-[2rem] font-black text-xl shadow-2xl shadow-pink-100 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 animate-in fade-in slide-in-from-bottom-4"
                   >
-                    Prosseguir <ChevronRight size={24} />
+                    Prosseguir para Identificação <ChevronRight size={24} />
                   </button>
                 )}
               </div>
