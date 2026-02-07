@@ -833,10 +833,14 @@ const FormPlayer: React.FC<{
                                                                 };
 
                                                                 const thicknessDescriptions: Record<string, string> = {
-                                                                    'Volume Russo e Mega Volume (0.03mm a 0.07mm)': 'Extremamente leves e finos. Permitem a criação de "fans" (leques) artesanais com 3 a 15 fios em um único cílio natural, proporcionando desde um volume macio e "fluffy" até uma densidade dramática e luxuosa, sem sobrecarregar a raiz.',
-                                                                    'Híbrido ou Volume Suave (0.10mm a 0.12mm)': 'A ponte perfeita entre o sutil e o marcante. Ideais para técnicas como o "Wet Effect" (efeito molhado) ou um volume híbrido sofisticado. Oferecem textura e profundidade ao olhar sem o peso do clássico mais grosso.',
-                                                                    'Fio a Fio / Clássico (0.15mm a 0.20mm)': 'A essência da elegância atemporal. O 0.15mm simula o efeito de rímel de alta definição, seguro para a maioria. O 0.20mm entrega impacto imediato, mas exige fios naturais fortes para suportar o peso com segurança.',
-                                                                    'Não Recomendados (0.25mm ou mais)': '⚠️ Risco Iminente. Excessivamente pesados e rígidos para a estrutura delicada do cílio humano. O uso pode causar alopecia por tração (falhas permanentes) e enfraquecimento severo. Priorizamos a saúde do seu olhar.'
+                                                                    '0.03': 'Mega Volume: Fios ultrafinos para criar leques ("fans") volumosos e leves. Quanto menor a espessura, mais fios podem ser colados em um único cílio natural.',
+                                                                    '0.05': 'Volume Russo: Ideal para fans delicados, permitindo mais fios por cílio natural.',
+                                                                    '0.07': 'Volume Russo: O limite para fans seguros, garantindo densidade sem peso excessivo.',
+                                                                    '0.10': 'Híbrido/Volume Suave: Intermediário, perfeito para um visual levemente mais preenchido que o clássico.',
+                                                                    '0.12': 'Híbrido/Volume Suave: Confere um pouco mais de textura que o clássico, mantendo a leveza.',
+                                                                    '0.15': 'Fio a Fio (Clássico): A espessura mais popular. Imita o fio natural com rímel, sendo seguro para a maioria das clientes.',
+                                                                    '0.20': 'Fio a Fio (Clássico): Para quem possui fios naturais fortes e busca um efeito de rímel intenso.',
+                                                                    '0.25': 'NÃO RECOMENDADO: Considerado muito pesado, podendo danificar a estrutura do fio natural de longo a prazo.'
                                                                 };
 
                                                                 const description = isMapping ? mappingDescriptions[opt] : (isCurvatura ? curvaturaDescriptions[opt] : (isEspessura ? thicknessDescriptions[opt] : null));
