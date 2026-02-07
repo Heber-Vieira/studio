@@ -87,8 +87,8 @@ const LUX_QUICK_TEMPLATES: Partial<AnamnesisTemplate>[] = [
 
             { id: 'h3', label: 'Prontuário Técnico (Mapping)', type: 'heading', required: false, description: 'Personalização artística e design.' },
             { id: 'mapping', label: 'Mapping Escolhido', type: 'select', required: true, options: ['Gatinho (Cat Eye)', 'Boneca (Doll)', 'Esquilo (Squirrel)', 'Fox Eye', 'Natural'] },
-            { id: 'curvatura', label: 'Curvatura Utilizada', type: 'select', required: true, options: ['J', 'B', 'C', 'CC', 'D', 'L', 'M'] },
-            { id: 'thickness', label: 'Espessura dos Fios', type: 'select', required: true, options: ['0.03', '0.05', '0.07', '0.10', '0.12', '0.15', '0.18', '0.20', '0.25'] },
+            { id: 'curvatura', label: 'Curvatura Utilizada', type: 'select', required: true, options: ['J e B', 'C', 'CC / D', 'L e M'] },
+            { id: 'thickness', label: 'Espessura dos Fios', type: 'select', required: true, options: ['Volume Russo e Mega Volume (0.03mm a 0.07mm)', 'Híbrido ou Volume Suave (0.10mm a 0.12mm)', 'Fio a Fio / Clássico (0.15mm a 0.20mm)', 'Não Recomendados (0.25mm ou mais)'] },
 
             { id: 'h4', label: 'Termos & Consentimento', type: 'heading', required: false },
             { id: 'term_image', label: 'Autorizo o uso de imagem para portfólio profissional e redes sociais.', type: 'boolean', required: true },
@@ -836,18 +836,7 @@ const FormPlayer: React.FC<{
                                                                     'Volume Russo e Mega Volume (0.03mm a 0.07mm)': 'Extremamente leves e finos. Permitem a criação de "fans" (leques) artesanais com 3 a 15 fios em um único cílio natural, proporcionando desde um volume macio e "fluffy" até uma densidade dramática e luxuosa, sem sobrecarregar a raiz.',
                                                                     'Híbrido ou Volume Suave (0.10mm a 0.12mm)': 'A ponte perfeita entre o sutil e o marcante. Ideais para técnicas como o "Wet Effect" (efeito molhado) ou um volume híbrido sofisticado. Oferecem textura e profundidade ao olhar sem o peso do clássico mais grosso.',
                                                                     'Fio a Fio / Clássico (0.15mm a 0.20mm)': 'A essência da elegância atemporal. O 0.15mm simula o efeito de rímel de alta definição, seguro para a maioria. O 0.20mm entrega impacto imediato, mas exige fios naturais fortes para suportar o peso com segurança.',
-                                                                    'Não Recomendados (0.25mm ou mais)': '⚠️ Risco Iminente. Excessivamente pesados e rígidos para a estrutura delicada do cílio humano. O uso pode causar alopecia por tração (falhas permanentes) e enfraquecimento severo. Priorizamos a saúde do seu olhar.',
-
-                                                                    // Fallback for individual values
-                                                                    '0.03': 'Extremamente leves e finos. Ideal para Mega Volume e efeitos muito cheios.',
-                                                                    '0.05': 'Leves e delicados. Perfeito para Volume Russo com acabamento macio.',
-                                                                    '0.07': 'O mais espesso do Volume Russo. Cria um olhar marcante sem pesar.',
-                                                                    '0.10': 'Espessura intermediária. Ideal para Volume Híbrido ou efeito molhado (Wet).',
-                                                                    '0.12': 'Levemente mais encorpado. Ótimo para destacar o olhar com sutileza.',
-                                                                    '0.15': 'Clássico fio a fio. Simula o efeito de rímel, ideal para fios saudáveis.',
-                                                                    '0.18': 'Fio a fio mais dramático. Exige fios naturais fortes.',
-                                                                    '0.20': 'Espessura máxima recomendada para fio a fio. Alto impacto visual.',
-                                                                    '0.25': '⚠️ Risco de danos. Muito pesado para a maioria dos cílios naturais.'
+                                                                    'Não Recomendados (0.25mm ou mais)': '⚠️ Risco Iminente. Excessivamente pesados e rígidos para a estrutura delicada do cílio humano. O uso pode causar alopecia por tração (falhas permanentes) e enfraquecimento severo. Priorizamos a saúde do seu olhar.'
                                                                 };
 
                                                                 const description = isMapping ? mappingDescriptions[opt] : (isCurvatura ? curvaturaDescriptions[opt] : (isEspessura ? thicknessDescriptions[opt] : null));
@@ -879,6 +868,9 @@ const FormPlayer: React.FC<{
                                                                 placeholder="Buscar atendente..."
                                                                 value={staffSearch}
                                                                 onChange={(e) => setStaffSearch(e.target.value)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') e.preventDefault();
+                                                                }}
                                                                 className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-pink-300 font-serif text-lg"
                                                             />
                                                         </div>
@@ -886,20 +878,25 @@ const FormPlayer: React.FC<{
                                                             {filteredStaff.map(member => (
                                                                 <button
                                                                     key={member.id}
-                                                                    onClick={() => setAnswerAndNext(currentField.id, member.name)}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        // Ensure we specifically set the answer for the current field ID 
+                                                                        console.log(`Saving staff answer: ${member.name} for field ${currentField.id}`);
+                                                                        setAnswerAndNext(currentField.id, member.name);
+                                                                    }}
                                                                     className={`p-4 md:p-5 rounded-2xl md:rounded-[2.5rem] border-2 transition-all flex items-center gap-4 ${playingRecord.answers?.[currentField.id] === member.name ? 'bg-gray-900 border-gray-900 text-white shadow-xl' : 'bg-white border-gray-100 text-gray-600 hover:border-[#FF69B4]'}`}
                                                                 >
                                                                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl overflow-hidden shadow-sm shrink-0">
-                                                                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.name}&background=random`} className="w-full h-full object-cover" />
+                                                                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.name}&background=random`} alt={member.name} className="w-full h-full object-cover" />
                                                                     </div>
                                                                     <div className="text-left min-w-0">
                                                                         <p className="font-serif text-base md:text-lg truncate leading-tight">{member.name}</p>
-                                                                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 opacity-60 truncate">{member.role}</p>
+                                                                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 opacity-60 truncate">{member.role === 'master_admin' ? 'Master' : (member.role === 'company_admin' ? 'Admin' : 'Atendente')}</p>
                                                                     </div>
                                                                 </button>
                                                             ))}
                                                             {filteredStaff.length === 0 && (
-                                                                <p className="col-span-full py-10 text-gray-400 font-medium italic">Nenhum atendente encontrado.</p>
+                                                                <p className="col-span-full py-10 text-center text-gray-400 font-medium italic">Nenhum atendente encontrado.</p>
                                                             )}
                                                         </div>
                                                     </div>
@@ -908,6 +905,7 @@ const FormPlayer: React.FC<{
                                         )}
                                     </div>
                                 )}
+
 
                                 {isSignatureStep && (
                                     <div className="space-y-8 md:space-y-12 px-2">
