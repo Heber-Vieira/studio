@@ -86,8 +86,9 @@ const LUX_QUICK_TEMPLATES: Partial<AnamnesisTemplate>[] = [
             { id: 'atividades', label: 'Pratica atividades intensas com umidade ou atrito (Academia, Natação, Sauna)?', type: 'boolean', required: true },
 
             { id: 'h3', label: 'Prontuário Técnico (Mapping)', type: 'heading', required: false, description: 'Personalização artística e design.' },
-            { id: 'mapping', label: 'Estilo de Mapping Desejado', type: 'select', required: true, options: ['Boneca (Doll)', 'Esquilo (Squirrel)', 'Gatinho (Cat Eye)', 'Natural'] },
-            { id: 'thickness', label: 'Espessura e Curvatura dos Fios (Lash Designer)', type: 'text', required: true, placeholder: 'Ex: 0.07D + 0.05C' },
+            { id: 'mapping', label: 'Mapping Escolhido', type: 'select', required: true, options: ['Gatinho (Cat Eye)', 'Boneca (Doll)', 'Esquilo (Squirrel)', 'Fox Eye', 'Natural'] },
+            { id: 'curvatura', label: 'Curvatura Utilizada', type: 'select', required: true, options: ['J e B', 'C', 'CC / D', 'L e M'] },
+            { id: 'thickness', label: 'Espessura dos Fios', type: 'select', required: true, options: ['Volume Russo e Mega Volume (0.03mm a 0.07mm)', 'Híbrido ou Volume Suave (0.10mm a 0.12mm)', 'Fio a Fio / Clássico (0.15mm a 0.20mm)', 'Não Recomendados (0.25mm ou mais)'] },
 
             { id: 'h4', label: 'Termos & Consentimento', type: 'heading', required: false },
             { id: 'term_image', label: 'Autorizo o uso de imagem para portfólio profissional e redes sociais.', type: 'boolean', required: true },
@@ -778,7 +779,7 @@ const FormPlayer: React.FC<{
                                             </div>
                                         ) : (
                                             <div className="w-full">
-                                                {currentField.type === 'text' && <input autoFocus value={playingRecord.answers?.[currentField.id] || ''} onChange={e => setAnswer(currentField.id, e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} className="w-full bg-transparent border-b-2 border-gray-100 py-4 md:py-6 text-center text-xl md:text-4xl font-serif text-[#FF69B4] outline-none focus:border-[#FF69B4] transition-all" placeholder="Escreva aqui..." />}
+                                                {currentField.type === 'text' && !currentField.label.includes('Lash Designer') && <input autoFocus value={playingRecord.answers?.[currentField.id] || ''} onChange={e => setAnswer(currentField.id, e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} className="w-full bg-transparent border-b-2 border-gray-100 py-4 md:py-6 text-center text-xl md:text-4xl font-serif text-[#FF69B4] outline-none focus:border-[#FF69B4] transition-all" placeholder="Escreva aqui..." />}
                                                 {currentField.type === 'textarea' && <textarea autoFocus value={playingRecord.answers?.[currentField.id] || ''} onChange={e => setAnswer(currentField.id, e.target.value)} className="w-full bg-gray-50 rounded-2xl md:rounded-[3rem] p-6 md:p-12 text-base md:text-2xl font-serif text-center outline-none focus:ring-4 focus:ring-pink-50 min-h-[150px] md:min-h-[250px]" placeholder="Sua resposta..." />}
                                                 {currentField.type === 'boolean' && (
                                                     <div className="grid grid-cols-2 gap-4 md:gap-8 max-w-xl mx-auto w-full">
@@ -787,13 +788,70 @@ const FormPlayer: React.FC<{
                                                     </div>
                                                 )}
                                                 {currentField.type === 'select' && (
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 w-full max-w-xl mx-auto">
-                                                        {currentField.options?.map(opt => (
-                                                            <button key={opt} onClick={() => setAnswerAndNext(currentField.id, opt)} className={`p-4 md:p-8 rounded-xl md:rounded-[2rem] border-2 transition-all font-serif text-base md:text-2xl ${playingRecord.answers?.[currentField.id] === opt ? 'bg-gray-900 text-white shadow-lg' : 'bg-gray-50 border-transparent text-gray-600 hover:border-[#FF69B4]'}`}>{opt}</button>
-                                                        ))}
+                                                    <div className="space-y-8 w-full max-w-2xl mx-auto">
+                                                        {(currentField.id === 'mapping' || currentField.label.includes('Curvatura') || currentField.label.includes('Espessura')) && (
+                                                            <motion.p
+                                                                initial={{ opacity: 0, y: 10 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                className="text-[11px] md:text-sm text-gray-400 font-medium text-center leading-relaxed italic max-w-lg mx-auto"
+                                                            >
+                                                                {currentField.id === 'mapping'
+                                                                    ? '"O mapping define o design e o comprimento dos fios usados para harmonizar e realçar a beleza única do seu olhar."'
+                                                                    : currentField.label.includes('Curvatura')
+                                                                        ? '"A curvatura define o \'formato\' do olhar e o nível de drama desejado para o procedimento."'
+                                                                        : '"A espessura determina o peso da extensão. Escolher uma muito pesada pode causar a queda precoce do cílio natural."'
+                                                                }
+                                                            </motion.p>
+                                                        )}
+                                                        <div className={`grid gap-3 md:gap-4 w-full ${(currentField.id === 'mapping' || currentField.label.includes('Curvatura') || currentField.label.includes('Espessura')) ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+                                                            {currentField.options?.map(opt => {
+                                                                const isMapping = currentField.id === 'mapping';
+                                                                const isCurvatura = currentField.label.includes('Curvatura');
+                                                                const isEspessura = currentField.label.includes('Espessura');
+
+                                                                const mappingDescriptions: Record<string, string> = {
+                                                                    'Gatinho (Cat Eye)': 'Fios maiores no canto externo para alongar e sofisticar o olhar.',
+                                                                    'Boneca (Doll)': 'Fios maiores no centro para abrir o olhar e conferir um ar romântico.',
+                                                                    'Esquilo (Squirrel)': 'Fios longos no arco da sobrancelha, ideal para levantar olhos caídos.',
+                                                                    'Fox Eye': 'Cria um efeito de "puxado" intenso e moderno, além do clássico gatinho.',
+                                                                    'Natural': 'Equilíbrio sutil que respeita o crescimento original dos seus fios.'
+                                                                };
+
+                                                                const curvaturaDescriptions: Record<string, string> = {
+                                                                    'J e B': 'Curvaturas bem naturais, quase retas. A B tem uma leve elevação na ponta, ideal para quem quer apenas definição.',
+                                                                    'C': 'A mais versátil e utilizada. Oferece um efeito de cílios curvados com curvex, mantendo um aspecto natural.',
+                                                                    'CC / D': 'Curvaturas acentuadas para um olhar mais aberto e dramático (efeito boneca). A D é ideal para clientes que buscam impacto visual.',
+                                                                    'L e M': 'Possuem uma base reta e uma subida súbita. São excelentes para pálpebras caídas (hooded eyes) ou para criar o efeito "foxy eyes" (delineado).'
+                                                                };
+
+                                                                const thicknessDescriptions: Record<string, string> = {
+                                                                    'Volume Russo e Mega Volume (0.03mm a 0.07mm)': 'Extremamente leves e finos. Permitem a criação de "fans" (leques) artesanais com 3 a 15 fios em um único cílio natural, proporcionando desde um volume macio e "fluffy" até uma densidade dramática e luxuosa, sem sobrecarregar a raiz.',
+                                                                    'Híbrido ou Volume Suave (0.10mm a 0.12mm)': 'A ponte perfeita entre o sutil e o marcante. Ideais para técnicas como o "Wet Effect" (efeito molhado) ou um volume híbrido sofisticado. Oferecem textura e profundidade ao olhar sem o peso do clássico mais grosso.',
+                                                                    'Fio a Fio / Clássico (0.15mm a 0.20mm)': 'A essência da elegância atemporal. O 0.15mm simula o efeito de rímel de alta definição, seguro para a maioria. O 0.20mm entrega impacto imediato, mas exige fios naturais fortes para suportar o peso com segurança.',
+                                                                    'Não Recomendados (0.25mm ou mais)': '⚠️ Risco Iminente. Excessivamente pesados e rígidos para a estrutura delicada do cílio humano. O uso pode causar alopecia por tração (falhas permanentes) e enfraquecimento severo. Priorizamos a saúde do seu olhar.'
+                                                                };
+
+                                                                const description = isMapping ? mappingDescriptions[opt] : (isCurvatura ? curvaturaDescriptions[opt] : (isEspessura ? thicknessDescriptions[opt] : null));
+
+                                                                return (
+                                                                    <button
+                                                                        key={opt}
+                                                                        onClick={() => setAnswerAndNext(currentField.id, opt)}
+                                                                        className={`p-5 md:p-8 rounded-2xl md:rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-2 group ${playingRecord.answers?.[currentField.id] === opt ? (isEspessura && opt.includes('Não Recomendados') ? 'bg-red-900 border-red-900 text-white shadow-xl translate-y-[-4px]' : 'bg-gray-900 border-gray-900 text-white shadow-xl translate-y-[-4px]') : (isEspessura && opt.includes('Não Recomendados') ? 'bg-red-50 border-transparent text-red-400 hover:border-red-300' : 'bg-gray-50 border-transparent text-gray-600 hover:border-[#FF69B4] hover:bg-white hover:shadow-lg')}`}
+                                                                    >
+                                                                        <span className="font-serif text-lg md:text-2xl">{opt}</span>
+                                                                        {description && (
+                                                                            <span className={`text-[10px] md:text-xs font-medium leading-tight opacity-70 group-hover:opacity-100 transition-opacity`}>
+                                                                                {description}
+                                                                            </span>
+                                                                        )}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
                                                 )}
-                                                {currentField.type === 'staff' && (
+                                                {(currentField.type === 'staff' || (currentField.type === 'text' && currentField.label.includes('Lash Designer'))) && (
                                                     <div className="space-y-6 w-full max-w-2xl mx-auto">
                                                         <div className="relative">
                                                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
