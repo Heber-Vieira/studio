@@ -798,7 +798,7 @@ const FormPlayer: React.FC<{
                                                                 {currentField.id === 'mapping'
                                                                     ? '"O mapping define o design e o comprimento dos fios usados para harmonizar e realçar a beleza única do seu olhar."'
                                                                     : currentField.label.includes('Curvatura')
-                                                                        ? '"A curvatura define o \'formato\' do olhar e o nível de drama desejado para o procedimento."'
+                                                                        ? '"A curvatura define o \'formato\' do olhar e o nível de drama."'
                                                                         : '"A espessura determina o peso da extensão. Escolher uma muito pesada pode causar a queda precoce do cílio natural."'
                                                                 }
                                                             </motion.p>
