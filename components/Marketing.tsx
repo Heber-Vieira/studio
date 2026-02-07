@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { COLORS } from '../constants';
 import { MessageSquare, Gift, Heart, Send, Sparkles, CheckCircle, X, Bell, Zap, Clock, Smartphone, ChevronRight, Loader2, User, ArrowRight, SkipForward, Copy } from 'lucide-react';
 import { getBellaAIResponse } from '../services/geminiService';
-import { Client, Appointment, SalonSettings } from '../types';
+import { Client, Appointment, SalonSettings, ConfirmDialogOptions } from '../types';
 
 interface MarketingViewProps {
   clients?: Client[];
@@ -11,6 +11,7 @@ interface MarketingViewProps {
   settings?: SalonSettings;
   onUpdateSettings?: (s: SalonSettings) => void;
   onShowToast?: (msg: string) => void;
+  onShowConfirm: (options: ConfirmDialogOptions) => void;
 }
 
 const MarketingView: React.FC<MarketingViewProps> = ({
@@ -18,7 +19,8 @@ const MarketingView: React.FC<MarketingViewProps> = ({
   appointments = [],
   settings,
   onUpdateSettings,
-  onShowToast
+  onShowToast,
+  onShowConfirm
 }) => {
   const [copyInput, setCopyInput] = useState('');
   const [generatedCopy, setGeneratedCopy] = useState('');
@@ -101,14 +103,31 @@ const MarketingView: React.FC<MarketingViewProps> = ({
     }
   };
 
-  // State for Demo Confirmation Modal
-  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const [pendingCampaignTitle, setPendingCampaignTitle] = useState('');
 
   const startSendingSequence = (targetClients: Client[], title: string) => {
     if (targetClients.length === 0) {
-      setPendingCampaignTitle(title);
-      setIsDemoModalOpen(true);
+      onShowConfirm({
+        title: 'Modo de Demonstração',
+        message: 'Nenhum cliente encontrado para esta campanha. Deseja simular o envio com um Cliente Teste?',
+        confirmText: 'Simular',
+        onConfirm: () => {
+          const demoClients = [{
+            id: 'demo-1',
+            name: 'Cliente Teste',
+            phone: '5511999999999',
+            lastVisit: new Date().toISOString(),
+            totalSpent: 100,
+            loyaltyPoints: 0,
+            tags: ['Demo']
+          }];
+          setExecutingCampaign({
+            clients: demoClients,
+            currentIndex: 0,
+            title: title
+          });
+        }
+      });
       return;
     }
 
@@ -120,24 +139,6 @@ const MarketingView: React.FC<MarketingViewProps> = ({
     });
   };
 
-  const confirmDemoMode = () => {
-    setIsDemoModalOpen(false);
-    const demoClients = [{
-      id: 'demo-1',
-      name: 'Cliente Teste',
-      phone: '5511999999999',
-      lastVisit: new Date().toISOString(),
-      totalSpent: 100,
-      loyaltyPoints: 0,
-      tags: ['Demo']
-    }];
-
-    setExecutingCampaign({
-      clients: demoClients,
-      currentIndex: 0,
-      title: pendingCampaignTitle
-    });
-  };
 
   const sendToCurrentClient = () => {
     if (!executingCampaign) return;
@@ -284,36 +285,7 @@ const MarketingView: React.FC<MarketingViewProps> = ({
         </div>
       )}
 
-      {/* Modal: Demo Mode Confirmation */}
-      {isDemoModalOpen && (
-        <div className="fixed inset-0 z-[260] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 text-center border-4 border-white/50">
-            <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-500 mb-2">
-              <Sparkles size={40} />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-gray-900">Modo de Demonstração</h3>
-              <p className="text-gray-500 text-sm font-medium leading-relaxed">
-                Nenhum cliente encontrado para esta campanha. Deseja simular o envio com um <b>Cliente Teste</b>?
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setIsDemoModalOpen(false)}
-                className="py-3 bg-gray-100 text-gray-500 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-gray-200 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmDemoMode}
-                className="py-3 bg-amber-400 text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-amber-500 transition-colors shadow-lg shadow-amber-100"
-              >
-                Simular
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal: Demo Mode Confirmation replaced by global onShowConfirm */}
 
       {/* Campaign Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

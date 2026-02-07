@@ -1,12 +1,12 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Service, Professional, Appointment, BlockedPeriod, SalonSettings, AnamnesisTemplate, AnamnesisRecord } from '../types';
 import { ChevronLeft, ChevronRight, Clock, Star, Scissors, Check, Calendar, Sparkles, X, Phone, User, Tag, LogOut, AlertTriangle, ShieldCheck, Signature, FileText, Send } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { queueService } from '../services/queueService';
 import { WaitingListWidget } from './WaitingListWidget';
 // @ts-ignore
 import SignatureCanvas from 'react-signature-canvas';
+import { Service, Professional, Appointment, BlockedPeriod, SalonSettings, AnamnesisTemplate, AnamnesisRecord, ConfirmDialogOptions } from '../types';
 
 interface ClientBookingProps {
   settings: SalonSettings;
@@ -20,9 +20,10 @@ interface ClientBookingProps {
   templates: AnamnesisTemplate[];
   onAddAnamnesisRecord: (record: AnamnesisRecord) => void;
   onShowToast: (msg: string, type?: 'success' | 'error') => void;
+  onShowConfirm: (options: ConfirmDialogOptions) => void;
 }
 
-const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff, appointments, blockedPeriods, onBook, onClose, initialClientData, templates, onAddAnamnesisRecord, onShowToast }) => {
+const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff, appointments, blockedPeriods, onBook, onClose, initialClientData, templates, onAddAnamnesisRecord, onShowToast, onShowConfirm }) => {
   const { logout, user } = useAuth();
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState<Service | null>(null);

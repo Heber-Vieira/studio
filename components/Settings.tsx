@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useMemo } from 'react';
-import { SalonSettings, BackupData, ReleaseFeature, UserRole, ReleaseNote } from '../types';
+import { SalonSettings, BackupData, ReleaseFeature, UserRole, ReleaseNote, ConfirmDialogOptions } from '../types';
 import { Language } from '../i18n';
 import {
   Building2,
@@ -74,6 +74,7 @@ interface SettingsProps {
   onExportData: () => void;
   onImportData: (data: BackupData) => void;
   onShowToast: (msg: string) => void;
+  onShowConfirm: (options: ConfirmDialogOptions) => void;
 }
 
 type TabId = 'general' | 'ai' | 'financial' | 'integrations' | 'plan' | 'loyalty' | 'data' | 'team' | 'releases' | 'users';
@@ -138,7 +139,7 @@ const AccessToggle: React.FC<{ title: string; description: string; isActive: boo
   </div>
 );
 
-const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onUpdate, onExportData, onImportData, onShowToast }) => {
+const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onUpdate, onExportData, onImportData, onShowToast, onShowConfirm }) => {
   const [activeTab, setActiveTab] = useState<TabId>('general');
   // --- USER MANAGEMENT STATE ---
   const [userProfiles, setUserProfiles] = useState<any[]>([]);
@@ -180,17 +181,22 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
   };
 
   const handleDeleteUser = async (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.")) {
-      try {
-        const { db } = await import('../services/database');
-        await db.deleteProfile(id);
-        onShowToast("Usuário excluído.");
-        fetchData();
-      } catch (e) {
-        console.error("Error deleting user:", e);
-        onShowToast("Erro ao excluir usuário.");
+    onShowConfirm({
+      title: "Excluir Usuário?",
+      message: "Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.",
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          const { db } = await import('../services/database');
+          await db.deleteProfile(id);
+          onShowToast("Usuário excluído.");
+          fetchData();
+        } catch (e) {
+          console.error("Error deleting user:", e);
+          onShowToast("Erro ao excluir usuário.");
+        }
       }
-    }
+    });
   };
   // -----------------------------
 
@@ -530,6 +536,7 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
                 </div>
               </div>
             </div>
+            {/* Reset Modal Logic replaced by global onShowConfirm */}
             <div className="bg-rose-50/50 p-10 rounded-[3rem] border border-rose-100 relative overflow-hidden group hover:bg-rose-50 transition-colors">
               <div className="absolute top-0 right-0 w-64 h-64 bg-rose-200/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
@@ -540,31 +547,19 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
                     <p className="text-sm text-rose-700 max-md font-medium mt-1 leading-relaxed">Ações aqui restauram o sistema. Ao resetar, suas configurações personalizadas voltarão aos valores de fábrica.</p>
                   </div>
                 </div>
-                <button onClick={() => setIsResetModalOpen(true)} className="px-10 py-5 bg-white border-2 border-rose-200 text-rose-600 rounded-[1.8rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all shadow-xl shadow-rose-50 active:scale-95">Resetar Fábrica</button>
+                <button
+                  onClick={() => onShowConfirm({
+                    title: 'Deseja resetar?',
+                    message: 'Isto reverterá suas configurações para o padrão original da plataforma. Esta ação não pode ser desfeita.',
+                    variant: 'danger',
+                    onConfirm: handleFactoryReset
+                  })}
+                  className="px-10 py-5 bg-white border-2 border-rose-200 text-rose-600 rounded-[1.8rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all shadow-xl shadow-rose-50 active:scale-95"
+                >
+                  Resetar Fábrica
+                </button>
               </div>
             </div>
-            {isResetModalOpen && (
-              <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl animate-in fade-in duration-300">
-                <div className="bg-white w-full max-w-sm rounded-[3.5rem] p-10 shadow-2xl text-center space-y-8 animate-in zoom-in duration-300 relative border border-rose-100">
-                  {isResetting ? (
-                    <div className="py-10 space-y-6">
-                      <Loader2 size={64} className="text-rose-500 animate-spin mx-auto" />
-                      <h3 className="text-2xl font-black text-gray-900">Redefinindo...</h3>
-                      <p className="text-gray-400 font-medium">Restaurando as configurações originais.</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="w-24 h-24 bg-rose-50 rounded-[2.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-inner mb-2 relative"><AlertTriangle size={48} className="animate-bounce" /></div>
-                      <div className="space-y-3"><h3 className="text-2xl font-black text-gray-900 tracking-tight">Deseja resetar?</h3><p className="text-sm text-gray-500 leading-relaxed font-medium px-4">Isto reverterá suas configurações para o padrão original da plataforma.</p></div>
-                      <div className="flex flex-col gap-3">
-                        <button onClick={handleFactoryReset} className="w-full py-5 bg-rose-600 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest shadow-2xl shadow-rose-200 hover:bg-rose-700 transition-all flex items-center justify-center gap-2"><RefreshCw size={18} /> Sim, resetar configurações</button>
-                        <button onClick={() => setIsResetModalOpen(false)} className="w-full py-5 bg-gray-50 text-gray-400 rounded-[1.8rem] font-black text-sm uppercase tracking-widest hover:bg-gray-100 transition-all">Cancelar</button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         );
       case 'plan':

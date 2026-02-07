@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { InventoryItem, Transaction, Category } from '../types';
+import { InventoryItem, Transaction, Category, ConfirmDialogOptions } from '../types';
 import {
    Search, Plus, Package, ShoppingBag, AlertCircle,
    TrendingDown, TrendingUp, Filter, Trash2, Edit3,
@@ -21,6 +21,7 @@ interface InventoryViewProps {
    onAddCategory: (cat: Omit<Category, 'id'>) => Promise<void>;
    onDeleteCategory: (id: string) => Promise<void>;
    onShowToast: (msg: string) => void;
+   onShowConfirm: (options: ConfirmDialogOptions) => void;
 }
 
 const IconMap: Record<string, any> = {
@@ -53,7 +54,8 @@ const InventoryView: React.FC<InventoryViewProps> = ({
    onAddTransaction,
    onAddCategory,
    onDeleteCategory,
-   onShowToast
+   onShowToast,
+   onShowConfirm
 }) => {
    const [activeTab, setActiveTab] = useState<'all' | 'consumable' | 'resale'>('all');
    const [searchTerm, setSearchTerm] = useState('');
@@ -64,12 +66,6 @@ const InventoryView: React.FC<InventoryViewProps> = ({
    const [isCatModalOpen, setIsCatModalOpen] = useState(false);
    const [isSaving, setIsSaving] = useState(false);
    const [newCat, setNewCat] = useState({ label: '', iconName: 'Tag' });
-   const [isDeleteCatModalOpen, setIsDeleteCatModalOpen] = useState(false);
-   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
-
-   // Delete Modal States
-   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-   const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
 
    const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
 
@@ -161,17 +157,15 @@ const InventoryView: React.FC<InventoryViewProps> = ({
    };
 
    const handleDeleteClick = (item: InventoryItem) => {
-      setItemToDelete(item);
-      setIsDeleteModalOpen(true);
-   };
-
-   const confirmDelete = () => {
-      if (itemToDelete) {
-         onDeleteItem(itemToDelete.id);
-         setIsDeleteModalOpen(false);
-         setItemToDelete(null);
-         onShowToast("Item removido do estoque.");
-      }
+      onShowConfirm({
+         title: 'Remover Item?',
+         message: `Você tem certeza que deseja remover ${item.name} do estoque? Essa ação não pode ser desfeita.`,
+         variant: 'danger',
+         onConfirm: () => {
+            onDeleteItem(item.id);
+            onShowToast("Item removido do estoque.");
+         }
+      });
    };
 
    const confirmMovement = () => {
@@ -233,16 +227,24 @@ const InventoryView: React.FC<InventoryViewProps> = ({
    };
 
    const handleDeleteCategoryClick = (cat: Category) => {
-      setCategoryToDelete(cat);
-      setIsDeleteCatModalOpen(true);
-   };
-
-   const confirmDeleteCategory = async () => {
-      if (categoryToDelete) {
-         await onDeleteCategory(categoryToDelete.id);
-         setIsDeleteCatModalOpen(false);
-         setCategoryToDelete(null);
-         onShowToast("Categoria removida.");
+      const itemCount = getItemsCountByCategory(cat.label);
+      if (itemCount > 0) {
+         onShowConfirm({
+            title: 'Categoria em Uso',
+            message: `A categoria ${cat.label} possui ${itemCount} itens no estoque. Remova ou mova os itens antes de excluir.`,
+            confirmText: 'Entendido',
+            onConfirm: () => { }
+         });
+      } else {
+         onShowConfirm({
+            title: 'Excluir Categoria?',
+            message: `Você tem certeza que deseja remover a categoria ${cat.label}? Essa ação não pode ser desfeita.`,
+            variant: 'danger',
+            onConfirm: async () => {
+               await onDeleteCategory(cat.id);
+               onShowToast("Categoria removida.");
+            }
+         });
       }
    };
 
@@ -404,98 +406,7 @@ const InventoryView: React.FC<InventoryViewProps> = ({
             })}
          </div>
 
-         {/* Modal: Confirm Delete Item */}
-         {isDeleteModalOpen && itemToDelete && (
-            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-               <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center">
-                  <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm mb-2">
-                     <Trash2 size={32} />
-                  </div>
-
-                  <div className="space-y-2">
-                     <h3 className="text-xl font-black text-gray-900">Remover Item?</h3>
-                     <p className="text-sm text-gray-500 leading-relaxed">
-                        Você tem certeza que deseja remover <span className="font-bold text-gray-800">{itemToDelete.name}</span> do estoque? Essa ação não pode ser desfeita.
-                     </p>
-                  </div>
-
-                  <div className="flex flex-col gap-3 pt-2">
-                     <button
-                        onClick={confirmDelete}
-                        className="w-full py-4 bg-rose-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-rose-200 hover:bg-rose-600 active:scale-95 transition-all"
-                     >
-                        Sim, Remover
-                     </button>
-                     <button
-                        onClick={() => setIsDeleteModalOpen(false)}
-                        className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-100 transition-all"
-                     >
-                        Cancelar
-                     </button>
-                  </div>
-               </div>
-            </div>
-         )}
-
-         {/* Modal: Confirmar Exclusão de Categoria */}
-         <Modal
-            isOpen={isDeleteCatModalOpen && !!categoryToDelete}
-            onClose={() => { setIsDeleteCatModalOpen(false); setCategoryToDelete(null); }}
-            title={getItemsCountByCategory(categoryToDelete?.label || '') > 0 ? "Categoria em Uso" : "Excluir Categoria?"}
-         >
-            <div className="text-center space-y-6">
-               {getItemsCountByCategory(categoryToDelete?.label || '') > 0 ? (
-                  <>
-                     <div className="w-20 h-20 bg-amber-50 rounded-[1.5rem] flex items-center justify-center text-amber-500 mx-auto shadow-sm">
-                        <AlertTriangle size={32} />
-                     </div>
-
-                     <div className="space-y-2">
-                        <p className="text-sm text-gray-500 leading-relaxed">
-                           A categoria <span className="font-bold text-gray-800">{categoryToDelete?.label}</span> possui <span className="font-bold text-[#FF69B4]">{getItemsCountByCategory(categoryToDelete?.label || '')} itens</span> no estoque. Remova ou mova os itens antes de excluir.
-                        </p>
-                     </div>
-
-                     <Button
-                        variant="secondary"
-                        fullWidth
-                        onClick={() => setIsDeleteCatModalOpen(false)}
-                     >
-                        Entendido
-                     </Button>
-                  </>
-               ) : (
-                  <>
-                     <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm">
-                        <Trash2 size={32} />
-                     </div>
-
-                     <div className="space-y-2">
-                        <p className="text-sm text-gray-500 leading-relaxed">
-                           Você tem certeza que deseja remover a categoria <span className="font-bold text-gray-800">{categoryToDelete?.label}</span>? Essa ação não pode ser desfeita.
-                        </p>
-                     </div>
-
-                     <div className="flex flex-col gap-3 pt-2">
-                        <Button
-                           variant="danger"
-                           fullWidth
-                           onClick={confirmDeleteCategory}
-                        >
-                           Sim, Excluir
-                        </Button>
-                        <Button
-                           variant="secondary"
-                           fullWidth
-                           onClick={() => { setIsDeleteCatModalOpen(false); setCategoryToDelete(null); }}
-                        >
-                           Cancelar
-                        </Button>
-                     </div>
-                  </>
-               )}
-            </div>
-         </Modal>
+         {/* Item and Category Deletion modals replaced by global onShowConfirm */}
 
          {/* Modal: Gerenciar Categorias */}
          <Modal

@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Appointment, Client, Professional, Service, BlockedPeriod } from '../types';
+import { Appointment, Client, Professional, Service, BlockedPeriod, ConfirmDialogOptions } from '../types';
 import {
   Plus,
   Filter,
@@ -49,11 +49,12 @@ interface AppointmentsProps {
   initialDate?: string;
   blockedPeriods?: BlockedPeriod[];
   onShowToast: (msg: string, type?: 'success' | 'error') => void;
+  onShowConfirm: (options: ConfirmDialogOptions) => void;
 }
 
 type ViewMode = 'day' | 'week' | 'month';
 
-const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, staff, services, onAdd, onDelete, onBlock, lang = 'pt', initialDate, blockedPeriods = [], onShowToast }) => {
+const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, staff, services, onAdd, onDelete, onBlock, lang = 'pt', initialDate, blockedPeriods = [], onShowToast, onShowConfirm }) => {
   const t = translations[lang as keyof typeof translations];
   const [viewMode, setViewMode] = useState<ViewMode>('day');
 
@@ -73,7 +74,6 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
   // Estados dos Modais
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [isConfirmCancelOpen, setIsConfirmCancelOpen] = useState(false);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
@@ -459,7 +459,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
   const handleConfirmCancel = () => {
     if (selectedAppointment) {
       onDelete(selectedAppointment.id);
-      setIsConfirmCancelOpen(false);
+      setWaitingListEntryId(null);
       setIsDetailsModalOpen(false);
       setSelectedAppointment(null);
     }
@@ -772,14 +772,14 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                               <div key={apt.id} onClick={() => { setSelectedAppointment(apt); setIsDetailsModalOpen(true); }}
                                 className="absolute left-1 right-1 rounded-xl p-2 shadow-sm border-l-4 cursor-pointer hover:scale-[1.02] transition-all z-20 overflow-hidden flex flex-col justify-center"
                                 style={{ ...style, backgroundColor: `${color}10`, borderLeftColor: color }}>
-                                <span className="text-[8px] font-black uppercase tracking-tight mb-0.5" style={{ color }}>{apt.time}</span>
-                                <h5 className="font-bold text-[9px] text-gray-900 leading-none truncate">{apt.service}</h5>
-                                <div className="flex items-center gap-1 mt-0.5">
-                                  <p className="text-[8px] text-gray-400 truncate flex-1 min-w-0">{apt.clientName}</p>
+                                <span className="text-[10px] font-black uppercase tracking-tight mb-1" style={{ color }}>{apt.time}</span>
+                                <h5 className="font-bold text-[11px] text-gray-900 leading-none truncate">{apt.service}</h5>
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  <p className="text-[10px] text-gray-400 truncate flex-1 min-w-0 font-medium">{apt.clientName}</p>
                                   {pro && (
-                                    <div className="flex items-center gap-0.5 px-1 py-0.5 bg-white/50 rounded-full border border-pink-100/30 shrink-0">
-                                      <User size={8} className="text-[#FF69B4]" />
-                                      <span className="text-[7px] font-black text-[#FF69B4] uppercase tracking-tighter">
+                                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-white/60 rounded-full border border-pink-100/30 shrink-0">
+                                      <User size={10} className="text-[#FF69B4]" />
+                                      <span className="text-[9px] font-black text-[#FF69B4] uppercase tracking-tighter">
                                         {pro.name.split(' ')[0]}
                                       </span>
                                     </div>
@@ -805,17 +805,17 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                               <div key={apt.id} onClick={() => { setSelectedAppointment(apt); setIsDetailsModalOpen(true); }}
                                 className="absolute left-2 right-2 rounded-2xl p-2.5 shadow-md border-l-4 cursor-pointer hover:scale-[1.02] transition-all z-20 flex flex-col justify-center overflow-hidden"
                                 style={{ ...style, backgroundColor: `${color}12`, borderLeftColor: color }}>
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1" style={{ color }}><Clock size={10} /> {apt.time}</span>
-                                  <div className="w-4 h-4 bg-white/50 rounded-full flex items-center justify-center"><CheckCircle2 size={10} className="text-emerald-500" /></div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5" style={{ color }}><Clock size={14} /> {apt.time}</span>
+                                  <div className="w-5 h-5 bg-white/60 rounded-full flex items-center justify-center"><CheckCircle2 size={14} className="text-emerald-500" /></div>
                                 </div>
-                                <h5 className="font-bold text-[11px] text-gray-900 leading-tight truncate">{apt.service}</h5>
-                                <div className="flex items-center justify-between gap-1 mt-0.5">
-                                  <p className="text-[10px] text-gray-400 font-medium truncate">{apt.clientName}</p>
+                                <h5 className="font-bold text-sm text-gray-900 leading-tight truncate">{apt.service}</h5>
+                                <div className="flex items-center justify-between gap-2 mt-1.5">
+                                  <p className="text-xs text-gray-400 font-medium truncate">{apt.clientName}</p>
                                   {pro && (
-                                    <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-white/40 rounded-full border border-pink-100/20 shrink-0">
-                                      <User size={8} className="text-[#FF69B4]" />
-                                      <span className="text-[8px] font-black text-[#FF69B4] uppercase tracking-tighter">
+                                    <div className="flex items-center gap-1 px-2.5 py-1 bg-white/40 rounded-full border border-pink-100/20 shrink-0">
+                                      <User size={12} className="text-[#FF69B4]" />
+                                      <span className="text-[10px] font-black text-[#FF69B4] uppercase tracking-tighter">
                                         {pro.name.split(' ')[0]}
                                       </span>
                                     </div>
@@ -1124,10 +1124,17 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                   <RefreshCw size={16} /> {t.appointments.reschedule}
                 </button>
                 <button
-                  onClick={() => setIsConfirmCancelOpen(true)}
-                  className="py-4 bg-rose-50 text-rose-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center justify-center gap-2"
+                  onClick={() => {
+                    onShowConfirm({
+                      title: 'Confirmar Cancelamento?',
+                      message: `Você está prestes a cancelar o horário de ${selectedAppointment.clientName}. Esta ação não pode ser desfeita.`,
+                      variant: 'danger',
+                      onConfirm: handleConfirmCancel
+                    });
+                  }}
+                  className="flex-1 py-4 bg-rose-50 text-rose-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-100 transition-all border border-rose-100 flex items-center justify-center gap-2"
                 >
-                  <Trash2 size={16} /> Cancelar
+                  <X size={16} /> {t.common.cancel}
                 </button>
               </div>
             </div>
@@ -1210,28 +1217,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
         </div>, document.body
       )}
 
-      {/* MODAL CONFIRMAÇÃO DE CANCELAMENTO */}
-      {isConfirmCancelOpen && selectedAppointment && createPortal(
-        <div className="fixed inset-0 z-[9999] p-4 bg-black/70 backdrop-blur-md overflow-y-auto flex items-center justify-center">
-          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center m-auto">
-            <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm mb-2">
-              <AlertTriangle size={32} />
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-gray-900">Confirmar Cancelamento?</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Você está prestes a cancelar o horário de <span className="font-bold text-gray-800">{selectedAppointment.clientName}</span>. Esta ação não pode ser desfeita.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 pt-2">
-              <button onClick={handleConfirmCancel} className="w-full py-4 bg-rose-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-rose-200 hover:bg-rose-600 active:scale-95 transition-all">Sim, Cancelar Atendimento</button>
-              <button onClick={() => setIsConfirmCancelOpen(false)} className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-100 transition-all">Não, Manter Horário</button>
-            </div>
-          </div>
-        </div>, document.body
-      )}
+      {/* Modal: Confirmar Cancelamento replaced by global onShowConfirm */}
       {/* Time Picker Global Instance */}
       <TimePicker
         isOpen={timePickerConfig.isOpen}

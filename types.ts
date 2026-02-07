@@ -282,3 +282,12 @@ export interface WaitingListEntry {
   position?: number; // Calculated field for frontend
   estimatedWaitTime?: string; // Calculated field for frontend
 }
+
+export interface ConfirmDialogOptions {
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: 'primary' | 'danger' | 'success';
+}

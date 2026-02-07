@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid } from 'recharts';
 import { TrendingUp, Users, Calendar, Sparkles, ChevronDown, Clock, ArrowRight, Star, Gift, Scissors, LogOut, X, CheckCircle2, User } from 'lucide-react';
 import { COLORS } from '../constants';
-import { View, Appointment, UserRole, UserProfile, SalonSettings, Client, Professional, Transaction } from '../types';
+import { View, Appointment, UserRole, UserProfile, SalonSettings, Client, Professional, Transaction, ConfirmDialogOptions } from '../types';
 
 interface DashboardProps {
    t: any;
@@ -16,11 +16,12 @@ interface DashboardProps {
    staff?: Professional[];
    transactions?: Transaction[];
    onLogout: () => void;
+   onShowConfirm: (options: ConfirmDialogOptions) => void;
 }
 
 type RangeType = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 
-const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appointments, userRole, user, settings, clients = [], staff = [], transactions = [], onLogout }) => {
+const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appointments, userRole, user, settings, clients = [], staff = [], transactions = [], onLogout, onShowConfirm }) => {
    const [timeRange, setTimeRange] = useState<RangeType>('weekly');
    const [scheduleTab, setScheduleTab] = useState<'today' | 'tomorrow'>('today');
    const [isMyAppointmentsOpen, setIsMyAppointmentsOpen] = useState(false);
@@ -577,19 +578,19 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                         <div
                            key={apt.id}
                            onClick={() => handleGoToSchedule(currentDate)}
-                           className={`flex items-center gap-4 p-4 rounded-2xl border transition-all group cursor-pointer hover:scale-[1.02] ${scheduleTab === 'today' ? 'bg-pink-50/30 border-pink-100 hover:bg-white hover:shadow-md' : 'bg-[#F9FAFB] border-gray-50 hover:bg-white hover:shadow-md'}`}
+                           className={`flex items-center gap-5 p-5 rounded-[2rem] border transition-all group cursor-pointer hover:scale-[1.02] ${scheduleTab === 'today' ? 'bg-pink-50/40 border-pink-100 hover:bg-white hover:shadow-xl' : 'bg-[#F9FAFB] border-gray-100 hover:bg-white hover:shadow-xl'}`}
                         >
-                           <div className={`p-2.5 rounded-xl font-black text-xs shadow-sm border text-center min-w-[50px] transition-colors ${scheduleTab === 'today' ? 'bg-[#FF69B4] text-white border-[#FF69B4]' : 'bg-white text-[#FF69B4] border-gray-100 group-hover:bg-[#FF69B4] group-hover:text-white'}`}>
+                           <div className={`p-3 rounded-2xl font-black text-sm shadow-sm border text-center min-w-[60px] transition-colors ${scheduleTab === 'today' ? 'bg-[#FF69B4] text-white border-[#FF69B4]' : 'bg-white text-[#FF69B4] border-gray-100 group-hover:bg-[#FF69B4] group-hover:text-white'}`}>
                               {apt.time}
                            </div>
                            <div className="flex-1 min-w-0">
-                              <h4 className="font-bold text-sm text-gray-900 truncate group-hover:text-[#FF69B4] transition-colors">{apt.clientName}</h4>
-                              <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                                 <p className="text-xs text-gray-400 font-medium truncate">{apt.service}</p>
+                              <h4 className="font-bold text-base text-gray-900 truncate group-hover:text-[#FF69B4] transition-colors">{apt.clientName}</h4>
+                              <div className="flex items-center gap-2 flex-wrap mt-1">
+                                 <p className="text-sm text-gray-400 font-medium truncate">{apt.service}</p>
                                  {professional && (
-                                    <div className="flex items-center gap-1 px-2 py-0.5 bg-pink-50 rounded-full border border-pink-100/50">
-                                       <User size={10} className="text-[#FF69B4]" />
-                                       <span className="text-[9px] font-black text-[#FF69B4] uppercase tracking-wider">
+                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-pink-50 rounded-full border border-pink-100/50">
+                                       <User size={12} className="text-[#FF69B4]" />
+                                       <span className="text-[10px] font-black text-[#FF69B4] uppercase tracking-wider">
                                           {professional.name.split(' ')[0]}
                                        </span>
                                     </div>
@@ -597,7 +598,7 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                               </div>
                            </div>
                            <div className="text-right">
-                              <span className="font-bold text-xs text-gray-700 block">R$ {apt.price}</span>
+                              <span className="font-black text-sm text-gray-900 block">R$ {apt.price}</span>
                            </div>
                         </div>
                      );
@@ -625,17 +626,17 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
 const StatCard: React.FC<{ title: string; value: string; change: string; bgColor: string; icon: React.ReactNode; onClick: () => void }> = ({ title, value, change, bgColor, icon, onClick }) => (
    <div
       onClick={onClick}
-      className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+      className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group"
    >
       <div className="flex items-center gap-3 mb-4">
-         <div className={`p-2.5 rounded-xl shadow-sm transition-transform group-hover:scale-110 ${bgColor}`}>
+         <div className={`p-3 rounded-xl shadow-sm transition-transform group-hover:scale-110 ${bgColor}`}>
             {icon}
          </div>
-         <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">{title}</span>
+         <span className="text-xs font-black text-gray-400 uppercase tracking-widest leading-none">{title}</span>
       </div>
       <div className="flex items-end justify-between">
-         <h2 className="text-2xl font-bold">{value}</h2>
-         <span className={`text-sm font-bold ${change.startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}`}>
+         <h2 className="text-3xl font-black text-gray-900 tracking-tight">{value}</h2>
+         <span className={`text-sm font-black ${change.startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}`}>
             {change}
          </span>
       </div>

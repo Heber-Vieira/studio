@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useMemo } from 'react';
-import { Professional, BlockedPeriod, WorkSchedule, Service, Category } from '../types';
+import { Professional, BlockedPeriod, WorkSchedule, Service, Category, ConfirmDialogOptions } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/database';
 import {
@@ -24,6 +24,7 @@ interface StaffProps {
   onViewSchedule: () => void;
   categories: Category[];
   onShowToast: (msg: string) => void;
+  onShowConfirm: (options: ConfirmDialogOptions) => void;
 }
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -39,7 +40,8 @@ const StaffView: React.FC<StaffProps> = ({
   onUnblock,
   onViewSchedule,
   categories,
-  onShowToast
+  onShowToast,
+  onShowConfirm
 }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'master_admin' || user?.role === 'company_admin';
@@ -48,7 +50,6 @@ const StaffView: React.FC<StaffProps> = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   const [selectedPro, setSelectedPro] = useState<Professional | null>(null);
@@ -187,7 +188,6 @@ const StaffView: React.FC<StaffProps> = ({
   const handleConfirmDelete = async () => {
     if (selectedPro) {
       await onDelete(selectedPro.id);
-      setIsDeleteModalOpen(false);
       setSelectedPro(null);
     }
   };
@@ -703,7 +703,12 @@ const StaffView: React.FC<StaffProps> = ({
                 <button
                   onClick={() => {
                     setIsEditModalOpen(false);
-                    setIsDeleteModalOpen(true);
+                    onShowConfirm({
+                      title: 'Remover Profissional?',
+                      message: `Você está prestes a remover ${selectedPro.name} da equipe. O histórico financeiro será preservado.`,
+                      variant: 'danger',
+                      onConfirm: handleConfirmDelete
+                    });
                   }}
                   className="flex-1 py-4 bg-rose-50 text-rose-500 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-100 transition-all"
                 >
@@ -722,38 +727,7 @@ const StaffView: React.FC<StaffProps> = ({
         </div>
       )}
 
-      {/* Modal: Confirmar Exclusão (Admin Only) */}
-      {isDeleteModalOpen && selectedPro && isAdmin && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center">
-            <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm mb-2">
-              <AlertTriangle size={32} />
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-gray-900">Remover Profissional?</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Você está prestes a remover <span className="font-bold text-gray-800">{selectedPro.name}</span> da equipe. O histórico financeiro será preservado.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 pt-2">
-              <button
-                onClick={handleConfirmDelete}
-                className="w-full py-4 bg-rose-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-rose-200 hover:bg-rose-600 active:scale-95 transition-all"
-              >
-                Sim, Remover
-              </button>
-              <button
-                onClick={() => { setIsDeleteModalOpen(false); setIsEditModalOpen(true); }}
-                className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-100 transition-all"
-              >
-                Não, Voltar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal: Confirmar Exclusão replaced by global onShowConfirm */}
 
       {/* Modal: Bloquear Agenda */}
       {isBlockModalOpen && selectedPro && (

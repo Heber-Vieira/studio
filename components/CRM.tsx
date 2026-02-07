@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useMemo } from 'react';
-import { Client, Appointment, SalonSettings, Professional } from '../types';
+import { Client, Appointment, SalonSettings, Professional, ConfirmDialogOptions } from '../types';
 import { User, UserPlus, Search, Phone, History, Star, X, CheckCircle2, Calendar, Sparkles, Trash2, AlertTriangle, Gift, Smartphone, Upload, Edit3, Save, Link2, ExternalLink, Copy, MessageCircle } from 'lucide-react';
 import { Modal, Button, InputField } from './ui';
 
@@ -17,10 +17,11 @@ interface CRMProps {
   settings: SalonSettings;
   t: any;
   onShowToast: (msg: string) => void;
+  onShowConfirm: (options: ConfirmDialogOptions) => void;
   initialSearchTerm?: string;
 }
 
-const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDelete, onRedeem, onPrefilledBooking, appointments, staff, settings, t, onShowToast, initialSearchTerm = '' }) => {
+const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDelete, onRedeem, onPrefilledBooking, appointments, staff, settings, t, onShowToast, onShowConfirm, initialSearchTerm = '' }) => {
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -33,9 +34,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
   // Magic Link Modal State
   const [activeMagicClient, setActiveMagicClient] = useState<Client | null>(null);
 
-  // States for Delete Modal
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  // States for Delete Modal removed in favor of unified onShowConfirm
 
   // States for Contact API Help
   const [isContactInstructionsOpen, setIsContactInstructionsOpen] = useState(false);
@@ -384,7 +383,15 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
                     <Edit3 size={16} />
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setClientToDelete(client); setIsDeleteModalOpen(true); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onShowConfirm({
+                        title: 'Remover Cliente?',
+                        message: `Você está prestes a remover ${client.name}. Todo o histórico e pontos de fidelidade serão perdidos.`,
+                        variant: 'danger',
+                        onConfirm: () => onDelete(client.id)
+                      });
+                    }}
                     className="p-2 bg-rose-50 rounded-xl text-rose-200 hover:text-rose-600 hover:bg-rose-100 transition-all shadow-sm active:scale-90"
                     title="Remover Cliente"
                   >
@@ -540,42 +547,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
         )}
       </Modal>
 
-      {/* Modal: Confirmar Exclusão */}
-      {isDeleteModalOpen && clientToDelete && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 text-center">
-            <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm mb-2">
-              <AlertTriangle size={32} />
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-gray-900">Remover Cliente?</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Você está prestes a remover <span className="font-bold text-gray-800">{clientToDelete.name}</span>. Todo o histórico e pontos de fidelidade serão perdidos.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 pt-2">
-              <Button
-                variant="danger"
-                size="lg"
-                fullWidth
-                onClick={() => { onDelete(clientToDelete.id); setIsDeleteModalOpen(false); setClientToDelete(null); }}
-              >
-                Sim, Remover
-              </Button>
-              <Button
-                variant="secondary"
-                size="lg"
-                fullWidth
-                onClick={() => { setIsDeleteModalOpen(false); setClientToDelete(null); }}
-              >
-                Não, Manter
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal: Confirmar Exclusão replaced by global onShowConfirm */}
 
       {/* Modal: Novo Cliente */}
       <Modal

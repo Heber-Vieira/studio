@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Service, Category } from '../types';
+import { Service, Category, ConfirmDialogOptions } from '../types';
 import { COLORS } from '../constants';
 import {
   Plus, Search, Clock, Tag, X, Scissors, Droplet, Sparkles,
@@ -19,6 +19,7 @@ interface ServicesProps {
   onAddCategory: (cat: Omit<Category, 'id'>) => Promise<void> | void;
   onDeleteCategory: (id: string) => void;
   anamnesisTemplates?: any[];
+  onShowConfirm: (options: ConfirmDialogOptions) => void;
 }
 
 const IconMap: Record<string, any> = {
@@ -50,18 +51,14 @@ const BELLA_PALETTE = [
   '#10B981', // Emerald
 ];
 
-const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, onUpdate, onDelete, onAddCategory, onDeleteCategory, anamnesisTemplates }) => {
+const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, onUpdate, onDelete, onAddCategory, onDeleteCategory, anamnesisTemplates, onShowConfirm }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCatModalOpen, setIsCatModalOpen] = useState(false);
 
-  const [isDeleteCatModalOpen, setIsDeleteCatModalOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
-
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
+  // States for Delete Modals removed in favor of unified onShowConfirm
 
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [newSvc, setNewSvc] = useState({
@@ -137,37 +134,35 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
   };
 
   const handleDeleteClick = (svc: Service) => {
-    setServiceToDelete(svc);
-    setIsDeleteModalOpen(true);
+    onShowConfirm({
+      title: 'Remover Serviço?',
+      message: `Você tem certeza que deseja remover ${svc.name}? Essa ação não pode ser desfeita.`,
+      variant: 'danger',
+      onConfirm: () => onDelete(svc.id)
+    });
   };
 
-  const confirmDeleteService = () => {
-    if (serviceToDelete) {
-      onDelete(serviceToDelete.id);
-      setIsDeleteModalOpen(false);
-      setServiceToDelete(null);
-    }
-  };
+  /* confirmDeleteService removed */
 
   const getServiceCountByCategory = (catId: string) => {
     return services.filter(s => s.category === catId || (categories.find(c => c.id === catId)?.label === s.category)).length;
   };
 
   const handleDeleteCategoryClick = (cat: Category) => {
-    setCategoryToDelete(cat);
-    setIsDeleteCatModalOpen(true);
+    onShowConfirm({
+      title: 'Excluir Categoria?',
+      message: `Isto removerá a categoria \"${cat.label}\". Os serviços desta categoria não serão excluídos, mas ficarão sem categoria.`,
+      variant: 'danger',
+      onConfirm: () => {
+        onDeleteCategory(cat.id);
+        if (selectedCategory === cat.id) {
+          setSelectedCategory('all');
+        }
+      }
+    });
   };
 
-  const confirmDeleteCategory = () => {
-    if (categoryToDelete) {
-      onDeleteCategory(categoryToDelete.id);
-      setIsDeleteCatModalOpen(false);
-      setCategoryToDelete(null);
-      if (selectedCategory === categoryToDelete.id) {
-        setSelectedCategory('all');
-      }
-    }
-  };
+  /* confirmDeleteCategory removed */
 
   return (
     <div className="space-y-8 fade-in">
@@ -304,41 +299,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
         </div>
       </div>
 
-      {/* Modal: Confirmar Exclusão de Serviço */}
-      <Modal
-        isOpen={isDeleteModalOpen && !!serviceToDelete}
-        onClose={() => { setIsDeleteModalOpen(false); setServiceToDelete(null); }}
-        title="Remover Serviço?"
-      >
-        <div className="text-center space-y-6">
-          <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm">
-            <Trash2 size={32} />
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Você tem certeza que deseja remover <span className="font-bold text-gray-800">{serviceToDelete?.name}</span>? Essa ação não pode ser desfeita.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 pt-2">
-            <Button
-              variant="danger"
-              fullWidth
-              onClick={confirmDeleteService}
-            >
-              Sim, Remover
-            </Button>
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={() => { setIsDeleteModalOpen(false); setServiceToDelete(null); }}
-            >
-              Cancelar
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      {/* Modal: Confirmar Exclusão de Serviço replaced by global onShowConfirm */}
 
       {/* Modal: Adicionar/Editar Serviço */}
       <Modal
@@ -533,65 +494,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
         </div>
       </Modal>
 
-      {/* Modal: Confirmar Exclusão de Categoria */}
-      <Modal
-        isOpen={isDeleteCatModalOpen && !!categoryToDelete}
-        onClose={() => { setIsDeleteCatModalOpen(false); setCategoryToDelete(null); }}
-        title={getServiceCountByCategory(categoryToDelete?.id || '') > 0 ? "Não é possível excluir" : "Excluir Categoria?"}
-      >
-        <div className="text-center space-y-6">
-          {getServiceCountByCategory(categoryToDelete?.id || '') > 0 ? (
-            <>
-              <div className="w-20 h-20 bg-amber-50 rounded-[1.5rem] flex items-center justify-center text-amber-500 mx-auto shadow-sm">
-                <AlertTriangle size={32} />
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  A categoria <span className="font-bold text-gray-800">{categoryToDelete?.label}</span> possui <span className="font-bold text-[#FF69B4]">{getServiceCountByCategory(categoryToDelete?.id || '')} serviços</span> vinculados. Remova os serviços antes de excluir a categoria.
-                </p>
-              </div>
-
-              <Button
-                variant="secondary"
-                fullWidth
-                onClick={() => setIsDeleteCatModalOpen(false)}
-              >
-                Entendido
-              </Button>
-            </>
-          ) : (
-            <>
-              <div className="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center text-rose-500 mx-auto shadow-sm">
-                <Trash2 size={32} />
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  Você tem certeza que deseja remover a categoria <span className="font-bold text-gray-800">{categoryToDelete?.label}</span>? Essa ação não pode ser desfeita.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 pt-2">
-                <Button
-                  variant="danger"
-                  fullWidth
-                  onClick={confirmDeleteCategory}
-                >
-                  Sim, Excluir
-                </Button>
-                <Button
-                  variant="secondary"
-                  fullWidth
-                  onClick={() => { setIsDeleteCatModalOpen(false); setCategoryToDelete(null); }}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      </Modal>
+      {/* Modal: Confirmar Exclusão de Categoria replaced by global onShowConfirm */}
     </div>
   );
 };

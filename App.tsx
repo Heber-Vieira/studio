@@ -19,7 +19,8 @@ import ReleaseNotesPopup from './components/ReleaseNotesPopup';
 import { View, Client, Appointment, Professional, SalonSettings, Service, Category, BlockedPeriod, BackupData, InventoryItem, Transaction, Supplier, AnamnesisTemplate, AnamnesisRecord } from './types';
 import { MOCK_CLIENTS, MOCK_APPOINTMENTS, MOCK_PROFESSIONALS, MOCK_SERVICES, MOCK_CATEGORIES, MOCK_INVENTORY, MOCK_INVENTORY_CATEGORIES } from './constants';
 import { Language, translations } from './i18n';
-import { CheckCircle2, LogOut, Loader2, Lock, Sparkles } from 'lucide-react';
+import { CheckCircle2, LogOut, Loader2, Lock, Sparkles, AlertTriangle, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from './services/supabase';
 import { db } from './services/database';
 import { Button } from './components/ui';
@@ -65,7 +66,6 @@ const MainLayout: React.FC = () => {
     return typeof window !== 'undefined' ? window.innerWidth >= 1024 : true;
   });
   const [isDataLoading, setIsDataLoading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; show: boolean }>({ message: '', show: false });
   const [prefilledClient, setPrefilledClient] = useState<{ name: string; phone: string } | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
@@ -218,9 +218,40 @@ const MainLayout: React.FC = () => {
     };
   });
 
-  const showToast = useCallback((message: string) => {
-    setToast({ message, show: true });
-    setTimeout(() => setToast({ message: '', show: false }), 3000);
+  const [toast, setToast] = useState({ message: '', show: false, type: 'info' as 'success' | 'error' | 'info' });
+  const [dialog, setDialog] = useState<{
+    show: boolean;
+    type: 'alert' | 'confirm';
+    title: string;
+    message: string;
+    onConfirm?: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: 'primary' | 'danger' | 'success';
+  }>({ show: false, type: 'alert', title: '', message: '' });
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, show: true, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
+  }, []);
+
+  const showConfirm = useCallback((options: {
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: 'primary' | 'danger' | 'success';
+  }) => {
+    setDialog({
+      show: true,
+      type: 'confirm',
+      ...options
+    });
+  }, []);
+
+  const showAlert = useCallback((title: string, message: string) => {
+    setDialog({ show: true, type: 'alert', title, message });
   }, []);
 
   const handleLogout = async () => {
@@ -652,6 +683,13 @@ const MainLayout: React.FC = () => {
   // --- ANAMNESIS ACTIONS ---
   const addAnamnesisTemplate = async (template: AnamnesisTemplate) => {
     try {
+      // Prevent duplicate templates with same title
+      const isDuplicate = anamnesisTemplates.some(t => t.title.toLowerCase() === template.title.toLowerCase());
+      if (isDuplicate) {
+        showToast("Este modelo já foi adicionado! ⚠️");
+        return;
+      }
+
       const companyId = user?.companyId || '00000000-0000-0000-0000-000000000001';
       await db.addAnamnesisTemplate(template, companyId);
       showToast("Modelo de anamnese criado!");
@@ -686,6 +724,21 @@ const MainLayout: React.FC = () => {
 
   const addAnamnesisRecord = async (record: AnamnesisRecord) => {
     try {
+      // Prevent duplicate records for the same client/template today
+      const today = new Date().toISOString().split('T')[0];
+      const isDuplicate = anamnesisRecords.some(r =>
+        r.clientId === record.clientId &&
+        r.templateId === record.templateId &&
+        r.createdAt.startsWith(today)
+      );
+
+      if (isDuplicate) {
+        showToast("Este cliente já possui uma ficha igual preenchida hoje! ⚠️");
+        // We still allow it if they really want, but let's block for safety as requested.
+        // Actually, let's block but log it.
+        return;
+      }
+
       await db.addAnamnesisRecord(record);
       showToast("Ficha de anamnese salva no banco! ✨");
       fetchData();
@@ -779,7 +832,7 @@ const MainLayout: React.FC = () => {
     try {
       // SECURITY GUARD: Clients are strictly limited to Dashboard or Booking Portal
       if (user?.role === 'client' && currentView !== View.DASHBOARD && currentView !== View.CLIENT_BOOKING) {
-        return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user.role} user={user} settings={settings} clients={clients} staff={staff} onLogout={logout} transactions={transactions} />;
+        return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user.role} user={user} settings={settings} clients={clients} staff={staff} onLogout={logout} transactions={transactions} onShowConfirm={showConfirm} />;
       }
 
       const permissions = settings.permissions || {
@@ -788,24 +841,137 @@ const MainLayout: React.FC = () => {
 
       switch (currentView) {
         case View.DASHBOARD:
-          return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={handleLogout} transactions={transactions} />;
+          return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={handleLogout} transactions={transactions} onShowConfirm={showConfirm} />;
         case View.APPOINTMENTS:
-          return <AppointmentsView appointments={appointments} clients={clients} staff={staff} services={services} onAdd={addAppointment} onDelete={deleteAppointment} onBlock={() => { }} lang={lang} initialDate={selectedDate} blockedPeriods={blockedPeriods} onShowToast={showToast} />;
+          return <AppointmentsView appointments={appointments} clients={clients} staff={staff} services={services} onAdd={addAppointment} onDelete={deleteAppointment} onBlock={() => { }} lang={lang} initialDate={selectedDate} blockedPeriods={blockedPeriods} onShowToast={showToast} onShowConfirm={showConfirm} />;
         case View.CRM:
           if (user?.role === 'attendant' && !permissions.viewCRM) return <AccessRestricted />;
-          return <CRMView clients={clients} onAdd={addClient} onImport={importClients} onUpdate={updateClient} onDelete={deleteClient} onRedeem={() => { }} onPrefilledBooking={handlePrefilledBooking} appointments={appointments} staff={staff} settings={settings} t={t} onShowToast={showToast} initialSearchTerm={crmSearchTerm} />;
-        case View.STAFF: if (user?.role === 'attendant' && !permissions.viewStaff) return <AccessRestricted />; return <StaffView staff={staff} services={services} onAdd={addStaff} onUpdate={updateStaff} onDelete={deleteStaff} blockedPeriods={blockedPeriods} onBlock={() => { }} onUnblock={() => { }} onViewSchedule={() => setCurrentView(View.APPOINTMENTS)} categories={categories} onShowToast={showToast} />;
-        case View.SERVICES: if (user?.role === 'attendant' && !permissions.viewServices) return <AccessRestricted />; return <ServicesView services={services} categories={categories} onAdd={addService} onUpdate={updateService} onDelete={deleteService} onAddCategory={addServiceCategory} onDeleteCategory={deleteServiceCategory} anamnesisTemplates={anamnesisTemplates} />;
+          return (
+            <CRMView
+              clients={clients}
+              onAdd={addClient}
+              onImport={importClients}
+              onUpdate={updateClient}
+              onDelete={deleteClient}
+              onRedeem={() => { }}
+              onPrefilledBooking={(c) => { setPrefilledClient(c); setCurrentView(View.CLIENT_BOOKING); }}
+              appointments={appointments}
+              staff={staff}
+              settings={settings}
+              t={t}
+              onShowToast={showToast}
+              onShowConfirm={showConfirm}
+              initialSearchTerm={crmSearchTerm}
+            />
+          );
+        case View.STAFF:
+          if (user?.role === 'attendant' && !permissions.viewStaff) return <AccessRestricted />;
+          return (
+            <StaffView
+              staff={staff}
+              services={services}
+              onAdd={addStaff}
+              onUpdate={updateStaff}
+              onDelete={deleteStaff}
+              blockedPeriods={blockedPeriods}
+              onBlock={() => { }}
+              onUnblock={() => { }}
+              onViewSchedule={() => setCurrentView(View.APPOINTMENTS)}
+              categories={categories}
+              onShowToast={showToast}
+              onShowConfirm={showConfirm}
+            />
+          );
+        case View.SERVICES:
+          if (user?.role === 'attendant' && !permissions.viewServices) return <AccessRestricted />;
+          return (
+            <ServicesView
+              services={services}
+              categories={categories}
+              onAdd={addService}
+              onUpdate={updateService}
+              onDelete={deleteService}
+              onAddCategory={addServiceCategory}
+              onDeleteCategory={deleteServiceCategory}
+              anamnesisTemplates={anamnesisTemplates}
+              onShowConfirm={showConfirm}
+            />
+          );
         case View.INVENTORY:
           if (user?.role === 'attendant' && !permissions.viewInventory) return <AccessRestricted />;
-          return <InventoryView inventory={inventory} categories={inventoryCategories} onAddItem={addInventoryItem} onUpdateItem={updateInventoryItem} onDeleteItem={deleteInventoryItem} onStockMovement={handleStockMovement} onAddTransaction={addTransaction} onAddCategory={addInventoryCategory} onDeleteCategory={deleteInventoryCategory} onShowToast={showToast} />;
-        case View.FINANCIAL: if (user?.role === 'attendant' && !permissions.viewFinancial) return <AccessRestricted />; return <FinancialView transactions={transactions} appointments={appointments} categories={categories} onProcessPayment={processPayment} onAddTransaction={addTransaction} onDeleteTransaction={deleteTransaction} clients={clients} services={services} inventory={inventory} suppliers={suppliers} onAddSupplier={addSupplier} onUpdateSupplier={updateSupplier} onDeleteSupplier={deleteSupplier} user={user!} onShowToast={showToast} />;
-        case View.MARKETING: if (user?.role === 'attendant' && !permissions.viewMarketing) return <AccessRestricted />; return <MarketingView clients={clients} appointments={appointments} settings={settings} onUpdateSettings={setSettingsAndPersist} onShowToast={showToast} />;
-        case View.ANAMNESIS: return <AnamnesisView clients={clients} templates={anamnesisTemplates} records={anamnesisRecords} onAddTemplate={addAnamnesisTemplate} onUpdateTemplate={updateAnamnesisTemplate} onDeleteTemplate={deleteAnamnesisTemplate} onAddRecord={addAnamnesisRecord} onDeleteRecord={deleteAnamnesisRecord} onShowToast={showToast} />;
-        case View.SETTINGS: if (user?.role === 'attendant' || user?.role === 'client') return <AccessRestricted />; return <SettingsView t={t} lang={lang} setLang={setLang} settings={settings} onUpdate={setSettingsAndPersist} onExportData={handleExportData} onImportData={handleImportData} onShowToast={showToast} />;
+          return (
+            <InventoryView
+              inventory={inventory}
+              categories={inventoryCategories}
+              onAddItem={addInventoryItem}
+              onUpdateItem={updateInventoryItem}
+              onDeleteItem={deleteInventoryItem}
+              onStockMovement={handleStockMovement}
+              onAddTransaction={addTransaction}
+              onAddCategory={addInventoryCategory}
+              onDeleteCategory={deleteInventoryCategory}
+              onShowToast={showToast}
+              onShowConfirm={showConfirm}
+            />
+          );
+        case View.FINANCIAL:
+          if (user?.role === 'attendant' && !permissions.viewFinancial) return <AccessRestricted />;
+          return (
+            <FinancialView
+              transactions={transactions}
+              appointments={appointments}
+              categories={categories}
+              onProcessPayment={processPayment}
+              onAddTransaction={addTransaction}
+              onDeleteTransaction={deleteTransaction}
+              clients={clients}
+              services={services}
+              inventory={inventory}
+              suppliers={suppliers}
+              onAddSupplier={addSupplier}
+              onUpdateSupplier={updateSupplier}
+              onDeleteSupplier={deleteSupplier}
+              user={user!}
+              onShowToast={showToast}
+              onShowConfirm={showConfirm}
+            />
+          );
+        case View.MARKETING:
+          if (user?.role === 'attendant' && !permissions.viewMarketing) return <AccessRestricted />;
+          return <MarketingView clients={clients} appointments={appointments} settings={settings} onUpdateSettings={setSettingsAndPersist} onShowToast={showToast} onShowConfirm={showConfirm} />;
+        case View.ANAMNESIS:
+          return (
+            <AnamnesisView
+              clients={clients}
+              templates={anamnesisTemplates}
+              records={anamnesisRecords}
+              onAddTemplate={addAnamnesisTemplate}
+              onUpdateTemplate={updateAnamnesisTemplate}
+              onDeleteTemplate={deleteAnamnesisTemplate}
+              onAddRecord={addAnamnesisRecord}
+              onDeleteRecord={deleteAnamnesisRecord}
+              onShowToast={showToast}
+              onShowConfirm={showConfirm}
+            />
+          );
+        case View.SETTINGS:
+          if (user?.role === 'attendant' || user?.role === 'client') return <AccessRestricted />;
+          return (
+            <SettingsView
+              t={t}
+              lang={lang}
+              setLang={setLang}
+              settings={settings}
+              onUpdate={setSettingsAndPersist}
+              onExportData={handleExportData}
+              onImportData={handleImportData}
+              onShowToast={showToast}
+              onShowConfirm={showConfirm}
+            />
+          );
         case View.CLIENT_BOOKING:
-          return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} templates={anamnesisTemplates} onAddAnamnesisRecord={addAnamnesisRecord} onShowToast={showToast} />;
-        default: return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={logout} />;
+          return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} templates={anamnesisTemplates} onAddAnamnesisRecord={addAnamnesisRecord} onShowToast={showToast} onShowConfirm={showConfirm} />;
+        default: return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={logout} onShowConfirm={showConfirm} />;
       }
     } catch (err) {
       console.error("Render error:", err);
@@ -902,7 +1068,66 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         {!isPortalMode && user && (
           <ReleaseNotesPopup config={settings.releaseNotes} />
         )}
-        {toast.show && <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#40E0D0] text-white px-8 py-4 rounded-[2rem] shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300 z-[200] border-2 border-white pointer-events-none"><Sparkles size={24} /><span className="font-bold text-sm tracking-tight">{toast.message}</span></div>}
+        {dialog.show && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 border border-white/20 text-center relative overflow-hidden">
+              <div className={`w-20 h-20 mx-auto rounded-[1.8rem] flex items-center justify-center mb-2 shadow-inner ${dialog.variant === 'danger' ? 'bg-rose-50 text-rose-500' : 'bg-[#40E0D0]/10 text-[#40E0D0]'}`}>
+                {dialog.variant === 'danger' ? <AlertTriangle size={36} /> : <Sparkles size={36} />}
+              </div>
+
+              <div className="space-y-3 relative z-10">
+                <h3 className="text-2xl font-black text-gray-900 leading-tight">{dialog.title}</h3>
+                <p className="text-sm text-gray-500 font-medium leading-relaxed">{dialog.message}</p>
+              </div>
+
+              <div className="flex flex-col gap-3 relative z-10">
+                {dialog.type === 'confirm' ? (
+                  <>
+                    <button
+                      onClick={() => { dialog.onConfirm?.(); setDialog({ ...dialog, show: false }); }}
+                      className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all hover:scale-[1.02] active:scale-95 text-white ${dialog.variant === 'danger' ? 'bg-rose-500 shadow-rose-100' : 'bg-[#1a1a1a] shadow-gray-200'}`}
+                    >
+                      {dialog.confirmText || 'Confirmar'}
+                    </button>
+                    <button
+                      onClick={() => setDialog({ ...dialog, show: false })}
+                      className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-gray-100 transition-all"
+                    >
+                      {dialog.cancelText || 'Cancelar'}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setDialog({ ...dialog, show: false })}
+                    className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+                  >
+                    Entendi
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <AnimatePresence>
+          {toast.show && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="fixed inset-0 pointer-events-none z-[300] flex items-center justify-center p-4"
+            >
+              <div className="bg-gray-900/90 backdrop-blur-xl text-white px-10 py-6 rounded-[2.5rem] shadow-2xl flex flex-col items-center gap-4 border border-white/10 text-center max-w-xs animate-in zoom-in duration-300">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${toast.type === 'error' ? 'bg-rose-500' : toast.type === 'success' ? 'bg-emerald-500' : 'bg-[#40E0D0]'}`}>
+                  {toast.type === 'error' ? <X size={24} /> : toast.type === 'success' ? <CheckCircle2 size={24} /> : <Sparkles size={24} />}
+                </div>
+                <div>
+                  <p className="font-black text-sm tracking-tight leading-tight">{toast.message}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
     </>
