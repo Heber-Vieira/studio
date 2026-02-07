@@ -18,6 +18,7 @@ import AnamnesisView from './components/Anamnesis';
 import HelpSystem from './components/HelpSystem';
 import ReleaseNotesPopup from './components/ReleaseNotesPopup';
 import { View, Client, Appointment, Professional, SalonSettings, Service, Category, BlockedPeriod, BackupData, InventoryItem, Transaction, Supplier, AnamnesisTemplate, AnamnesisRecord } from './types';
+import { queueService } from './services/queueService';
 import { MOCK_CLIENTS, MOCK_APPOINTMENTS, MOCK_PROFESSIONALS, MOCK_SERVICES, MOCK_CATEGORIES, MOCK_INVENTORY, MOCK_INVENTORY_CATEGORIES } from './constants';
 import { Language, translations } from './i18n';
 import { CheckCircle2, LogOut, Loader2, Lock, Sparkles, AlertTriangle, X } from 'lucide-react';
@@ -462,10 +463,30 @@ const MainLayout: React.FC = () => {
 
   const deleteAppointment = async (id: string) => {
     try {
+      const aptToDelete = appointments.find(a => a.id === id);
       await db.deleteAppointment(id);
       showToast("Cancelado.");
-      fetchData();
-    } catch (e) { showToast("Erro ao cancelar."); }
+      refreshData();
+
+      // Check Waitlist for this slot
+      if (aptToDelete) {
+        const candidate = await queueService.checkWaitlistForCancellation(aptToDelete.date, aptToDelete.time, aptToDelete.professionalId);
+        if (candidate) {
+          showAlert(
+            "Vaga Disponível na Fila! 🔊",
+            `A desitência de ${aptToDelete.clientName} liberou o horário de ${aptToDelete.time} no dia ${new Date(aptToDelete.date + 'T12:00:00').toLocaleDateString()}.\n\n` +
+            `CLIENTE NA FILA:\n` +
+            `👤 ${candidate.clientName}\n` +
+            `📞 ${candidate.clientPhone}\n` +
+            `✂️ ${candidate.serviceName}\n\n` +
+            `Entre em contato para confirmar o agendamento!`
+          );
+        }
+      }
+    } catch (e) {
+      console.error("Error deleting appointment:", e);
+      showToast("Erro ao cancelar.");
+    }
   };
 
   const addTransaction = async (t: Omit<Transaction, 'id'>) => {

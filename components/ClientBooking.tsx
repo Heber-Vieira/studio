@@ -48,6 +48,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
   const [waitingListEntryId, setWaitingListEntryId] = useState<string | null>(null);
   const [isJoiningQueue, setIsJoiningQueue] = useState(false);
   const [isWaitlistMode, setIsWaitlistMode] = useState(false);
+  const [waitlistTimes, setWaitlistTimes] = useState<string[]>([]);
 
   const handleJoinWaitingList = async () => {
     setIsJoiningQueue(true);
@@ -57,10 +58,22 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
         selectedService!,
         selectedPro!.id,
         selectedPro!.name,
-        selectedDate
+        selectedDate,
+        waitlistTimes
       );
       setWaitingListEntryId(entry.id);
       onShowToast("Você entrou na fila de espera!", 'success');
+
+      // Resumo em pop-up conforme solicitado
+      onShowAlert(
+        "Lugar Reservado! ⏳",
+        `Olá ${clientInfo.name}, você está oficialmente na fila.\n\n` +
+        `Serviço: ${selectedService?.name}\n` +
+        `Data desejada: ${new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR')}\n` +
+        `Horários: ${waitlistTimes.join(', ')}\n\n` +
+        `Enviaremos uma mensagem no WhatsApp (${clientInfo.phone}) assim que uma vaga for liberada!`
+      );
+
       setStep(6);
     } catch (error) {
       console.error("Failed to join queue", error);
@@ -210,6 +223,32 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
       return !hasBlockConflict;
     });
   }, [selectedPro, selectedDate, selectedService, appointments, blockedPeriods, services]);
+
+  const potentialTimes = useMemo(() => {
+    if (!selectedPro || !selectedDate) return [];
+
+    const timeToMinutes = (time: string) => {
+      const [h, m] = time.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    const dateObj = new Date(selectedDate + 'T12:00:00');
+    const dayOfWeek = dateObj.getDay();
+    const daySchedule = selectedPro.schedule?.[dayOfWeek];
+
+    if (!daySchedule || daySchedule.isOff) return [];
+
+    const workStart = timeToMinutes(daySchedule.workStart);
+    const workEnd = timeToMinutes(daySchedule.workEnd);
+
+    const slots = [];
+    for (let m = workStart; m < workEnd; m += 30) {
+      const h = Math.floor(m / 60);
+      const min = m % 60;
+      slots.push(`${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
+    }
+    return slots;
+  }, [selectedPro, selectedDate]);
 
   const handleFinish = () => {
     if (!selectedService) {
@@ -473,14 +512,40 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
 
                           {/* Waiting List CTA - Only shown if it's NOT a day off */}
                           {selectedPro && !selectedPro.schedule?.[new Date(selectedDate + 'T12:00:00').getDay()]?.isOff && !waitingListEntryId && (
-                            <button
-                              onClick={handleWaitlistClickStep3}
-                              disabled={isJoiningQueue}
-                              className="mt-2 px-8 py-3 bg-gradient-to-r from-[#2D2B4D] to-[#4B4870] text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-                            >
-                              {isJoiningQueue ? <span className="animate-spin">⏳</span> : <Sparkles size={14} className="text-[#FF69B4]" />}
-                              Entrar na Fila de Espera
-                            </button>
+                            <div className="mt-4 w-full animate-in fade-in zoom-in duration-500">
+                              <p className="text-[10px] font-black text-[#FF69B4] uppercase tracking-widest mb-4">Selecione horários de interesse para a fila:</p>
+                              <div className="grid grid-cols-3 gap-2 mb-6 max-h-40 overflow-y-auto pr-1 scrollbar-hide py-2">
+                                {potentialTimes.map(time => {
+                                  const isSelected = waitlistTimes.includes(time);
+                                  return (
+                                    <button
+                                      key={time}
+                                      type="button"
+                                      onClick={() => {
+                                        setWaitlistTimes(prev =>
+                                          prev.includes(time)
+                                            ? prev.filter(t => t !== time)
+                                            : [...prev, time].sort()
+                                        );
+                                      }}
+                                      className={`py-3 rounded-xl font-black text-xs transition-all border-2 ${isSelected
+                                        ? 'bg-[#2D2B4D] text-white border-[#2D2B4D] shadow-lg scale-105'
+                                        : 'bg-gray-50 text-gray-400 border-transparent hover:border-gray-100'}`}
+                                    >
+                                      {time}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <button
+                                onClick={handleWaitlistClickStep3}
+                                disabled={isJoiningQueue || waitlistTimes.length === 0}
+                                className="w-full py-5 bg-gradient-to-r from-[#2D2B4D] to-[#4B4870] text-white rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                              >
+                                {isJoiningQueue ? <span className="animate-spin">⏳</span> : <Sparkles size={18} className="text-[#FF69B4]" />}
+                                Entrar na Fila de Espera
+                              </button>
+                            </div>
                           )}
                         </div>
                       )}
@@ -577,7 +642,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
 
                   <button
                     onClick={isWaitlistMode ? handleJoinWaitingList : handleFinish}
-                    disabled={!isNameValid || !isPhoneValid || isJoiningQueue}
+                    disabled={(!isWaitlistMode && !selectedTime) || !isNameValid || !isPhoneValid || isJoiningQueue || (isWaitlistMode && waitlistTimes.length === 0)}
                     className="w-full py-6 bg-[#2D2B4D] text-white rounded-[2rem] font-black text-lg shadow-2xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-3 relative z-10"
                   >
                     {isWaitlistMode

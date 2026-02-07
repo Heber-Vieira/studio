@@ -75,6 +75,17 @@ export const WaitingListWidget: React.FC<WaitingListWidgetProps> = ({ entryId, o
                     Você está na lista de espera para <b>{status.serviceName}</b> com <b>{status.professionalName}</b>.
                 </p>
 
+                {/* Preferred Times */}
+                {status.preferredTimes && status.preferredTimes.length > 0 && (
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                        {status.preferredTimes.map(time => (
+                            <span key={time} className="px-2 py-1 bg-white/10 rounded-lg text-[9px] font-black text-white/60 border border-white/5 uppercase tracking-tighter">
+                                {time}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
                 {/* Notification Promise */}
                 <div className="w-full bg-white/5 rounded-2xl p-4 flex items-center gap-4 text-left border border-white/5">
                     <div className="p-3 bg-emerald-500/20 rounded-xl text-emerald-400">

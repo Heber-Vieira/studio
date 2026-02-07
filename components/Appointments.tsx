@@ -90,8 +90,9 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
   const [isJoiningQueue, setIsJoiningQueue] = useState(false);
 
   const [waitlistPhone, setWaitlistPhone] = useState('');
+  const [waitlistTimes, setWaitlistTimes] = useState<string[]>([]);
 
-  const handleJoinWaitingList = async (clientName: string, serviceId: string, proId: string, date: string) => {
+  const handleJoinWaitingList = async (clientName: string, serviceId: string, proId: string, date: string, preferredTimes: string[]) => {
     // Busca informações completas para a fila
     const service = services.find(s => s.id === serviceId);
     const pro = staff.find(p => p.id === proId);
@@ -99,31 +100,59 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
     // Tenta encontrar o cliente real ou cria objeto temporário
     let clientInfo = { name: clientName, phone: waitlistPhone, id: newApt.clientId || 'external' };
 
-    // Se selecionou cliente da lista, pega o telefone
+    // Se selecionou cliente da lista, pega o telefone se não tiver inserido manual
     if (newApt.clientId) {
       const existingClient = clients.find(c => c.id === newApt.clientId);
-      if (existingClient) clientInfo = { ...clientInfo, phone: existingClient.phone || waitlistPhone };
+      if (existingClient) {
+        clientInfo = { ...clientInfo, phone: waitlistPhone || existingClient.phone || '' };
+      }
     }
 
-    // Validar se temos o telefone (essencial para notificação)
     if (!clientInfo.phone || clientInfo.phone.replace(/\D/g, '').length < 10) {
       onShowToast("Por favor, informe um telefone válido para entrar na fila.", "error");
       return;
     }
 
-    if (!service || !pro || !clientName) return;
+    if (preferredTimes.length === 0) {
+      onShowToast("Por favor, selecione pelo menos um horário de preferência.", "error");
+      return;
+    }
+
+    if (!service || !pro) {
+      onShowToast("Dados do serviço ou profissional inválidos.", "error");
+      return;
+    }
 
     setIsJoiningQueue(true);
     try {
+      console.log("Joining waitlist with:", { clientInfo, service, pro, date, preferredTimes });
       const entry = await queueService.joinWaitingList(
         clientInfo,
         service,
         pro.id,
         pro.name,
-        date
+        date,
+        preferredTimes
       );
+
       setWaitingListEntryId(entry.id);
       onShowToast("Adicionado à fila de espera!", "success");
+
+      // Resumo em pop-up conforme solicitado
+      onShowAlert(
+        "Fila de Espera Confirmada! ✨",
+        `Salvaguardamos seu lugar na fila.\n\n` +
+        `👤 Cliente: ${entry.clientName}\n` +
+        `✂️ Serviço: ${entry.serviceName}\n` +
+        `👤 Especialista: ${entry.professionalName}\n` +
+        `📅 Data: ${new Date(entry.preferredDate + 'T12:00:00').toLocaleDateString()}\n` +
+        `⏰ Preferências: ${entry.preferredTimes?.join(', ') || 'Todo o dia'}\n\n` +
+        `Avisaremos no WhatsApp assim que surgir uma vaga!`
+      );
+
+      // Reset states
+      setWaitlistPhone('');
+      setWaitlistTimes([]);
     } catch (error) {
       console.error("Failed to join queue", error);
       onShowToast("Erro ao entrar na fila. Verifique os dados.", "error");
@@ -287,6 +316,29 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
     return getAvailableSlotsForPro(newApt.professionalId, newApt.date, newApt.serviceId);
   }, [newApt.professionalId, newApt.date, newApt.serviceId, appointments, blockedPeriods]);
 
+  // Horários potenciais (todos do dia) para a lista de espera
+  const potentialTimesForWaitlist = useMemo(() => {
+    const pro = staff.find(p => p.id === newApt.professionalId);
+    if (!pro || !newApt.date) return [];
+
+    const dateObj = new Date(newApt.date + 'T12:00:00');
+    const dayOfWeek = dateObj.getDay();
+    const daySchedule = pro.schedule?.[dayOfWeek];
+
+    if (!daySchedule || daySchedule.isOff) return [];
+
+    const workStart = timeToMinutes(daySchedule.workStart);
+    const workEnd = timeToMinutes(daySchedule.workEnd);
+
+    const slots = [];
+    for (let m = workStart; m < workEnd; m += 30) {
+      const h = Math.floor(m / 60);
+      const min = m % 60;
+      slots.push(`${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
+    }
+    return slots;
+  }, [newApt.professionalId, newApt.date, staff]);
+
   // Especialistas filtrados (por serviço E por horário se o horário estiver selecionado)
   const availableStaffForForm = useMemo(() => {
     let filtered = sortedStaff;
@@ -360,6 +412,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
         time: ''
       });
       setWaitlistPhone('');
+      setWaitlistTimes([]);
     }
   }, [isModalOpen, TODAY]);
 
@@ -1108,10 +1161,34 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                               />
                             </div>
                           )}
+                          <div className="grid grid-cols-4 gap-2 mb-4 max-h-40 overflow-y-auto pr-1 scrollbar-hide py-2 px-1">
+                            {potentialTimesForWaitlist.map(time => {
+                              const isSelected = waitlistTimes.includes(time);
+                              return (
+                                <button
+                                  key={time}
+                                  type="button"
+                                  onClick={() => {
+                                    setWaitlistTimes(prev =>
+                                      prev.includes(time)
+                                        ? prev.filter(t => t !== time)
+                                        : [...prev, time].sort()
+                                    );
+                                  }}
+                                  className={`py-2 rounded-xl font-black text-[10px] transition-all border-2 ${isSelected
+                                    ? 'bg-rose-500 text-white border-rose-500 shadow-md ring-2 ring-rose-200'
+                                    : 'bg-white text-rose-300 border-rose-100 hover:border-rose-200'}`}
+                                >
+                                  {time}
+                                </button>
+                              );
+                            })}
+                          </div>
+
                           <button
                             type="button"
-                            onClick={() => handleJoinWaitingList(formClientSearch || "Cliente Especial", newApt.serviceId, newApt.professionalId, newApt.date)}
-                            disabled={isJoiningQueue || (needsPhone && waitlistPhone.length < 10) || (!formClientSearch && !newApt.clientId)}
+                            onClick={() => handleJoinWaitingList(formClientSearch || "Cliente Especial", newApt.serviceId, newApt.professionalId, newApt.date, waitlistTimes)}
+                            disabled={isJoiningQueue || (needsPhone && waitlistPhone.length < 10) || (!formClientSearch && !newApt.clientId) || waitlistTimes.length === 0}
                             className="w-full py-3 bg-white border border-rose-200 text-rose-500 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
                           >
                             {isJoiningQueue ? <span className="animate-spin">⏳</span> : <Sparkles size={14} />}

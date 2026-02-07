@@ -274,6 +274,7 @@ export interface WaitingListEntry {
   professionalId?: string;
   professionalName?: string;
   preferredDate: string; // YYYY-MM-DD
+  preferredTimes?: string[]; // Array de horários preferidos (ex: ["08:00", "09:30"])
   status: WaitingListStatus;
   priorityScore: number;
   createdAt: string;

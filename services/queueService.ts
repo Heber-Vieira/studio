@@ -48,7 +48,8 @@ export const queueService = {
         service: Service,
         professionalId: string,
         professionalName: string,
-        date: string
+        date: string,
+        preferredTimes?: string[]
     ): Promise<WaitingListEntry> {
 
         // 1. Find or Create Client to get stats
@@ -92,6 +93,7 @@ export const queueService = {
             professionalId,
             professionalName,
             preferredDate: date,
+            preferredTimes: preferredTimes || [],
             status: 'active',
             priorityScore: score,
             createdAt: new Date().toISOString()
@@ -109,6 +111,7 @@ export const queueService = {
                 professional_id: entry.professionalId,
                 professional_name: entry.professionalName,
                 preferred_date: entry.preferredDate,
+                preferred_times: entry.preferredTimes,
                 priority_score: entry.priorityScore,
                 status: 'active'
             }])
@@ -158,6 +161,32 @@ export const queueService = {
         };
     },
 
+    async checkWaitlistForCancellation(date: string, time: string, professionalId?: string): Promise<WaitingListEntry | null> {
+        // Find best candidate (highest score) who has this time in their preferredTimes
+        const { data, error } = await supabase
+            .from('waiting_list')
+            .select('*')
+            .eq('preferred_date', date)
+            .eq('status', 'active')
+            .contains('preferred_times', [time])
+            .order('priority_score', { ascending: false })
+            .limit(1);
+
+        if (error || !data || data.length === 0) {
+            // If no match by specific time, check if there's someone who didn't specify times (optional, but keep it simple for now as per multiple selection requirement)
+            return null;
+        }
+
+        const entry = data[0];
+
+        // If professionalId is specified, check if it matches OR if the entry didn't specify a professional
+        if (professionalId && entry.professional_id && entry.professional_id !== professionalId) {
+            return null;
+        }
+
+        return this.mapEntry(entry);
+    },
+
     mapEntry(data: any): WaitingListEntry {
         return {
             id: data.id,
@@ -169,6 +198,7 @@ export const queueService = {
             professionalId: data.professional_id,
             professionalName: data.professional_name,
             preferredDate: data.preferred_date,
+            preferredTimes: data.preferred_times,
             status: data.status,
             priorityScore: data.priority_score,
             createdAt: data.created_at,
