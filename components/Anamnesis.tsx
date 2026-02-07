@@ -521,15 +521,26 @@ const TemplateBuilder: React.FC<{
     onShowConfirm: (options: ConfirmDialogOptions) => void;
 }> = ({ template, onChange, onSave, onCancel, onShowConfirm }) => {
     const fieldListRef = useRef<HTMLDivElement>(null);
+    const prevFieldCount = useRef(template.fields.length);
 
-    // Auto-scroll to bottom when a new field is added
+    // Force scroll to top on open
     useEffect(() => {
         if (fieldListRef.current) {
-            fieldListRef.current.scrollTo({
-                top: fieldListRef.current.scrollHeight,
-                behavior: 'smooth'
-            });
+            fieldListRef.current.scrollTo({ top: 0, behavior: 'auto' });
         }
+    }, []);
+
+    // Auto-scroll to bottom ONLY when a new field is added
+    useEffect(() => {
+        if (template.fields.length > prevFieldCount.current) {
+            if (fieldListRef.current) {
+                fieldListRef.current.scrollTo({
+                    top: fieldListRef.current.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+        }
+        prevFieldCount.current = template.fields.length;
     }, [template.fields.length]);
 
     const updateField = (id: string, updates: Partial<AnamnesisField>) => {
