@@ -836,7 +836,18 @@ const FormPlayer: React.FC<{
                                                                     'Volume Russo e Mega Volume (0.03mm a 0.07mm)': 'Extremamente leves e finos. Permitem a criação de "fans" (leques) artesanais com 3 a 15 fios em um único cílio natural, proporcionando desde um volume macio e "fluffy" até uma densidade dramática e luxuosa, sem sobrecarregar a raiz.',
                                                                     'Híbrido ou Volume Suave (0.10mm a 0.12mm)': 'A ponte perfeita entre o sutil e o marcante. Ideais para técnicas como o "Wet Effect" (efeito molhado) ou um volume híbrido sofisticado. Oferecem textura e profundidade ao olhar sem o peso do clássico mais grosso.',
                                                                     'Fio a Fio / Clássico (0.15mm a 0.20mm)': 'A essência da elegância atemporal. O 0.15mm simula o efeito de rímel de alta definição, seguro para a maioria. O 0.20mm entrega impacto imediato, mas exige fios naturais fortes para suportar o peso com segurança.',
-                                                                    'Não Recomendados (0.25mm ou mais)': '⚠️ Risco Iminente. Excessivamente pesados e rígidos para a estrutura delicada do cílio humano. O uso pode causar alopecia por tração (falhas permanentes) e enfraquecimento severo. Priorizamos a saúde do seu olhar.'
+                                                                    'Não Recomendados (0.25mm ou mais)': '⚠️ Risco Iminente. Excessivamente pesados e rígidos para a estrutura delicada do cílio humano. O uso pode causar alopecia por tração (falhas permanentes) e enfraquecimento severo. Priorizamos a saúde do seu olhar.',
+
+                                                                    // Fallback for individual values
+                                                                    '0.03': 'Extremamente leves e finos. Ideal para Mega Volume e efeitos muito cheios.',
+                                                                    '0.05': 'Leves e delicados. Perfeito para Volume Russo com acabamento macio.',
+                                                                    '0.07': 'O mais espesso do Volume Russo. Cria um olhar marcante sem pesar.',
+                                                                    '0.10': 'Espessura intermediária. Ideal para Volume Híbrido ou efeito molhado (Wet).',
+                                                                    '0.12': 'Levemente mais encorpado. Ótimo para destacar o olhar com sutileza.',
+                                                                    '0.15': 'Clássico fio a fio. Simula o efeito de rímel, ideal para fios saudáveis.',
+                                                                    '0.18': 'Fio a fio mais dramático. Exige fios naturais fortes.',
+                                                                    '0.20': 'Espessura máxima recomendada para fio a fio. Alto impacto visual.',
+                                                                    '0.25': '⚠️ Risco de danos. Muito pesado para a maioria dos cílios naturais.'
                                                                 };
 
                                                                 const description = isMapping ? mappingDescriptions[opt] : (isCurvatura ? curvaturaDescriptions[opt] : (isEspessura ? thicknessDescriptions[opt] : null));
