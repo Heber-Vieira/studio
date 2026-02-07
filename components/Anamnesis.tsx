@@ -87,15 +87,7 @@ const LUX_QUICK_TEMPLATES: Partial<AnamnesisTemplate>[] = [
 
             { id: 'h3', label: 'Prontuário Técnico (Mapping)', type: 'heading', required: false, description: 'Personalização artística e design.' },
             { id: 'mapping', label: 'Estilo de Mapping Desejado', type: 'select', required: true, options: ['Boneca (Doll)', 'Esquilo (Squirrel)', 'Gatinho (Cat Eye)', 'Natural'] },
-            {
-                id: 'curvatura',
-                label: 'Curvatura Utilizada',
-                type: 'select',
-                required: true,
-                options: ['J', 'B', 'C', 'CC', 'D', 'L', 'M'],
-                description: 'A curvatura define o "formato" do olhar e o nível de drama.\n\nJ e B: Curvaturas bem naturais, quase retas. A B tem uma leve elevação na ponta, ideal para quem quer apenas definição.\nC: A mais versátil e utilizada. Oferece um efeito de cílios curvados com curvex, mantendo um aspecto natural.\nCC / D: Curvaturas acentuadas para um olhar mais aberto e dramático (efeito boneca). A D é ideal para clientes que buscam impacto visual.\nL e M: Possuem uma base reta e uma subida súbita. São excelentes para pálpebras caídas (hooded eyes) ou para criar o efeito "foxy eyes" (delineado)'
-            },
-            { id: 'thickness', label: 'Espessura dos Fios', type: 'text', required: true, placeholder: 'Ex: 0.07, 0.05' },
+            { id: 'thickness', label: 'Espessura e Curvatura dos Fios (Lash Designer)', type: 'text', required: true, placeholder: 'Ex: 0.07D + 0.05C' },
 
             { id: 'h4', label: 'Termos & Consentimento', type: 'heading', required: false },
             { id: 'term_image', label: 'Autorizo o uso de imagem para portfólio profissional e redes sociais.', type: 'boolean', required: true },
@@ -779,12 +771,7 @@ const FormPlayer: React.FC<{
 
                                 {currentField && (
                                     <div className="space-y-8 md:space-y-12 px-2">
-                                        <div className="space-y-4">
-                                            <h3 className="font-serif text-xl md:text-4xl lg:text-5xl text-gray-900 leading-tight">{currentField.label}</h3>
-                                            {currentField.description && (
-                                                <p className="text-gray-400 font-medium text-xs md:text-sm lg:text-base max-w-2xl mx-auto whitespace-pre-wrap">{currentField.description}</p>
-                                            )}
-                                        </div>
+                                        <h3 className="font-serif text-xl md:text-4xl lg:text-5xl text-gray-900 leading-tight">{currentField.label}</h3>
                                         {currentField.type === 'heading' ? (
                                             <div className="space-y-4">
                                                 <button onClick={() => handleNext()} className="bg-gray-900 text-white px-10 md:px-12 py-5 md:py-6 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] shadow-2xl hover:scale-[1.05] transition-all">Iniciar Seção <ChevronRight className="inline ml-2" size={18} /></button>
