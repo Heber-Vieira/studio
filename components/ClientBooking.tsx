@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Clock, Star, Scissors, Check, Calendar, Spar
 import { useAuth } from '../contexts/AuthContext';
 import { queueService } from '../services/queueService';
 import { WaitingListWidget } from './WaitingListWidget';
+import { maskPhone } from '../services/utils';
 // @ts-ignore
 import SignatureCanvas from 'react-signature-canvas';
 import { Service, Professional, Appointment, BlockedPeriod, SalonSettings, AnamnesisTemplate, AnamnesisRecord, ConfirmDialogOptions } from '../types';
@@ -102,16 +103,6 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
     }
   }, [initialClientData]);
 
-  const formatPhoneNumber = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 11) {
-      return numbers
-        .replace(/^(\d{2})(\d)/g, '($1) $2')
-        .replace(/(\d{5})(\d)/, '$1-$2')
-        .substr(0, 15);
-    }
-    return value.substr(0, 15);
-  };
 
   const isPhoneValid = clientInfo.phone.replace(/\D/g, '').length >= 10;
   const isNameValid = clientInfo.name.trim().split(/\s+/).length >= 2;
@@ -522,7 +513,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                           : 'border-transparent focus:border-[#40E0D0]/30')
                           }`}
                         value={clientInfo.phone}
-                        onChange={e => setClientInfo({ ...clientInfo, phone: formatPhoneNumber(e.target.value) })}
+                        onChange={e => setClientInfo({ ...clientInfo, phone: maskPhone(e.target.value) })}
                       />
                     </div>
                   </div>

@@ -63,30 +63,31 @@ interface AnamnesisProps {
 
 const LUX_QUICK_TEMPLATES: Partial<AnamnesisTemplate>[] = [
     {
-        title: 'Ficha Editorial: Extensão de Cílios',
+        title: 'Anamnese Extensão de Cílios',
         category: 'Lash Design',
         description: 'Protocolo de luxo para análise de saúde ocular, estilo e retenção.',
         fields: [
-            { id: 'h1', label: 'Identificação Profissional', type: 'heading', required: false, description: 'Análise de retenção e histórico técnico.' },
-            { id: 'prof_name', label: 'Nome da Lash Designer', type: 'text', required: true, placeholder: 'Ex: Dra. Juliana Silva' },
-            { id: 'h2', label: 'Checklist de Saúde (Obrigatório)', type: 'heading', required: false, description: 'Segurança médica e estética' },
-            { id: 'allergy_latex', label: 'Alergia a Látex ou Cianoacrilato?', type: 'boolean', required: true, description: 'Fundamental para escolha do adesivo.' },
-            { id: 'eye_health', label: 'Histórico de cirurgias oculares ou Blefarite?', type: 'boolean', required: true },
-            { id: 'systemic', label: 'Condições sistêmicas (Tireoide ou Diabetes)?', type: 'boolean', required: true, description: 'Afeta diretamente a retenção dos fios.' },
-            { id: 'pregnant', label: 'Estado Gestacional ou Psicológico Sensível?', type: 'boolean', required: true },
-            { id: 'h3', label: 'Lifestyle & Retenção', type: 'heading', required: false, description: 'Hábitos que influenciam o resultado.' },
-            { id: 'sleep_habit', label: 'Costuma dormir de lado ou bruços?', type: 'boolean', required: true },
-            { id: 'exercise', label: 'Pratica exercícios físicos intensos ou natação?', type: 'boolean', required: true },
-            { id: 'skincare', label: 'Utiliza demaquilantes ou cremes à base de óleo?', type: 'boolean', required: true },
-            { id: 'h4', label: 'Prontuário Técnico (Lash Design)', type: 'heading', required: false, description: 'Personalização e Mapping' },
-            { id: 'mapping', label: 'Mapping Escolhido', type: 'select', required: true, options: ['Boneca (Doll)', 'Esquilo (Squirrel)', 'Gatinho (Cat Eye)', 'Natural'] },
-            { id: 'curvature', label: 'Curvatura Utilizada', type: 'select', required: true, options: ['C', 'CC', 'D', 'L'] },
-            { id: 'thickness', label: 'Espessura dos Fios', type: 'select', required: true, options: ['0.03', '0.05', '0.07', '0.15'] },
-            { id: 'adhesive', label: 'Adesivo/Cola Utilizada', type: 'text', required: true, placeholder: 'Ex: Elite HS-10' },
-            { id: 'environment', label: 'Umidade e Temperatura da Cabine', type: 'text', required: false, placeholder: 'Ex: 55% / 22°C' },
-            { id: 'h5', label: 'Segurança & Termos', type: 'heading', required: false, description: 'Cláusulas de Veracidade e Imagem' },
-            { id: 'term_veracity', label: 'Confirmo a veracidade de todas as informações prestadas.', type: 'boolean', required: true },
-            { id: 'term_image', label: 'Autorizo o uso de imagem (fotos/vídeos) para fins de portfólio profissional.', type: 'boolean', required: true },
+            { id: 'h1', label: 'Avaliação de Saúde & Contraindicações', type: 'heading', required: false, description: 'Protocolo preventivo para sua segurança ocular.' },
+            { id: 'sensibilidade', label: 'Sua pele costuma reagir a materiais de uso tópico, cosméticos ou adesivos?', type: 'boolean', required: true },
+            { id: 'lentes', label: 'Você utiliza lentes de contato ou possui olhos excessivamente secos?', type: 'boolean', required: true },
+            { id: 'condicao_olhos', label: 'Já teve alguma condição relacionada aos olhos ou cílios (ex: blefarite, conjuntivite)?', type: 'boolean', required: true },
+            { id: 'procedimento_recente', label: 'Realizou procedimento facial ou ocular nos últimos 6 meses (Botox, Micro, Cirurgia)?', type: 'boolean', required: true },
+            { id: 'saude_fios', label: 'Há alguma condição de saúde ou hormonal que possa afetar o crescimento dos fios?', type: 'boolean', required: true },
+            { id: 'condicao_fisica', label: 'Há alguma condição física atual (Gestação, Sensibilidade na Coluna ou Lombo)?', type: 'boolean', required: true },
+            { id: 'medicacao', label: 'Está utilizando alguma medicação que possa interferir no procedimento ou sensibilidade?', type: 'boolean', required: true },
+
+            { id: 'h2', label: 'Histórico & Hábitos Relevantes', type: 'heading', required: false, description: 'Entendendo seu lifestyle para maximizar a retenção.' },
+            { id: 'primeira_vez', label: 'Já realizou este procedimento anteriormente? Teve alguma intercorrência?', type: 'boolean', required: true },
+            { id: 'limpeza_facial', label: 'Quais produtos de limpeza facial você prefere utilizar na área dos olhos?', type: 'select', required: true, options: ['Mousse/Sabonete Neutro', 'Água Micelar', 'Demaquilante (Base Óleo)', 'Nenhum / Somente Água'] },
+            { id: 'dormir', label: 'Qual a sua posição preferencial ao dormir? (Isso influencia na durabilidade)', type: 'select', required: true, options: ['De Costas', 'Lado Esquerdo', 'Lado Direito', 'De Bruços'] },
+            { id: 'atividades', label: 'Pratica atividades intensas com umidade ou atrito (Academia, Natação, Sauna)?', type: 'boolean', required: true },
+
+            { id: 'h3', label: 'Prontuário Técnico (Mapping)', type: 'heading', required: false, description: 'Personalização artística e design.' },
+            { id: 'mapping', label: 'Estilo de Mapping Desejado', type: 'select', required: true, options: ['Boneca (Doll)', 'Esquilo (Squirrel)', 'Gatinho (Cat Eye)', 'Natural'] },
+            { id: 'thickness', label: 'Espessura e Curvatura dos Fios (Lash Designer)', type: 'text', required: true, placeholder: 'Ex: 0.07D + 0.05C' },
+
+            { id: 'h4', label: 'Termos & Consentimento', type: 'heading', required: false },
+            { id: 'term_image', label: 'Autorizo o uso de imagem para portfólio profissional e redes sociais.', type: 'boolean', required: true },
         ]
     }
 ];
@@ -266,6 +267,7 @@ const AnamnesisView: React.FC<AnamnesisProps> = ({
                         onExportPDF={exportRecordToPDF}
                         onDeleteRecord={onDeleteRecord}
                         onShowConfirm={onShowConfirm}
+                        onShowToast={onShowToast}
                     />
                 )}
 
@@ -282,6 +284,7 @@ const AnamnesisView: React.FC<AnamnesisProps> = ({
                             setActiveTab('manager');
                         }}
                         onCancel={() => setActiveTab('manager')}
+                        onShowConfirm={onShowConfirm}
                     />
                 )}
 
@@ -317,15 +320,18 @@ const TemplateManager: React.FC<{
     onExportPDF: (r: AnamnesisRecord, t: AnamnesisTemplate) => void;
     onDeleteRecord: (id: string) => void;
     onShowConfirm: (options: ConfirmDialogOptions) => void;
-}> = ({ templates, records, onStartPlayer, onEditTemplate, onDeleteTemplate, onAddQuickTemplate, onExportPDF, onDeleteRecord, onShowConfirm }) => {
+    onShowToast: (msg: string, type: 'success' | 'error' | 'info') => void;
+}> = ({ templates, records, onStartPlayer, onEditTemplate, onDeleteTemplate, onAddQuickTemplate, onExportPDF, onDeleteRecord, onShowConfirm, onShowToast }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [viewingRecord, setViewingRecord] = useState<{ record: AnamnesisRecord, template: AnamnesisTemplate } | null>(null);
 
     const filteredRecords = useMemo(() => {
         const lower = searchTerm.toLowerCase();
-        return records.filter(r => r.clientName.toLowerCase().includes(lower))
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }, [records, searchTerm]);
+        return records.filter(r => {
+            const hasTemplate = templates.some(t => t.id === r.templateId);
+            return hasTemplate && r.clientName.toLowerCase().includes(lower);
+        }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }, [records, templates, searchTerm]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
@@ -397,9 +403,30 @@ const TemplateManager: React.FC<{
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <button onClick={() => setViewingRecord({ record: r, template: template! })} className="p-4 bg-gray-50 text-gray-400 hover:text-indigo-600 rounded-2xl transition-all"><Eye size={18} /></button>
-                                    <button onClick={() => onExportPDF(r, template!)} className="p-4 bg-gray-50 text-gray-400 hover:text-[#FF69B4] rounded-2xl transition-all"><FileDown size={18} /></button>
-                                    <button onClick={() => onDeleteRecord(r.id)} className="p-4 bg-gray-50 text-gray-400 hover:text-rose-500 rounded-2xl transition-all"><Trash2 size={18} /></button>
+                                    <button
+                                        onClick={() => {
+                                            if (template) setViewingRecord({ record: r, template });
+                                            else onShowToast('Este prontuário não pode ser aberto pois o modelo foi excluído.', 'error');
+                                        }}
+                                        className="p-4 bg-gray-50 text-gray-400 hover:text-indigo-600 rounded-2xl transition-all"
+                                    >
+                                        <Eye size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (template) onExportPDF(r, template);
+                                            else onShowToast('Exportação impossível: Modelo original não encontrado.', 'error');
+                                        }}
+                                        className="p-4 bg-gray-50 text-gray-400 hover:text-[#FF69B4] rounded-2xl transition-all"
+                                    >
+                                        <FileDown size={18} />
+                                    </button>
+                                    <button onClick={() => onShowConfirm({
+                                        title: 'Excluir Prontuário?',
+                                        message: 'Esta ação não poderá ser desfeita. Deseja realmente remover este registro?',
+                                        variant: 'danger',
+                                        onConfirm: () => onDeleteRecord(r.id)
+                                    })} className="p-4 bg-gray-50 text-gray-400 hover:text-rose-500 rounded-2xl transition-all"><Trash2 size={18} /></button>
                                 </div>
                             </div>
                         );
@@ -447,7 +474,8 @@ const TemplateBuilder: React.FC<{
     onChange: (t: AnamnesisTemplate) => void;
     onSave: () => void;
     onCancel: () => void;
-}> = ({ template, onChange, onSave, onCancel }) => {
+    onShowConfirm: (options: ConfirmDialogOptions) => void;
+}> = ({ template, onChange, onSave, onCancel, onShowConfirm }) => {
     const updateField = (id: string, updates: Partial<AnamnesisField>) => {
         onChange({ ...template, fields: template.fields.map(f => f.id === id ? { ...f, ...updates } : f) });
     };
@@ -473,18 +501,19 @@ const TemplateBuilder: React.FC<{
 
     return (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-[3rem] border border-gray-100 shadow-2xl overflow-hidden max-w-4xl mx-auto">
-            <div className="p-10 bg-gray-50 border-white flex justify-between items-center">
-                <div>
+            <div className="p-10 bg-gray-50 border-white flex justify-between items-center gap-8">
+                <div className="flex-1 min-w-0">
                     <input
                         value={template.title}
                         onChange={e => onChange({ ...template, title: e.target.value })}
-                        className="bg-transparent border-none text-3xl font-black text-gray-900 p-0 mb-1 outline-none w-full"
+                        className="bg-transparent border-none text-3xl font-black text-gray-900 p-0 mb-1 outline-none w-full truncate focus:not-italic"
+                        placeholder="Título do Modelo"
                     />
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Configuração de Protocolo Profissional</p>
                 </div>
-                <div className="flex gap-4">
-                    <button onClick={onCancel} className="px-6 py-4 text-gray-400 font-black text-[10px] uppercase">Cancelar</button>
-                    <button onClick={onSave} className="bg-gray-900 text-white px-8 py-4 rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-xl">Salvar Modelo</button>
+                <div className="flex items-center gap-4 shrink-0">
+                    <button onClick={onCancel} className="px-6 py-4 text-gray-400 hover:text-gray-600 font-black text-[10px] uppercase transition-colors">Cancelar</button>
+                    <button onClick={onSave} className="bg-gray-900 text-white px-8 py-4 rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all">Salvar Modelo</button>
                 </div>
             </div>
 
@@ -520,8 +549,19 @@ const TemplateBuilder: React.FC<{
                                 <button onClick={() => moveField(idx, 'down')} className="p-1 bg-white border rounded shadow-sm hover:text-indigo-600"><ChevronLeft size={12} className="-rotate-90" /></button>
                             </div>
                             <div className="flex justify-between items-start gap-4">
-                                <div className="flex-1 space-y-3">
-                                    <input value={field.label} onChange={e => updateField(field.id, { label: e.target.value })} className="w-full font-bold text-gray-800 text-lg border-none p-0 focus:ring-0 outline-none" />
+                                <div className="flex-1 space-y-3 min-w-0">
+                                    <textarea
+                                        rows={1}
+                                        value={field.label}
+                                        onChange={e => {
+                                            updateField(field.id, { label: e.target.value });
+                                            // Auto-resize
+                                            e.target.style.height = 'auto';
+                                            e.target.style.height = e.target.scrollHeight + 'px';
+                                        }}
+                                        className="w-full font-bold text-gray-800 text-lg border-none p-0 focus:ring-0 outline-none resize-none bg-transparent overflow-hidden"
+                                        placeholder="Pergunta ou Título"
+                                    />
                                     {field.type === 'select' && (
                                         <input value={field.options?.join(', ')} onChange={e => updateField(field.id, { options: e.target.value.split(',').map(s => s.trim()) })} className="w-full bg-gray-50 rounded-xl p-3 text-sm font-bold" placeholder="Opções (sep. por vírgula)" />
                                     )}
@@ -533,7 +573,12 @@ const TemplateBuilder: React.FC<{
                                         <span className="text-[10px] font-bold text-gray-300 bg-gray-50 px-3 py-1 rounded-full uppercase">{field.type}</span>
                                     </div>
                                 </div>
-                                <button onClick={() => onChange({ ...template, fields: template.fields.filter(f => f.id !== field.id) })} className="p-2 text-gray-300 hover:text-rose-500 transition-colors"><Trash2 size={18} /></button>
+                                <button onClick={() => onShowConfirm({
+                                    title: 'Remover Campo?',
+                                    message: `Deseja excluir o campo "${field.label}"?`,
+                                    variant: 'danger',
+                                    onConfirm: () => onChange({ ...template, fields: template.fields.filter(f => f.id !== field.id) })
+                                })} className="p-2 text-gray-300 hover:text-rose-500 transition-colors"><Trash2 size={18} /></button>
                             </div>
                         </div>
                     ))}
@@ -573,16 +618,30 @@ const FormPlayer: React.FC<{
         onUpdateRecord({ ...playingRecord, answers: { ...(playingRecord.answers || {}), [fieldId]: value } });
     };
 
-    const handleNext = () => {
+    const handleNext = (override?: { fieldId: string, value: any }) => {
+        const answers = override
+            ? { ...(playingRecord.answers || {}), [override.fieldId]: override.value }
+            : (playingRecord.answers || {});
+
         if (isClientStep && !playingRecord.clientId) {
             onShowToast('Selecione uma cliente para continuar.', 'error');
             return;
         }
-        if (currentField && currentField.required && !playingRecord.answers?.[currentField.id]) {
-            onShowToast('Este campo é obrigatório.', 'error');
-            return;
+
+        if (currentField && currentField.required && currentField.type !== 'heading') {
+            const ans = answers[currentField.id];
+            const hasAnswer = ans !== undefined && ans !== null && ans !== '';
+            if (!hasAnswer) {
+                onShowToast('Este campo é obrigatório.', 'error');
+                return;
+            }
         }
         setStep(step + 1);
+    };
+
+    const setAnswerAndNext = (fieldId: string, value: any) => {
+        setAnswer(fieldId, value);
+        handleNext({ fieldId, value });
     };
 
     return (
@@ -623,12 +682,12 @@ const FormPlayer: React.FC<{
                     )}
                 </div>
 
-                <main className="flex-1 bg-white flex flex-col items-center justify-center p-8 md:p-20 relative overflow-hidden">
+                <main className="flex-1 bg-white flex flex-col items-center justify-center p-6 md:p-20 relative overflow-y-auto scrollbar-hide">
                     <AnimatePresence mode="wait">
                         <motion.div key={step} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-2xl text-center space-y-12">
                             {isClientStep && (
                                 <div className="space-y-10">
-                                    <h3 className="font-serif text-5xl text-gray-900">Seja bem-vinda.</h3>
+                                    <h3 className="font-serif text-3xl md:text-5xl text-gray-900 leading-tight">Seja bem-vinda.</h3>
                                     <div className="relative max-w-md mx-auto">
                                         <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
                                         <input type="text" placeholder="Nome da cliente..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-gray-50 border-none rounded-3xl py-6 pl-16 pr-6 font-bold shadow-inner outline-none focus:ring-4 focus:ring-pink-50 transition-all" />
@@ -649,23 +708,23 @@ const FormPlayer: React.FC<{
 
                             {currentField && (
                                 <div className="space-y-12">
-                                    <h3 className="font-serif text-5xl text-gray-900 leading-tight">{currentField.label}</h3>
+                                    <h3 className="font-serif text-2xl md:text-4xl lg:text-5xl text-gray-900 leading-tight px-4">{currentField.label}</h3>
                                     {currentField.type === 'heading' ? (
-                                        <button onClick={handleNext} className="bg-gray-900 text-white px-12 py-6 rounded-full font-black text-xs uppercase tracking-[0.3em] shadow-2xl hover:scale-[1.05] transition-all">Iniciar Seção <ChevronRight className="inline ml-2" size={18} /></button>
+                                        <button onClick={() => handleNext()} className="bg-gray-900 text-white px-12 py-6 rounded-full font-black text-xs uppercase tracking-[0.3em] shadow-2xl hover:scale-[1.05] transition-all">Iniciar Seção <ChevronRight className="inline ml-2" size={18} /></button>
                                     ) : (
                                         <div className="w-full">
-                                            {currentField.type === 'text' && <input autoFocus value={playingRecord.answers?.[currentField.id] || ''} onChange={e => setAnswer(currentField.id, e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} className="w-full bg-transparent border-b-2 border-gray-100 py-6 text-center text-4xl font-serif text-[#FF69B4] outline-none focus:border-[#FF69B4] transition-all" placeholder="Escreva aqui..." />}
-                                            {currentField.type === 'textarea' && <textarea autoFocus value={playingRecord.answers?.[currentField.id] || ''} onChange={e => setAnswer(currentField.id, e.target.value)} className="w-full bg-gray-50 rounded-[3rem] p-12 text-2xl font-serif text-center outline-none focus:ring-4 focus:ring-pink-50 min-h-[250px]" placeholder="Sua resposta..." />}
+                                            {currentField.type === 'text' && <input autoFocus value={playingRecord.answers?.[currentField.id] || ''} onChange={e => setAnswer(currentField.id, e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} className="w-full bg-transparent border-b-2 border-gray-100 py-4 md:py-6 text-center text-2xl md:text-4xl font-serif text-[#FF69B4] outline-none focus:border-[#FF69B4] transition-all" placeholder="Escreva aqui..." />}
+                                            {currentField.type === 'textarea' && <textarea autoFocus value={playingRecord.answers?.[currentField.id] || ''} onChange={e => setAnswer(currentField.id, e.target.value)} className="w-full bg-gray-50 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 text-lg md:text-2xl font-serif text-center outline-none focus:ring-4 focus:ring-pink-50 min-h-[200px] md:min-h-[250px]" placeholder="Sua resposta..." />}
                                             {currentField.type === 'boolean' && (
-                                                <div className="grid grid-cols-2 gap-8 max-w-xl mx-auto">
-                                                    <button onClick={() => { setAnswer(currentField.id, true); handleNext(); }} className={`p-12 rounded-[3rem] border-2 transition-all flex flex-col items-center gap-4 ${playingRecord.answers?.[currentField.id] === true ? 'bg-gray-900 border-gray-900 text-white' : 'bg-gray-50 border-transparent text-gray-400 hover:border-[#FF69B4]'}`}><Check size={40} /><span className="font-serif text-3xl">Sim</span></button>
-                                                    <button onClick={() => { setAnswer(currentField.id, false); handleNext(); }} className={`p-12 rounded-[3rem] border-2 transition-all flex flex-col items-center gap-4 ${playingRecord.answers?.[currentField.id] === false ? 'bg-gray-900 border-gray-900 text-white' : 'bg-gray-50 border-transparent text-gray-400 hover:border-[#FF69B4]'}`}><X size={40} /><span className="font-serif text-3xl">Não</span></button>
+                                                <div className="grid grid-cols-2 gap-4 md:gap-8 max-w-xl mx-auto w-full">
+                                                    <button onClick={() => setAnswerAndNext(currentField.id, true)} className={`p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] border-2 transition-all flex flex-col items-center gap-2 md:gap-4 ${playingRecord.answers?.[currentField.id] === true ? 'bg-gray-900 border-gray-900 text-white' : 'bg-gray-50 border-transparent text-gray-400 hover:border-[#FF69B4]'}`}><Check size={28} className="md:w-10 md:h-10" /><span className="font-serif text-xl md:text-3xl">Sim</span></button>
+                                                    <button onClick={() => setAnswerAndNext(currentField.id, false)} className={`p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] border-2 transition-all flex flex-col items-center gap-2 md:gap-4 ${playingRecord.answers?.[currentField.id] === false ? 'bg-gray-900 border-gray-900 text-white' : 'bg-gray-50 border-transparent text-gray-400 hover:border-[#FF69B4]'}`}><X size={28} className="md:w-10 md:h-10" /><span className="font-serif text-xl md:text-3xl">Não</span></button>
                                                 </div>
                                             )}
                                             {currentField.type === 'select' && (
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 w-full">
                                                     {currentField.options?.map(opt => (
-                                                        <button key={opt} onClick={() => { setAnswer(currentField.id, opt); handleNext(); }} className={`p-8 rounded-[2rem] border-2 transition-all font-serif text-2xl ${playingRecord.answers?.[currentField.id] === opt ? 'bg-gray-900 text-white' : 'bg-gray-50 border-transparent text-gray-600 hover:border-[#FF69B4]'}`}>{opt}</button>
+                                                        <button key={opt} onClick={() => setAnswerAndNext(currentField.id, opt)} className={`p-4 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-2 transition-all font-serif text-lg md:text-2xl ${playingRecord.answers?.[currentField.id] === opt ? 'bg-gray-900 text-white' : 'bg-gray-50 border-transparent text-gray-600 hover:border-[#FF69B4]'}`}>{opt}</button>
                                                     ))}
                                                 </div>
                                             )}
@@ -676,10 +735,10 @@ const FormPlayer: React.FC<{
 
                             {isSignatureStep && (
                                 <div className="space-y-12">
-                                    <h3 className="font-serif text-5xl text-gray-900">Validar Prontuário</h3>
+                                    <h3 className="font-serif text-3xl md:text-5xl text-gray-900">Validar Prontuário</h3>
                                     <div className="bg-gray-50 rounded-[4rem] p-10 border-2 border-dashed border-gray-200 relative overflow-hidden group">
-                                        <SignatureCanvas ref={sigCanvas} penColor='#111827' canvasProps={{ className: 'w-full h-80' }} />
-                                        <button onClick={() => sigCanvas.current?.clear()} className="absolute bottom-10 left-12 text-[10px] font-black uppercase text-gray-400 hover:text-rose-500 transition-colors">Limpar Assinatura</button>
+                                        <SignatureCanvas ref={sigCanvas} penColor='#111827' canvasProps={{ className: 'w-full h-60 md:h-80' }} />
+                                        <button onClick={() => sigCanvas.current?.clear()} className="absolute bottom-6 md:bottom-10 left-8 md:left-12 text-[10px] font-black uppercase text-gray-400 hover:text-rose-500 transition-colors">Limpar Assinatura</button>
                                     </div>
                                 </div>
                             )}
@@ -689,8 +748,8 @@ const FormPlayer: React.FC<{
                     <div className="mt-auto w-full flex items-center justify-between max-w-4xl py-10">
                         {!isClientStep && <button onClick={onPrevStep} className="flex items-center gap-2 text-gray-300 font-black uppercase text-[10px] hover:text-gray-900 transition-all"><ChevronLeft size={20} /> Voltar</button>}
                         <div className="flex-1" />
-                        {!isSignatureStep && !isClientStep && <button onClick={handleNext} className="bg-gray-900 text-white px-12 py-6 rounded-full font-black text-xs uppercase tracking-widest hover:scale-[1.05] transition-all">Próximo <ChevronRight className="inline ml-2" size={18} /></button>}
-                        {isSignatureStep && <button onClick={() => { if (!sigCanvas.current?.isEmpty()) setShowAftercare(true); else onShowToast('Assinatura obrigatória!', 'error'); }} className="bg-indigo-600 text-white px-14 py-7 rounded-full font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-[1.05] transition-all">Finalizar e Validar <CheckCircle2 className="inline ml-2" size={24} /></button>}
+                        {!isSignatureStep && !isClientStep && <button onClick={() => handleNext()} className="bg-gray-900 text-white px-8 md:px-12 py-4 md:py-6 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest hover:scale-[1.05] transition-all">Próximo <ChevronRight className="inline ml-2" size={18} /></button>}
+                        {isSignatureStep && <button onClick={() => { if (!sigCanvas.current?.isEmpty()) setShowAftercare(true); else onShowToast('Assinatura obrigatória!', 'error'); }} className="bg-indigo-600 text-white px-10 md:px-14 py-5 md:py-7 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-[1.05] transition-all">Finalizar e Validar <CheckCircle2 className="inline ml-2" size={24} /></button>}
                     </div>
                 </main>
             </div>

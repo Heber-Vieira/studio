@@ -36,6 +36,7 @@ import { translations } from '../i18n';
 import { Modal, Button, SelectField, InputField, TimePicker } from './ui';
 import { queueService } from '../services/queueService';
 import { WaitingListWidget } from './WaitingListWidget';
+import { maskPhone } from '../services/utils';
 
 interface AppointmentsProps {
   appointments: Appointment[];
@@ -569,7 +570,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                         </div>
                         <div>
                           <p className="font-bold text-gray-900 text-sm">{client.name}</p>
-                          <p className="text-[10px] text-gray-400">{client.phone}</p>
+                          <p className="text-[10px] text-gray-400">{maskPhone(client.phone)}</p>
                         </div>
                       </div>
                       <ChevronRight size={14} className="text-gray-300 group-hover:text-[#FF69B4] group-hover:translate-x-1 transition-all" />

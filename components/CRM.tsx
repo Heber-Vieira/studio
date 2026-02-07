@@ -1,8 +1,8 @@
-
 import React, { useState, useRef, useMemo } from 'react';
 import { Client, Appointment, SalonSettings, Professional, ConfirmDialogOptions } from '../types';
 import { User, UserPlus, Search, Phone, History, Star, X, CheckCircle2, Calendar, Sparkles, Trash2, AlertTriangle, Gift, Smartphone, Upload, Edit3, Save, Link2, ExternalLink, Copy, MessageCircle } from 'lucide-react';
 import { Modal, Button, InputField } from './ui';
+import { formatPhone, maskPhone } from '../services/utils';
 
 interface CRMProps {
   clients: Client[];
@@ -42,16 +42,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const formatPhoneNumber = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 11) {
-      return numbers
-        .replace(/^(\d{2})(\d)/g, '($1) $2')
-        .replace(/(\d{5})(\d)/, '$1-$2')
-        .substr(0, 15);
-    }
-    return value.substr(0, 15);
-  };
+  // formatPhoneNumber replaced by central utils maskPhone
 
   const filteredClients = useMemo(() => {
     return clients
@@ -174,7 +165,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
             if (!exists) {
               toImport.push({
                 name: name,
-                phone: formatPhoneNumber(cleanPhone),
+                phone: maskPhone(cleanPhone),
                 lastVisit: new Date().toISOString().split('T')[0],
                 totalSpent: 0,
                 loyaltyPoints: 0,
@@ -226,7 +217,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
             const cleanPhone = rawPhone.replace(/\D/g, '');
             let formattedPhone = rawPhone;
             if (cleanPhone.length >= 10) {
-              formattedPhone = formatPhoneNumber(cleanPhone);
+              formattedPhone = maskPhone(cleanPhone);
             }
 
             const exists = clients.some(c => c.phone.replace(/\D/g, '') === cleanPhone);
@@ -347,7 +338,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
                   </h3>
                   <p className="text-sm text-gray-400 font-bold flex items-center gap-1.5">
                     <Smartphone size={14} className="opacity-50" />
-                    {client.phone}
+                    {formatPhone(client.phone)}
                   </p>
                 </div>
               </div>
@@ -525,7 +516,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
               label="WHATSAPP / CELULAR"
               type="tel"
               value={editingClient.phone}
-              onChange={e => setEditingClient({ ...editingClient, phone: formatPhoneNumber(e.target.value) })}
+              onChange={e => setEditingClient({ ...editingClient, phone: maskPhone(e.target.value) })}
             />
             <InputField
               label="ANIVERSÁRIO"
@@ -570,7 +561,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
             inputMode="numeric"
             placeholder="(31) 99999-9999"
             value={newClient.phone}
-            onChange={e => setNewClient({ ...newClient, phone: formatPhoneNumber(e.target.value) })}
+            onChange={e => setNewClient({ ...newClient, phone: maskPhone(e.target.value) })}
           />
           <InputField
             label="Aniversário (Opcional)"

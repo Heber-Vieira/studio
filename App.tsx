@@ -707,7 +707,7 @@ const MainLayout: React.FC = () => {
       fetchData();
     } catch (e: any) {
       console.error("Error updating template:", e);
-      showToast("Erro ao atualizar modelo.");
+      showToast("Erro ao excluir modelo.");
     }
   };
 
