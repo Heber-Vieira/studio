@@ -87,8 +87,8 @@ const LUX_QUICK_TEMPLATES: Partial<AnamnesisTemplate>[] = [
 
             { id: 'h3', label: 'Prontuário Técnico (Mapping)', type: 'heading', required: false, description: 'Personalização artística e design.' },
             { id: 'mapping', label: 'Mapping Escolhido', type: 'select', required: true, options: ['Gatinho (Cat Eye)', 'Boneca (Doll)', 'Esquilo (Squirrel)', 'Fox Eye', 'Natural'] },
-            { id: 'curvatura', label: 'Curvatura Utilizada', type: 'select', required: true, options: ['J e B', 'C', 'CC / D', 'L e M'] },
-            { id: 'thickness', label: 'Espessura dos Fios', type: 'select', required: true, options: ['Volume Russo e Mega Volume (0.03mm a 0.07mm)', 'Híbrido ou Volume Suave (0.10mm a 0.12mm)', 'Fio a Fio / Clássico (0.15mm a 0.20mm)', 'Não Recomendados (0.25mm ou mais)'] },
+            { id: 'curvatura', label: 'Curvatura Utilizada', type: 'select', required: true, options: ['J', 'B', 'C', 'CC', 'D', 'L', 'M'] },
+            { id: 'thickness', label: 'Espessura dos Fios', type: 'select', required: true, options: ['0.03', '0.05', '0.07', '0.10', '0.12', '0.15', '0.18', '0.20', '0.25'] },
 
             { id: 'h4', label: 'Termos & Consentimento', type: 'heading', required: false },
             { id: 'term_image', label: 'Autorizo o uso de imagem para portfólio profissional e redes sociais.', type: 'boolean', required: true },
