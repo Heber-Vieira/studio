@@ -821,7 +821,15 @@ const FormPlayer: React.FC<{
                                                                     'J e B': 'Curvaturas bem naturais, quase retas. A B tem uma leve elevação na ponta, ideal para quem quer apenas definição.',
                                                                     'C': 'A mais versátil e utilizada. Oferece um efeito de cílios curvados com curvex, mantendo um aspecto natural.',
                                                                     'CC / D': 'Curvaturas acentuadas para um olhar mais aberto e dramático (efeito boneca). A D é ideal para clientes que buscam impacto visual.',
-                                                                    'L e M': 'Possuem uma base reta e uma subida súbita. São excelentes para pálpebras caídas (hooded eyes) ou para criar o efeito "foxy eyes" (delineado).'
+                                                                    'L e M': 'Possuem uma base reta e uma subida súbita. São excelentes para pálpebras caídas (hooded eyes) ou para criar o efeito "foxy eyes" (delineado).',
+
+                                                                    // Fallback for individual keys if template has split options
+                                                                    'J': 'Curvaturas bem naturais, quase retas. A B tem uma leve elevação na ponta, ideal para quem quer apenas definição.',
+                                                                    'B': 'Curvaturas bem naturais, quase retas. A B tem uma leve elevação na ponta, ideal para quem quer apenas definição.',
+                                                                    'CC': 'Curvaturas acentuadas para um olhar mais aberto e dramático (efeito boneca). A D é ideal para clientes que buscam impacto visual.',
+                                                                    'D': 'Curvaturas acentuadas para um olhar mais aberto e dramático (efeito boneca). A D é ideal para clientes que buscam impacto visual.',
+                                                                    'L': 'Possuem uma base reta e uma subida súbita. São excelentes para pálpebras caídas (hooded eyes) ou para criar o efeito "foxy eyes" (delineado).',
+                                                                    'M': 'Possuem uma base reta e uma subida súbita. São excelentes para pálpebras caídas (hooded eyes) ou para criar o efeito "foxy eyes" (delineado).'
                                                                 };
 
                                                                 const thicknessDescriptions: Record<string, string> = {
