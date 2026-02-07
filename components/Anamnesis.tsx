@@ -876,8 +876,9 @@ const FormPlayer: React.FC<{
                                                                 const mappingDescriptions: Record<string, string> = {
                                                                     'Gatinho (Cat Eye)': 'Fios maiores no canto externo para alongar e sofisticar o olhar.',
                                                                     'Boneca (Doll)': 'Fios maiores no centro para abrir o olhar e conferir um ar romântico.',
-                                                                    'Esquilo (Squirrel)': 'Fios longos no arco da sobrancelha, ideal para levantar olhos caídos.',
+                                                                    'Esquilo': 'Fios que crescem em direção ao arco da sobrancelha, ideal para levantar o olhar.',
                                                                     'Fox Eye': 'Cria um efeito de "puxado" intenso e moderno, além do clássico gatinho.',
+                                                                    'Kim K (Wispy)': 'Alterna fios curtos e longos para criar um efeito glamouroso e "desalinhado" proposital.',
                                                                     'Natural': 'Equilíbrio sutil que respeita o crescimento original dos seus fios.'
                                                                 };
 
