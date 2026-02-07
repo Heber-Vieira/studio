@@ -392,41 +392,41 @@ const TemplateManager: React.FC<{
                     {filteredRecords.map(r => {
                         const template = templates.find(t => t.id === r.templateId);
                         return (
-                            <div key={r.id} className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm flex items-center justify-between group hover:shadow-lg transition-all">
-                                <div className="flex items-center gap-5">
-                                    <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                            <div key={r.id} className="bg-white p-5 md:p-6 rounded-[2rem] md:rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group hover:shadow-lg transition-all">
+                                <div className="flex items-center gap-4 md:gap-5 min-w-0">
+                                    <div className="w-12 h-12 md:w-14 md:h-14 bg-indigo-50 text-indigo-600 rounded-xl md:rounded-2xl flex items-center justify-center font-black text-lg md:text-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors shrink-0">
                                         {r.clientName[0]}
                                     </div>
-                                    <div>
-                                        <h4 className="font-serif text-xl text-gray-900">{r.clientName}</h4>
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{template?.title || 'Ficha Excluída'}</p>
+                                    <div className="min-w-0">
+                                        <h4 className="font-serif text-lg md:text-xl text-gray-900 truncate">{r.clientName}</h4>
+                                        <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest truncate">{template?.title || 'Ficha Excluída'}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto justify-end">
                                     <button
                                         onClick={() => {
                                             if (template) setViewingRecord({ record: r, template });
                                             else onShowToast('Este prontuário não pode ser aberto pois o modelo foi excluído.', 'error');
                                         }}
-                                        className="p-4 bg-gray-50 text-gray-400 hover:text-indigo-600 rounded-2xl transition-all"
+                                        className="p-3 md:p-4 bg-gray-50 text-gray-400 hover:text-indigo-600 rounded-xl md:rounded-2xl transition-all"
                                     >
-                                        <Eye size={18} />
+                                        <Eye className="w-4 h-4 md:w-5 md:h-5" />
                                     </button>
                                     <button
                                         onClick={() => {
                                             if (template) onExportPDF(r, template);
                                             else onShowToast('Exportação impossível: Modelo original não encontrado.', 'error');
                                         }}
-                                        className="p-4 bg-gray-50 text-gray-400 hover:text-[#FF69B4] rounded-2xl transition-all"
+                                        className="p-3 md:p-4 bg-gray-50 text-gray-400 hover:text-[#FF69B4] rounded-xl md:rounded-2xl transition-all"
                                     >
-                                        <FileDown size={18} />
+                                        <FileDown className="w-4 h-4 md:w-5 md:h-5" />
                                     </button>
                                     <button onClick={() => onShowConfirm({
                                         title: 'Excluir Prontuário?',
                                         message: 'Esta ação não poderá ser desfeita. Deseja realmente remover este registro?',
                                         variant: 'danger',
                                         onConfirm: () => onDeleteRecord(r.id)
-                                    })} className="p-4 bg-gray-50 text-gray-400 hover:text-rose-500 rounded-2xl transition-all"><Trash2 size={18} /></button>
+                                    })} className="p-3 md:p-4 bg-gray-50 text-gray-400 hover:text-rose-500 rounded-xl md:rounded-2xl transition-all"><Trash2 className="w-4 h-4 md:w-5 md:h-5" /></button>
                                 </div>
                             </div>
                         );
@@ -435,32 +435,32 @@ const TemplateManager: React.FC<{
             </div>
 
             {viewingRecord && (
-                <div className="fixed inset-0 z-[100] bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-                        <div className="p-10 border-b border-gray-50 shrink-0">
-                            <h3 className="font-serif text-3xl text-gray-900">{viewingRecord.record.clientName}</h3>
+                <div className="fixed inset-0 z-[100] bg-gray-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+                    <div className="bg-white w-full max-w-2xl rounded-t-[2.5rem] sm:rounded-[3rem] shadow-2xl overflow-hidden max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+                        <div className="p-6 md:p-10 border-b border-gray-50 shrink-0">
+                            <h3 className="font-serif text-2xl md:text-3xl text-gray-900">{viewingRecord.record.clientName}</h3>
                             <p className="text-[10px] font-black text-[#FF69B4] uppercase tracking-[0.3em] mt-2">Prontuário Digital: {viewingRecord.template.title}</p>
                         </div>
-                        <div className="p-10 overflow-y-auto space-y-8 flex-1 scrollbar-hide">
+                        <div className="p-6 md:p-10 overflow-y-auto space-y-6 md:space-y-8 flex-1 scrollbar-hide">
                             {viewingRecord.template.fields.map(f => {
-                                if (f.type === 'heading') return <h4 key={f.id} className="font-serif text-2xl text-gray-900 pt-6 border-t border-gray-50">{f.label}</h4>;
+                                if (f.type === 'heading') return <h4 key={f.id} className="font-serif text-xl md:text-2xl text-gray-900 pt-6 border-t border-gray-50">{f.label}</h4>;
                                 const ans = viewingRecord.record.answers[f.id];
                                 return (
-                                    <div key={f.id} className="space-y-2">
+                                    <div key={f.id} className="space-y-1">
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{f.label}</p>
-                                        <p className="text-lg font-serif text-gray-700">{typeof ans === 'boolean' ? (ans ? 'Sim' : 'Não') : (ans || 'N/A')}</p>
+                                        <p className="text-base md:text-lg font-serif text-gray-700">{typeof ans === 'boolean' ? (ans ? 'Sim' : 'Não') : (ans || 'N/A')}</p>
                                     </div>
                                 );
                             })}
                             {viewingRecord.record.signatureUrl && (
-                                <div className="pt-10 border-t border-gray-50">
+                                <div className="pt-8 md:pt-10 border-t border-gray-50">
                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Assinatura Certificada</p>
-                                    <img src={viewingRecord.record.signatureUrl} alt="Signature" className="max-w-[200px] border border-gray-100 rounded-2xl" />
+                                    <img src={viewingRecord.record.signatureUrl} alt="Signature" className="max-w-[150px] md:max-w-[200px] border border-gray-100 rounded-2xl" />
                                 </div>
                             )}
                         </div>
-                        <div className="p-10 bg-gray-50 flex gap-4 shrink-0">
-                            <button onClick={() => setViewingRecord(null)} className="flex-1 py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest">Fechar Prontuário</button>
+                        <div className="p-6 md:p-10 bg-gray-50 flex gap-4 shrink-0">
+                            <button onClick={() => setViewingRecord(null)} className="flex-1 py-4 bg-gray-900 text-white rounded-xl md:rounded-2xl font-black text-xs uppercase tracking-widest">Fechar Prontuário</button>
                         </div>
                     </div>
                 </div>
@@ -501,39 +501,43 @@ const TemplateBuilder: React.FC<{
 
     return (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-[3rem] border border-gray-100 shadow-2xl overflow-hidden max-w-4xl mx-auto">
-            <div className="p-10 bg-gray-50 border-white flex justify-between items-center gap-8">
-                <div className="flex-1 min-w-0">
+            <div className="p-6 md:p-10 bg-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                <div className="flex-1 min-w-0 w-full">
                     <input
                         value={template.title}
                         onChange={e => onChange({ ...template, title: e.target.value })}
-                        className="bg-transparent border-none text-3xl font-black text-gray-900 p-0 mb-1 outline-none w-full truncate focus:not-italic"
+                        className="bg-transparent border-none text-2xl md:text-3xl font-black text-gray-900 p-0 mb-1 outline-none w-full truncate focus:not-italic"
                         placeholder="Título do Modelo"
                     />
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Configuração de Protocolo Profissional</p>
                 </div>
-                <div className="flex items-center gap-4 shrink-0">
-                    <button onClick={onCancel} className="px-6 py-4 text-gray-400 hover:text-gray-600 font-black text-[10px] uppercase transition-colors">Cancelar</button>
-                    <button onClick={onSave} className="bg-gray-900 text-white px-8 py-4 rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all">Salvar Modelo</button>
+                <div className="flex items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+                    <button onClick={onCancel} className="flex-1 sm:flex-none px-4 py-3 text-gray-400 hover:text-gray-600 font-black text-[10px] uppercase transition-colors">Cancelar</button>
+                    <button onClick={onSave} className="flex-1 sm:flex-none bg-gray-900 text-white px-6 py-3 rounded-2xl md:rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all">Salvar Modelo</button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-4 min-h-[500px]">
-                <div className="col-span-1 bg-gray-50 p-6 border-r border-gray-100 space-y-4">
-                    <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Ferramentas</h5>
-                    {[
-                        { icon: <Type size={16} />, label: 'Texto', type: 'text' },
-                        { icon: <AlignLeft size={16} />, label: 'Parágrafo', type: 'textarea' },
-                        { icon: <ToggleLeft size={16} />, label: 'Booleano', type: 'boolean' },
-                        { icon: <List size={16} />, label: 'Seleção', type: 'select' },
-                        { icon: <Info size={16} />, label: 'Título', type: 'heading' }
-                    ].map(item => (
-                        <button key={item.label} onClick={() => addField(item.type as AnamnesisFieldType)} className="w-full p-4 bg-white rounded-2xl border border-transparent shadow-sm hover:border-indigo-200 flex items-center gap-4 group">
-                            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white">{item.icon}</div>
-                            <span className="text-xs font-bold text-gray-600">{item.label}</span>
-                        </button>
-                    ))}
+            <div className="flex flex-col md:grid md:grid-cols-4 min-h-[500px]">
+                <div className="w-full md:col-span-1 bg-gray-50 p-6 border-b md:border-b-0 md:border-r border-gray-100 flex md:flex-col gap-4 overflow-x-auto md:overflow-x-visible no-scrollbar shrink-0">
+                    <div className="shrink-0 flex md:flex-col gap-4 items-center md:items-start w-full">
+                        <h5 className="hidden md:block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Ferramentas</h5>
+                        <div className="flex md:flex-col gap-3 w-full">
+                            {[
+                                { icon: <Type size={16} />, label: 'Texto', type: 'text' },
+                                { icon: <AlignLeft size={16} />, label: 'Parágrafo', type: 'textarea' },
+                                { icon: <ToggleLeft size={16} />, label: 'Booleano', type: 'boolean' },
+                                { icon: <List size={16} />, label: 'Seleção', type: 'select' },
+                                { icon: <Info size={16} />, label: 'Título', type: 'heading' }
+                            ].map(item => (
+                                <button key={item.label} onClick={() => addField(item.type as AnamnesisFieldType)} className="shrink-0 md:w-full p-3 md:p-4 bg-white rounded-xl md:rounded-2xl border border-transparent shadow-sm hover:border-indigo-200 flex items-center gap-3 md:gap-4 group">
+                                    <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white shrink-0">{item.icon}</div>
+                                    <span className="text-[10px] md:text-xs font-bold text-gray-600 whitespace-nowrap">{item.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-                    <div className="pt-6 border-t border-gray-200">
+                    <div className="hidden md:block pt-6 border-t border-gray-200 mt-auto">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Categoria</label>
                         <select value={template.category} onChange={e => onChange({ ...template, category: e.target.value })} className="w-full bg-white border-none rounded-xl p-3 text-xs font-bold text-gray-700">
                             {['Cílios', 'Sobrancelha', 'Estética', 'Unhas', 'Geral'].map(c => <option key={c} value={c}>{c}</option>)}
@@ -541,10 +545,24 @@ const TemplateBuilder: React.FC<{
                     </div>
                 </div>
 
-                <div className="col-span-3 p-10 space-y-8 overflow-y-auto scrollbar-hide max-h-[600px]">
+                <div className="w-full md:col-span-3 p-6 md:p-10 space-y-6 md:space-y-8 overflow-y-auto scrollbar-hide max-h-[600px] bg-white">
+                    <div className="md:hidden mb-4">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Categoria</label>
+                        <select value={template.category} onChange={e => onChange({ ...template, category: e.target.value })} className="w-full bg-gray-50 border-none rounded-xl p-3 text-xs font-bold text-gray-700">
+                            {['Cílios', 'Sobrancelha', 'Estética', 'Unhas', 'Geral'].map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </div>
+
+                    {template.fields.length === 0 && (
+                        <div className="h-64 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-gray-100 rounded-[2rem]">
+                            <Plus className="text-gray-200 mb-4" size={48} />
+                            <p className="text-gray-400 font-bold text-sm">Arraste uma ferramenta ou clique acima para começar a construir seu protocolo.</p>
+                        </div>
+                    )}
+
                     {template.fields.map((field, idx) => (
-                        <div key={field.id} className="group relative bg-white p-6 rounded-3xl border border-gray-100 hover:border-[#FF69B4] transition-all shadow-sm">
-                            <div className="absolute left-[-15px] top-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                        <div key={field.id} className="group relative bg-white p-5 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 hover:border-[#FF69B4] transition-all shadow-sm">
+                            <div className="absolute left-[-15px] top-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all z-10 hidden md:flex">
                                 <button onClick={() => moveField(idx, 'up')} className="p-1 bg-white border rounded shadow-sm hover:text-indigo-600"><ChevronLeft size={12} className="rotate-90" /></button>
                                 <button onClick={() => moveField(idx, 'down')} className="p-1 bg-white border rounded shadow-sm hover:text-indigo-600"><ChevronLeft size={12} className="-rotate-90" /></button>
                             </div>
@@ -555,22 +573,25 @@ const TemplateBuilder: React.FC<{
                                         value={field.label}
                                         onChange={e => {
                                             updateField(field.id, { label: e.target.value });
-                                            // Auto-resize
                                             e.target.style.height = 'auto';
                                             e.target.style.height = e.target.scrollHeight + 'px';
                                         }}
-                                        className="w-full font-bold text-gray-800 text-lg border-none p-0 focus:ring-0 outline-none resize-none bg-transparent overflow-hidden"
+                                        className="w-full font-bold text-gray-800 text-base md:text-lg border-none p-0 focus:ring-0 outline-none resize-none bg-transparent overflow-hidden"
                                         placeholder="Pergunta ou Título"
                                     />
                                     {field.type === 'select' && (
                                         <input value={field.options?.join(', ')} onChange={e => updateField(field.id, { options: e.target.value.split(',').map(s => s.trim()) })} className="w-full bg-gray-50 rounded-xl p-3 text-sm font-bold" placeholder="Opções (sep. por vírgula)" />
                                     )}
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex flex-wrap items-center gap-3 md:gap-4">
                                         <label className="flex items-center gap-2 cursor-pointer">
                                             <input type="checkbox" checked={field.required} onChange={e => updateField(field.id, { required: e.target.checked })} className="w-4 h-4 rounded text-indigo-600" />
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Obrigatório</span>
                                         </label>
                                         <span className="text-[10px] font-bold text-gray-300 bg-gray-50 px-3 py-1 rounded-full uppercase">{field.type}</span>
+                                        <div className="flex md:hidden gap-2">
+                                            <button onClick={() => moveField(idx, 'up')} className="p-1 text-gray-300 hover:text-indigo-600"><ChevronLeft size={14} className="rotate-90" /></button>
+                                            <button onClick={() => moveField(idx, 'down')} className="p-1 text-gray-300 hover:text-indigo-600"><ChevronLeft size={14} className="-rotate-90" /></button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button onClick={() => onShowConfirm({
@@ -578,7 +599,7 @@ const TemplateBuilder: React.FC<{
                                     message: `Deseja excluir o campo "${field.label}"?`,
                                     variant: 'danger',
                                     onConfirm: () => onChange({ ...template, fields: template.fields.filter(f => f.id !== field.id) })
-                                })} className="p-2 text-gray-300 hover:text-rose-500 transition-colors"><Trash2 size={18} /></button>
+                                })} className="p-2 text-gray-300 hover:text-rose-500 transition-colors shrink-0"><Trash2 size={18} /></button>
                             </div>
                         </div>
                     ))}
@@ -646,110 +667,145 @@ const FormPlayer: React.FC<{
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[150] bg-white flex flex-col font-sans">
-            <header className="px-8 md:px-20 py-8 flex items-center justify-between border-b border-gray-50">
-                <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 bg-gray-900 rounded-2xl flex items-center justify-center text-white"><Sparkles size={24} /></div>
-                    <div>
-                        <h2 className="font-serif text-2xl text-gray-900">{template.title}</h2>
-                        <p className="text-[10px] font-black uppercase text-[#FF69B4] tracking-[0.3em]">BellaAI Luxury Experience</p>
+            <header className="px-6 md:px-20 py-4 md:py-8 flex items-center justify-between border-b border-gray-50 bg-white sticky top-0 z-[160]">
+                <div className="flex items-center gap-4 md:gap-6">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-900 rounded-xl md:rounded-2xl flex items-center justify-center text-white shrink-0"><Sparkles size={20} className="md:w-6 md:h-6" /></div>
+                    <div className="min-w-0">
+                        <h2 className="font-serif text-lg md:text-2xl text-gray-900 truncate">{template.title}</h2>
+                        <p className="text-[8px] md:text-[10px] font-black uppercase text-[#FF69B4] tracking-[0.2em] md:tracking-[0.3em] truncate">BellaAI Luxury Experience</p>
                     </div>
                 </div>
-                <button onClick={onCancel} className="p-4 bg-gray-50 text-gray-400 hover:text-rose-500 rounded-2xl transition-all"><X size={20} /></button>
+                <button onClick={onCancel} className="p-3 bg-gray-50 text-gray-400 hover:text-rose-500 rounded-xl transition-all shrink-0"><X size={18} /></button>
             </header>
 
-            <div className="flex-1 flex flex-col md:flex-row min-h-0">
-                <div className="w-full md:w-80 bg-gray-50/50 p-8 md:p-12 space-y-12 overflow-y-auto border-r border-gray-100">
-                    <div className="space-y-4">
-                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">Fases do Protocolo</p>
-                        <div className="space-y-3">
-                            {[{ label: 'Identificação', s: 0 }, ...template.fields.map((f, i) => ({ label: f.label, s: i + 1 })), { label: 'Finalização', s: totalSteps }].map((sObj, i) => {
-                                const isActive = step === sObj.s;
-                                const isDone = step > sObj.s;
-                                return (
-                                    <div key={i} className="flex items-center gap-4">
-                                        <div className={`w-2 h-2 rounded-full ${isDone ? 'bg-emerald-400' : isActive ? 'bg-[#FF69B4] scale-150' : 'bg-gray-200'}`} />
-                                        <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-gray-900' : 'text-gray-300'}`}>{sObj.label.slice(0, 20)}</span>
-                                    </div>
-                                );
-                            })}
+            <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+                {/* Phases Side/Top Bar */}
+                <div className="w-full md:w-80 bg-gray-50/50 p-6 md:p-12 border-b md:border-b-0 md:border-r border-gray-100 shrink-0">
+                    <div className="flex flex-col gap-6 md:gap-12">
+                        <div className="space-y-4">
+                            <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em] mb-4">Fases do Protocolo</p>
+
+                            {/* Horizontal Progress on Mobile */}
+                            <div className="flex md:hidden items-center gap-1 w-full overflow-hidden">
+                                {[{ label: 'Identificação', s: 0 }, ...template.fields.map((f, i) => ({ label: f.label, s: i + 1 })), { label: 'Finalização', s: totalSteps }].map((sObj, i) => {
+                                    const isActive = step === sObj.s;
+                                    const isDone = step > sObj.s;
+                                    return (
+                                        <div key={i} className={`h-1 rounded-full flex-1 transition-all ${isDone ? 'bg-emerald-400' : isActive ? 'bg-[#FF69B4]' : 'bg-gray-200'}`} />
+                                    );
+                                })}
+                            </div>
+
+                            {/* Vertical List for Desktop and some mobile detail */}
+                            <div className="hidden md:flex flex-col space-y-3">
+                                {[{ label: 'Identificação', s: 0 }, ...template.fields.map((f, i) => ({ label: f.label, s: i + 1 })), { label: 'Finalização', s: totalSteps }].map((sObj, i) => {
+                                    const isActive = step === sObj.s;
+                                    const isDone = step > sObj.s;
+                                    return (
+                                        <div key={i} className="flex items-center gap-4">
+                                            <div className={`w-2 h-2 rounded-full shrink-0 ${isDone ? 'bg-emerald-400' : isActive ? 'bg-[#FF69B4] scale-150' : 'bg-gray-200'}`} />
+                                            <span className={`text-[10px] font-black uppercase tracking-widest truncate ${isActive ? 'text-gray-900' : 'text-gray-300'}`}>{sObj.label}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Step Indicator on Mobile */}
+                            <div className="md:hidden flex justify-between items-center mt-2">
+                                <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest">
+                                    {step === 0 ? 'Identificação' : step === totalSteps ? 'Finalização' : template.fields[step - 1]?.label.slice(0, 30)}
+                                </p>
+                                <span className="text-[10px] font-bold text-gray-400">{step + 1}/{totalSteps + 1}</span>
+                            </div>
                         </div>
+
+                        {playingRecord.clientId && (
+                            <div className="pt-6 md:pt-12 border-t border-gray-100 hidden md:block">
+                                <p className="text-sm font-bold text-gray-900 truncate">{playingRecord.clientName}</p>
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Cliente Selecionada</p>
+                            </div>
+                        )}
                     </div>
-                    {playingRecord.clientId && (
-                        <div className="pt-12 border-t border-gray-100">
-                            <p className="text-sm font-bold text-gray-900">{playingRecord.clientName}</p>
-                            <p className="text-[10px] text-gray-400 uppercase font-black">Cliente Selecionada</p>
-                        </div>
-                    )}
                 </div>
 
-                <main className="flex-1 bg-white flex flex-col items-center justify-center p-6 md:p-20 relative overflow-y-auto scrollbar-hide">
-                    <AnimatePresence mode="wait">
-                        <motion.div key={step} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-2xl text-center space-y-12">
-                            {isClientStep && (
-                                <div className="space-y-10">
-                                    <h3 className="font-serif text-3xl md:text-5xl text-gray-900 leading-tight">Seja bem-vinda.</h3>
-                                    <div className="relative max-w-md mx-auto">
-                                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
-                                        <input type="text" placeholder="Nome da cliente..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-gray-50 border-none rounded-3xl py-6 pl-16 pr-6 font-bold shadow-inner outline-none focus:ring-4 focus:ring-pink-50 transition-all" />
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto pr-4 scrollbar-hide">
-                                        {filteredClients.map(c => (
-                                            <button key={c.id} onClick={() => { onUpdateRecord({ ...playingRecord, clientId: c.id, clientName: c.name }); setStep(1); }} className="p-6 rounded-[2rem] border-2 border-transparent bg-gray-50/50 hover:border-[#FF69B4] hover:bg-white hover:shadow-xl transition-all flex items-center justify-between group">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#FF69B4] font-black">{c.name[0]}</div>
-                                                    <div className="text-left"><p className="font-serif text-lg text-gray-900 leading-none">{c.name}</p></div>
-                                                </div>
-                                                <ChevronRight size={18} className="text-gray-300 group-hover:text-[#FF69B4]" />
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {currentField && (
-                                <div className="space-y-12">
-                                    <h3 className="font-serif text-2xl md:text-4xl lg:text-5xl text-gray-900 leading-tight px-4">{currentField.label}</h3>
-                                    {currentField.type === 'heading' ? (
-                                        <button onClick={() => handleNext()} className="bg-gray-900 text-white px-12 py-6 rounded-full font-black text-xs uppercase tracking-[0.3em] shadow-2xl hover:scale-[1.05] transition-all">Iniciar Seção <ChevronRight className="inline ml-2" size={18} /></button>
-                                    ) : (
-                                        <div className="w-full">
-                                            {currentField.type === 'text' && <input autoFocus value={playingRecord.answers?.[currentField.id] || ''} onChange={e => setAnswer(currentField.id, e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} className="w-full bg-transparent border-b-2 border-gray-100 py-4 md:py-6 text-center text-2xl md:text-4xl font-serif text-[#FF69B4] outline-none focus:border-[#FF69B4] transition-all" placeholder="Escreva aqui..." />}
-                                            {currentField.type === 'textarea' && <textarea autoFocus value={playingRecord.answers?.[currentField.id] || ''} onChange={e => setAnswer(currentField.id, e.target.value)} className="w-full bg-gray-50 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 text-lg md:text-2xl font-serif text-center outline-none focus:ring-4 focus:ring-pink-50 min-h-[200px] md:min-h-[250px]" placeholder="Sua resposta..." />}
-                                            {currentField.type === 'boolean' && (
-                                                <div className="grid grid-cols-2 gap-4 md:gap-8 max-w-xl mx-auto w-full">
-                                                    <button onClick={() => setAnswerAndNext(currentField.id, true)} className={`p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] border-2 transition-all flex flex-col items-center gap-2 md:gap-4 ${playingRecord.answers?.[currentField.id] === true ? 'bg-gray-900 border-gray-900 text-white' : 'bg-gray-50 border-transparent text-gray-400 hover:border-[#FF69B4]'}`}><Check size={28} className="md:w-10 md:h-10" /><span className="font-serif text-xl md:text-3xl">Sim</span></button>
-                                                    <button onClick={() => setAnswerAndNext(currentField.id, false)} className={`p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] border-2 transition-all flex flex-col items-center gap-2 md:gap-4 ${playingRecord.answers?.[currentField.id] === false ? 'bg-gray-900 border-gray-900 text-white' : 'bg-gray-50 border-transparent text-gray-400 hover:border-[#FF69B4]'}`}><X size={28} className="md:w-10 md:h-10" /><span className="font-serif text-xl md:text-3xl">Não</span></button>
-                                                </div>
-                                            )}
-                                            {currentField.type === 'select' && (
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 w-full">
-                                                    {currentField.options?.map(opt => (
-                                                        <button key={opt} onClick={() => setAnswerAndNext(currentField.id, opt)} className={`p-4 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-2 transition-all font-serif text-lg md:text-2xl ${playingRecord.answers?.[currentField.id] === opt ? 'bg-gray-900 text-white' : 'bg-gray-50 border-transparent text-gray-600 hover:border-[#FF69B4]'}`}>{opt}</button>
-                                                    ))}
-                                                </div>
+                <main className="flex-1 bg-white flex flex-col items-center justify-center p-6 md:p-20 relative overflow-y-auto">
+                    <div className="w-full max-w-2xl flex flex-col items-center justify-center flex-1 py-10 md:py-0">
+                        <AnimatePresence mode="wait">
+                            <motion.div key={step} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full text-center space-y-8 md:space-y-12">
+                                {isClientStep && (
+                                    <div className="space-y-8 md:space-y-10">
+                                        <h3 className="font-serif text-3xl md:text-5xl text-gray-900 leading-tight">Seja bem-vinda.</h3>
+                                        <div className="relative max-w-md mx-auto">
+                                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
+                                            <input type="text" placeholder="Nome da cliente..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-gray-50 border-none rounded-[1.5rem] md:rounded-3xl py-5 md:py-6 pl-16 pr-6 font-bold shadow-inner outline-none focus:ring-4 focus:ring-pink-50 transition-all text-sm md:text-base" />
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-3 max-h-[300px] md:max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                            {filteredClients.map(c => (
+                                                <button key={c.id} onClick={() => { onUpdateRecord({ ...playingRecord, clientId: c.id, clientName: c.name }); setStep(1); }} className="p-4 md:p-6 rounded-2xl md:rounded-[2rem] border-2 border-transparent bg-gray-50/50 hover:border-[#FF69B4] hover:bg-white hover:shadow-xl transition-all flex items-center justify-between group">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#FF69B4] font-black shrink-0">{c.name[0]}</div>
+                                                        <div className="text-left min-w-0"><p className="font-serif text-base md:text-lg text-gray-900 leading-none truncate">{c.name}</p></div>
+                                                    </div>
+                                                    <ChevronRight size={18} className="text-gray-300 group-hover:text-[#FF69B4] shrink-0" />
+                                                </button>
+                                            ))}
+                                            {filteredClients.length === 0 && (
+                                                <p className="text-gray-400 font-medium py-10">Nenhuma cliente encontrada.</p>
                                             )}
                                         </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {isSignatureStep && (
-                                <div className="space-y-12">
-                                    <h3 className="font-serif text-3xl md:text-5xl text-gray-900">Validar Prontuário</h3>
-                                    <div className="bg-gray-50 rounded-[4rem] p-10 border-2 border-dashed border-gray-200 relative overflow-hidden group">
-                                        <SignatureCanvas ref={sigCanvas} penColor='#111827' canvasProps={{ className: 'w-full h-60 md:h-80' }} />
-                                        <button onClick={() => sigCanvas.current?.clear()} className="absolute bottom-6 md:bottom-10 left-8 md:left-12 text-[10px] font-black uppercase text-gray-400 hover:text-rose-500 transition-colors">Limpar Assinatura</button>
                                     </div>
-                                </div>
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
+                                )}
 
-                    <div className="mt-auto w-full flex items-center justify-between max-w-4xl py-10">
-                        {!isClientStep && <button onClick={onPrevStep} className="flex items-center gap-2 text-gray-300 font-black uppercase text-[10px] hover:text-gray-900 transition-all"><ChevronLeft size={20} /> Voltar</button>}
+                                {currentField && (
+                                    <div className="space-y-8 md:space-y-12 px-2">
+                                        <h3 className="font-serif text-xl md:text-4xl lg:text-5xl text-gray-900 leading-tight">{currentField.label}</h3>
+                                        {currentField.type === 'heading' ? (
+                                            <div className="space-y-4">
+                                                <button onClick={() => handleNext()} className="bg-gray-900 text-white px-10 md:px-12 py-5 md:py-6 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] shadow-2xl hover:scale-[1.05] transition-all">Iniciar Seção <ChevronRight className="inline ml-2" size={18} /></button>
+                                            </div>
+                                        ) : (
+                                            <div className="w-full">
+                                                {currentField.type === 'text' && <input autoFocus value={playingRecord.answers?.[currentField.id] || ''} onChange={e => setAnswer(currentField.id, e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} className="w-full bg-transparent border-b-2 border-gray-100 py-4 md:py-6 text-center text-xl md:text-4xl font-serif text-[#FF69B4] outline-none focus:border-[#FF69B4] transition-all" placeholder="Escreva aqui..." />}
+                                                {currentField.type === 'textarea' && <textarea autoFocus value={playingRecord.answers?.[currentField.id] || ''} onChange={e => setAnswer(currentField.id, e.target.value)} className="w-full bg-gray-50 rounded-2xl md:rounded-[3rem] p-6 md:p-12 text-base md:text-2xl font-serif text-center outline-none focus:ring-4 focus:ring-pink-50 min-h-[150px] md:min-h-[250px]" placeholder="Sua resposta..." />}
+                                                {currentField.type === 'boolean' && (
+                                                    <div className="grid grid-cols-2 gap-4 md:gap-8 max-w-xl mx-auto w-full">
+                                                        <button onClick={() => setAnswerAndNext(currentField.id, true)} className={`p-6 md:p-12 rounded-2xl md:rounded-[3rem] border-2 transition-all flex flex-col items-center gap-3 md:gap-4 ${playingRecord.answers?.[currentField.id] === true ? 'bg-gray-900 border-gray-900 text-white shadow-xl' : 'bg-gray-50 border-transparent text-gray-400 hover:border-[#FF69B4]'}`}><Check size={24} className="md:w-10 md:h-10" /><span className="font-serif text-lg md:text-3xl">Sim</span></button>
+                                                        <button onClick={() => setAnswerAndNext(currentField.id, false)} className={`p-6 md:p-12 rounded-2xl md:rounded-[3rem] border-2 transition-all flex flex-col items-center gap-3 md:gap-4 ${playingRecord.answers?.[currentField.id] === false ? 'bg-gray-900 border-gray-900 text-white shadow-xl' : 'bg-gray-50 border-transparent text-gray-400 hover:border-[#FF69B4]'}`}><X size={24} className="md:w-10 md:h-10" /><span className="font-serif text-lg md:text-3xl">Não</span></button>
+                                                    </div>
+                                                )}
+                                                {currentField.type === 'select' && (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 w-full max-w-xl mx-auto">
+                                                        {currentField.options?.map(opt => (
+                                                            <button key={opt} onClick={() => setAnswerAndNext(currentField.id, opt)} className={`p-4 md:p-8 rounded-xl md:rounded-[2rem] border-2 transition-all font-serif text-base md:text-2xl ${playingRecord.answers?.[currentField.id] === opt ? 'bg-gray-900 text-white shadow-lg' : 'bg-gray-50 border-transparent text-gray-600 hover:border-[#FF69B4]'}`}>{opt}</button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {isSignatureStep && (
+                                    <div className="space-y-8 md:space-y-12 px-2">
+                                        <div className="space-y-2">
+                                            <h3 className="font-serif text-2xl md:text-5xl text-gray-900">Validar Prontuário</h3>
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Sua assinatura garante segurança e procedência.</p>
+                                        </div>
+                                        <div className="bg-gray-50 rounded-2xl md:rounded-[4rem] p-4 md:p-10 border-2 border-dashed border-gray-200 relative overflow-hidden group shadow-inner">
+                                            <SignatureCanvas ref={sigCanvas} penColor='#111827' canvasProps={{ className: 'w-full h-48 md:h-80 cursor-crosshair' }} />
+                                            <button onClick={() => sigCanvas.current?.clear()} className="absolute bottom-4 left-6 md:bottom-10 md:left-12 text-[9px] font-black uppercase text-gray-400 hover:text-rose-500 transition-colors bg-white/80 py-1 px-3 rounded-lg">Limpar</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
+
+                    <div className="w-full flex items-center justify-between max-w-4xl py-6 md:py-10 mt-auto bg-white border-t border-gray-50 sm:border-none">
+                        {!isClientStep && <button onClick={onPrevStep} className="flex items-center gap-2 text-gray-300 font-black uppercase text-[9px] md:text-[10px] hover:text-gray-900 transition-all"><ChevronLeft size={16} /> Voltar</button>}
                         <div className="flex-1" />
-                        {!isSignatureStep && !isClientStep && <button onClick={() => handleNext()} className="bg-gray-900 text-white px-8 md:px-12 py-4 md:py-6 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest hover:scale-[1.05] transition-all">Próximo <ChevronRight className="inline ml-2" size={18} /></button>}
-                        {isSignatureStep && <button onClick={() => { if (!sigCanvas.current?.isEmpty()) setShowAftercare(true); else onShowToast('Assinatura obrigatória!', 'error'); }} className="bg-indigo-600 text-white px-10 md:px-14 py-5 md:py-7 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-[1.05] transition-all">Finalizar e Validar <CheckCircle2 className="inline ml-2" size={24} /></button>}
+                        {!isSignatureStep && !isClientStep && <button onClick={() => handleNext()} className="bg-gray-900 text-white px-6 md:px-12 py-3.5 md:py-6 rounded-full font-black text-[9px] md:text-xs uppercase tracking-widest hover:scale-[1.05] transition-all">Próximo <ChevronRight className="inline ml-1" size={14} /></button>}
+                        {isSignatureStep && <button onClick={() => { if (!sigCanvas.current?.isEmpty()) setShowAftercare(true); else onShowToast('Assinatura obrigatória!', 'error'); }} className="bg-indigo-600 text-white px-8 md:px-14 py-4 md:py-7 rounded-full font-black text-[10px] md:text-sm uppercase tracking-[0.1em] md:tracking-[0.2em] shadow-2xl hover:scale-[1.05] transition-all">Finalizar <CheckCircle2 className="inline ml-2" size={20} /></button>}
                     </div>
                 </main>
             </div>

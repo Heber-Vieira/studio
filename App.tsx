@@ -1027,18 +1027,18 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         <main ref={mainContentRef} className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-300 ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'bg-white p-0' : 'p-4 md:p-6 lg:p-8'} `}>
           {!isPortalMode && user && (
             <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 lg:mb-12 fade-in gap-6 border-b border-gray-100 pb-6 shrink-0 px-4 lg:px-0">
-              <div className="w-full lg:w-auto flex justify-between items-center sm:pl-14 lg:pl-0 min-w-0">
-                <div className="flex items-center gap-5 min-w-0">
-                  <div className="lg:hidden w-12 h-12 bg-white rounded-2xl shadow-lg border border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
-                    {settings.logo ? <img src={settings.logo} className="w-full h-full object-contain p-1.5" /> : <Sparkles className="text-[#FF69B4]" />}
+              <div className="w-full lg:w-auto flex justify-between items-center pl-14 md:pl-0 min-w-0">
+                <div className="flex items-center gap-4 md:gap-5 min-w-0">
+                  <div className="lg:hidden w-11 h-11 bg-white rounded-2xl shadow-lg border border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                    {settings.logo ? <img src={settings.logo} className="w-full h-full object-contain p-1.5" /> : <Sparkles className="text-[#FF69B4]" size={18} />}
                   </div>
                   <div className="min-w-0">
-                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 leading-none tracking-tight truncate shrink-0">
+                    <h1 className="text-xl md:text-2xl lg:text-4xl font-black text-gray-900 leading-none tracking-tight truncate">
                       {settings.name}
                     </h1>
-                    <div className="flex items-center gap-2 mt-1.5 overflow-hidden">
-                      <span className="text-[9px] sm:text-[10px] font-black text-[#FF69B4] uppercase tracking-widest bg-pink-50 px-2 py-0.5 rounded-full shrink-0">Pro Studio</span>
-                      <span className="text-xs font-medium text-gray-400 truncate">{settings.address}</span>
+                    <div className="flex items-center gap-2 mt-1 overflow-hidden">
+                      <span className="text-[9px] font-black text-[#FF69B4] uppercase tracking-widest bg-pink-50 px-2 py-0.5 rounded-full shrink-0">Pro Studio</span>
+                      <span className="hidden sm:inline text-xs font-medium text-gray-400 truncate">{settings.address}</span>
                     </div>
                   </div>
                 </div>

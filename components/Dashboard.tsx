@@ -626,19 +626,21 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
 const StatCard: React.FC<{ title: string; value: string; change: string; bgColor: string; icon: React.ReactNode; onClick: () => void }> = ({ title, value, change, bgColor, icon, onClick }) => (
    <div
       onClick={onClick}
-      className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group"
+      className="bg-white p-5 md:p-6 rounded-[2rem] md:rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group"
    >
-      <div className="flex items-center gap-3 mb-4">
-         <div className={`p-3 rounded-xl shadow-sm transition-transform group-hover:scale-110 ${bgColor}`}>
+      <div className="flex items-center gap-3 mb-3 md:mb-4">
+         <div className={`p-2.5 md:p-3 rounded-xl shadow-sm transition-transform group-hover:scale-110 ${bgColor}`}>
             {icon}
          </div>
-         <span className="text-xs font-black text-gray-400 uppercase tracking-widest leading-none">{title}</span>
+         <span className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest leading-none truncate">{title}</span>
       </div>
-      <div className="flex items-end justify-between">
-         <h2 className="text-3xl font-black text-gray-900 tracking-tight">{value}</h2>
-         <span className={`text-sm font-black ${change.startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}`}>
-            {change}
-         </span>
+      <div className="flex items-end justify-between gap-2">
+         <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight truncate">{value}</h2>
+         {change && (
+            <span className={`text-xs md:text-sm font-black whitespace-nowrap ${change.startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}`}>
+               {change}
+            </span>
+         )}
       </div>
    </div>
 );
