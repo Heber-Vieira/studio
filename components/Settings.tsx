@@ -931,7 +931,7 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
       {/* --- MOVED MODAL OUTSIDE OF BACKDROP CONTAINER --- */}
       {isUserModalOpen && editingUser && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in">
-          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative animate-in zoom-in duration-300">
+          <div className="bg-white w-full max-w-xl rounded-[3rem] p-10 shadow-2xl relative animate-in zoom-in duration-300">
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-2xl font-black text-gray-900 tracking-tight">Editar Usuário</h3>
               <button onClick={() => setIsUserModalOpen(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><X size={20} /></button>

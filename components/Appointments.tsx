@@ -29,7 +29,8 @@ import {
   Save,
   Send,
   UserSearch,
-  Users
+  Users,
+  Phone
 } from 'lucide-react';
 import { COLORS } from '../constants';
 import { translations } from '../i18n';
@@ -51,11 +52,12 @@ interface AppointmentsProps {
   blockedPeriods?: BlockedPeriod[];
   onShowToast: (msg: string, type?: 'success' | 'error') => void;
   onShowConfirm: (options: ConfirmDialogOptions) => void;
+  onShowAlert: (title: string, message: string) => void;
 }
 
 type ViewMode = 'day' | 'week' | 'month';
 
-const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, staff, services, onAdd, onDelete, onBlock, lang = 'pt', initialDate, blockedPeriods = [], onShowToast, onShowConfirm }) => {
+const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, staff, services, onAdd, onDelete, onBlock, lang = 'pt', initialDate, blockedPeriods = [], onShowToast, onShowConfirm, onShowAlert }) => {
   const t = translations[lang as keyof typeof translations];
   const [viewMode, setViewMode] = useState<ViewMode>('day');
 
@@ -87,23 +89,25 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
   const [waitingListEntryId, setWaitingListEntryId] = useState<string | null>(null);
   const [isJoiningQueue, setIsJoiningQueue] = useState(false);
 
+  const [waitlistPhone, setWaitlistPhone] = useState('');
+
   const handleJoinWaitingList = async (clientName: string, serviceId: string, proId: string, date: string) => {
     // Busca informações completas para a fila
     const service = services.find(s => s.id === serviceId);
     const pro = staff.find(p => p.id === proId);
 
     // Tenta encontrar o cliente real ou cria objeto temporário
-    let clientInfo = { name: clientName, phone: '', id: newApt.clientId || 'external' };
+    let clientInfo = { name: clientName, phone: waitlistPhone, id: newApt.clientId || 'external' };
 
     // Se selecionou cliente da lista, pega o telefone
     if (newApt.clientId) {
       const existingClient = clients.find(c => c.id === newApt.clientId);
-      if (existingClient) clientInfo = { ...clientInfo, phone: existingClient.phone };
+      if (existingClient) clientInfo = { ...clientInfo, phone: existingClient.phone || waitlistPhone };
     }
 
     // Validar se temos o telefone (essencial para notificação)
-    if (!clientInfo.phone) {
-      onShowToast("Para entrar na fila, o cliente precisa ter um telefone cadastrado.", "error");
+    if (!clientInfo.phone || clientInfo.phone.replace(/\D/g, '').length < 10) {
+      onShowToast("Por favor, informe um telefone válido para entrar na fila.", "error");
       return;
     }
 
@@ -181,20 +185,26 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
   };
 
   const parseDuration = (dur: string) => {
+    if (!dur) return 60;
     let total = 0;
-    // Normalize separator
-    const normalized = dur.replace(';', ':');
+    const normalized = dur.replace(/;/g, ':').replace(/\s/g, '');
+
+    // CASO 1: Formato HH:MM (ex: 1:30h ou 2:15min)
+    if (normalized.includes(':')) {
+      const parts = normalized.split(':');
+      const h = parseInt(parts[0]);
+      const rest = parts[1];
+      const m = parseInt(rest);
+      if (!isNaN(h)) total += h * 60;
+      if (!isNaN(m)) total += m;
+      return total || 60;
+    }
+
+    // CASO 2: Formato tradicional Xh Ymin
     const hours = normalized.match(/(\d+)h/);
     const mins = normalized.match(/(\d+)min/);
     if (hours) total += parseInt(hours[1]) * 60;
     if (mins) total += parseInt(mins[1]);
-
-    // Fallback for simple HH:MM format without h/min labels
-    if (!hours && !mins && normalized.includes(':')) {
-      const [h, m] = normalized.split(':').map(Number);
-      if (!isNaN(h)) total += h * 60;
-      if (!isNaN(m)) total += m;
-    }
 
     return total || 60;
   };
@@ -241,7 +251,8 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       const slotEnd = slotStart + duration;
 
       // Rule 1: Must be in the future if today
-      if (isToday && slotStart <= currentMinutes + 15) return false;
+      // Reduzi para +5 minutos para ser menos restritivo e permitir agendamentos quase imediatos
+      if (isToday && slotStart <= currentMinutes + 5) return false;
 
       // Rule 2: Must fit in work hours
       if (slotEnd > workEnd) return false;
@@ -348,6 +359,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
         date: TODAY,
         time: ''
       });
+      setWaitlistPhone('');
     }
   }, [isModalOpen, TODAY]);
 
@@ -435,10 +447,34 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
 
   const handleAddAppointment = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!newApt.clientId && !formClientSearch) {
+      onShowAlert("Cliente não informado", "Por favor, busque e selecione um cliente para o agendamento.");
+      return;
+    }
+
+    if (!newApt.serviceId) {
+      onShowAlert("Serviço ausente", "Você precisa selecionar um serviço para prosseguir.");
+      return;
+    }
+
+    if (!newApt.professionalId) {
+      onShowAlert("Especialista ausente", "Escolha qual profissional realizará o serviço.");
+      return;
+    }
+
+    if (!newApt.time) {
+      onShowAlert("Horário não selecionado", "Selecione um dos horários disponíveis na lista.");
+      return;
+    }
+
     const client = clients.find(c => c.id === newApt.clientId);
     const service = services.find(s => s.id === newApt.serviceId);
 
-    if (!client || !service || !newApt.date || !newApt.time || !newApt.professionalId) return;
+    if (!client || !service) {
+      onShowAlert("Erro de Dados", "Ocorreu uma inconsistência ao recuperar os dados do cliente ou serviço.");
+      return;
+    }
 
     onAdd({
       id: Math.random().toString(36).substr(2, 9),
@@ -764,7 +800,8 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                       return (
                         <div key={dateStr} className="min-w-[150px] flex-1 relative border-r border-gray-50 last:border-0">
                           {dayAppts.map(apt => {
-                            const svc = services.find(s => s.name === apt.service);
+                            const svc = services.find(s => s.id === apt.serviceId) || services.find(s => s.name === apt.service);
+                            const serviceName = (svc?.name || apt.service || 'Serviço').trim() || 'Serviço';
                             const pro = staff.find(p => p.id === apt.professionalId);
                             const color = svc?.color || COLORS.pink;
                             const style = getPositionStyle(apt.time, svc?.duration || '1h');
@@ -774,7 +811,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                                 className="absolute left-1 right-1 rounded-xl p-2 shadow-sm border-l-4 cursor-pointer hover:scale-[1.02] transition-all z-20 overflow-hidden flex flex-col justify-center"
                                 style={{ ...style, backgroundColor: `${color}10`, borderLeftColor: color }}>
                                 <span className="text-[10px] font-black uppercase tracking-tight mb-1" style={{ color }}>{apt.time}</span>
-                                <h5 className="font-bold text-[11px] text-gray-900 leading-none truncate">{apt.service}</h5>
+                                <h5 className="font-bold text-[11px] text-gray-900 leading-none truncate">{serviceName}</h5>
                                 <div className="flex items-center gap-1.5 mt-1">
                                   <p className="text-[10px] text-gray-400 truncate flex-1 min-w-0 font-medium">{apt.clientName}</p>
                                   {pro && (
@@ -798,7 +835,8 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                       return (
                         <div key={pro.id} className="min-w-[200px] flex-1 relative border-r border-gray-50 last:border-0">
                           {proAppts.map(apt => {
-                            const svc = services.find(s => s.name === apt.service);
+                            const svc = services.find(s => s.id === apt.serviceId) || services.find(s => s.name === apt.service);
+                            const serviceName = (svc?.name || apt.service || 'Serviço').trim() || 'Serviço';
                             const color = svc?.color || COLORS.pink;
                             const style = getPositionStyle(apt.time, svc?.duration || '1h');
                             if (parseFloat(style.top) < 0 || parseFloat(style.top) > schedulerHeight) return null;
@@ -810,7 +848,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                                   <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5" style={{ color }}><Clock size={14} /> {apt.time}</span>
                                   <div className="w-5 h-5 bg-white/60 rounded-full flex items-center justify-center"><CheckCircle2 size={14} className="text-emerald-500" /></div>
                                 </div>
-                                <h5 className="font-bold text-sm text-gray-900 leading-tight truncate">{apt.service}</h5>
+                                <h5 className="font-bold text-sm text-gray-900 leading-tight truncate">{serviceName}</h5>
                                 <div className="flex items-center justify-between gap-2 mt-1.5">
                                   <p className="text-xs text-gray-400 font-medium truncate">{apt.clientName}</p>
                                   {pro && (
@@ -856,7 +894,7 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                             <div className="flex flex-col min-w-0">
                               <div className="flex items-center gap-1">
                                 <div className="w-1.5 h-1.5 rounded-full bg-[#40E0D0]"></div>
-                                <span className="truncate">{a.time} {a.clientName.split(' ')[0]}</span>
+                                <span className="truncate">{a.time} {a.clientName.split(' ')[0]} - {services.find(s => s.id === a.serviceId)?.name || a.service}</span>
                               </div>
                               {staff.find(p => p.id === a.professionalId) && (
                                 <span className="text-[7px] text-[#FF69B4] font-black uppercase tracking-tighter ml-2.5 truncate">
@@ -1043,27 +1081,53 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
                   <div className="bg-gray-50 border-2 border-dashed border-gray-100 rounded-3xl p-6 text-center">
                     <p className="text-xs font-bold text-gray-300">Selecione o especialista e serviço para ver horários.</p>
                   </div>
-                ) : availableTimesForForm.length === 0 ? (
-                  <div className="bg-rose-50 border-2 border-dashed border-rose-100 rounded-3xl p-6 text-center space-y-3">
-                    <p className="text-xs font-bold text-rose-300">Sem horários para esta data.</p>
+                ) : availableTimesForForm.length === 0 ? (() => {
+                  const pro = staff.find(p => p.id === newApt.professionalId);
+                  const dateObj = new Date(newApt.date + 'T12:00:00');
+                  const daySchedule = pro?.schedule?.[dateObj.getDay()];
+                  const isOff = !daySchedule || daySchedule.isOff;
+                  const needsPhone = !newApt.clientId || !clients.find(c => c.id === newApt.clientId)?.phone;
 
-                    {!waitingListEntryId ? (
-                      <button
-                        type="button"
-                        onClick={() => handleJoinWaitingList(formClientSearch, newApt.serviceId, newApt.professionalId, newApt.date)}
-                        disabled={isJoiningQueue || !formClientSearch}
-                        className="w-full py-3 bg-white border border-rose-200 text-rose-500 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center justify-center gap-2"
-                      >
-                        {isJoiningQueue ? <span className="animate-spin">⏳</span> : <Sparkles size={14} />}
-                        Entrar na Fila de Espera
-                      </button>
-                    ) : (
-                      <div className="text-[10px] font-black uppercase text-emerald-500 bg-emerald-100/50 py-2 rounded-lg">
-                        Nome adicionado à fila!
-                      </div>
-                    )}
-                  </div>
-                ) : (
+                  return (
+                    <div className={`${isOff ? 'bg-gray-50 border-gray-100' : 'bg-rose-50 border-rose-100'} border-2 border-dashed rounded-3xl p-6 text-center space-y-4`}>
+                      <p className={`text-xs font-bold ${isOff ? 'text-gray-400' : 'text-rose-300'}`}>
+                        {isOff ? 'Esta profissional não atende nesta data (Dia de Folga).' : 'Sem horários para esta data.'}
+                      </p>
+
+                      {!isOff && !waitingListEntryId && (
+                        <div className="space-y-3 animate-in fade-in zoom-in duration-300">
+                          {needsPhone && (
+                            <div className="relative group max-w-xs mx-auto">
+                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-rose-300 group-focus-within:text-rose-500" size={14} />
+                              <input
+                                type="tel"
+                                placeholder="Seu WhatsApp para aviso..."
+                                className="w-full bg-white border border-rose-100 rounded-xl py-2.5 pl-9 pr-3 outline-none focus:ring-2 focus:ring-rose-500/20 text-xs font-bold text-rose-600 placeholder:text-rose-200 transition-all shadow-sm"
+                                value={waitlistPhone}
+                                onChange={e => setWaitlistPhone(maskPhone(e.target.value))}
+                              />
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleJoinWaitingList(formClientSearch || "Cliente Especial", newApt.serviceId, newApt.professionalId, newApt.date)}
+                            disabled={isJoiningQueue || (needsPhone && waitlistPhone.length < 10) || (!formClientSearch && !newApt.clientId)}
+                            className="w-full py-3 bg-white border border-rose-200 text-rose-500 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                          >
+                            {isJoiningQueue ? <span className="animate-spin">⏳</span> : <Sparkles size={14} />}
+                            Entrar na Fila de Espera
+                          </button>
+                        </div>
+                      )}
+
+                      {!isOff && waitingListEntryId && (
+                        <div className="text-[10px] font-black uppercase text-emerald-500 bg-emerald-100/50 py-3 rounded-xl border border-emerald-100 animate-in zoom-in">
+                          ✨ Nome adicionado à fila!
+                        </div>
+                      )}
+                    </div>
+                  );
+                })() : (
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-48 overflow-y-auto pr-2 scrollbar-hide">
                     {availableTimesForForm.map(time => (
                       <button
@@ -1103,7 +1167,9 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
             </div>
             <div className="space-y-4">
               <div className="bg-gray-50 p-6 rounded-[2rem]">
-                <p className="text-[10px] font-black text-[#FF69B4] uppercase tracking-widest mb-1">{selectedAppointment.service}</p>
+                <p className="text-[10px] font-black text-[#FF69B4] uppercase tracking-widest mb-1">
+                  {services.find(s => s.id === selectedAppointment.serviceId)?.name || selectedAppointment.service}
+                </p>
                 <h4 className="text-2xl font-black text-gray-900">{selectedAppointment.clientName}</h4>
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 text-sm font-bold text-gray-500">
                   <div className="flex items-center gap-1"><CalendarIcon size={14} /> {new Date(selectedAppointment.date + 'T12:00:00').toLocaleDateString()}</div>

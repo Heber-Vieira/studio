@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid } from 'recharts';
 import { TrendingUp, Users, Calendar, Sparkles, ChevronDown, Clock, ArrowRight, Star, Gift, Scissors, LogOut, X, CheckCircle2, User } from 'lucide-react';
 import { COLORS } from '../constants';
-import { View, Appointment, UserRole, UserProfile, SalonSettings, Client, Professional, Transaction, ConfirmDialogOptions } from '../types';
+import { View, Appointment, UserRole, UserProfile, SalonSettings, Client, Professional, Service, Transaction, ConfirmDialogOptions } from '../types';
 
 interface DashboardProps {
    t: any;
@@ -17,11 +17,12 @@ interface DashboardProps {
    transactions?: Transaction[];
    onLogout: () => void;
    onShowConfirm: (options: ConfirmDialogOptions) => void;
+   services?: Service[];
 }
 
 type RangeType = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 
-const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appointments, userRole, user, settings, clients = [], staff = [], transactions = [], onLogout, onShowConfirm }) => {
+const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appointments, userRole, user, settings, clients = [], staff = [], services = [], transactions = [], onLogout, onShowConfirm }) => {
    const [timeRange, setTimeRange] = useState<RangeType>('weekly');
    const [scheduleTab, setScheduleTab] = useState<'today' | 'tomorrow'>('today');
    const [isMyAppointmentsOpen, setIsMyAppointmentsOpen] = useState(false);
@@ -284,7 +285,9 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                                  <div className="flex items-center gap-3">
                                     <div className="p-2 bg-teal-50 rounded-xl text-[#40E0D0]"><Scissors size={18} /></div>
                                     <div>
-                                       <p className="font-bold text-gray-900 text-sm">{apt.service}</p>
+                                       <p className="font-bold text-gray-900 text-sm">
+                                          {(services.find(s => s.id === apt.serviceId)?.name || apt.service || 'Serviço').trim() || 'Serviço'}
+                                       </p>
                                        <div className="flex items-center gap-2">
                                           <p className="text-[10px] text-gray-400 font-medium uppercase">{new Date(apt.date + 'T12:00:00').toLocaleDateString('pt-BR')} às {apt.time}</p>
                                           {staff.find(p => p.id === apt.professionalId) && (
@@ -370,7 +373,9 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                                                    {apt.status === 'confirmed' ? 'Confirmado' : 'Aguardando'}
                                                 </span>
                                              </div>
-                                             <h4 className="font-black text-gray-900 text-xl tracking-tight">{apt.service}</h4>
+                                             <h4 className="font-black text-gray-900 text-xl tracking-tight">
+                                                {services.find(s => s.id === apt.serviceId)?.name || apt.service || 'Serviço'}
+                                             </h4>
                                              <p className="text-gray-400 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
                                                 <Clock size={14} className="text-gray-300" />
                                                 {new Date(apt.date + 'T12:00:00').toLocaleDateString('pt-BR')} às {apt.time}
@@ -586,7 +591,9 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                            <div className="flex-1 min-w-0">
                               <h4 className="font-bold text-base text-gray-900 truncate group-hover:text-[#FF69B4] transition-colors">{apt.clientName}</h4>
                               <div className="flex items-center gap-2 flex-wrap mt-1">
-                                 <p className="text-sm text-gray-400 font-medium truncate">{apt.service}</p>
+                                 <p className="text-sm text-gray-400 font-medium truncate">
+                                    {(services.find(s => s.id === apt.serviceId)?.name || apt.service || 'Serviço').trim() || 'Serviço'}
+                                 </p>
                                  {professional && (
                                     <div className="flex items-center gap-1.5 px-2.5 py-1 bg-pink-50 rounded-full border border-pink-100/50">
                                        <User size={12} className="text-[#FF69B4]" />

@@ -22,9 +22,10 @@ interface ClientBookingProps {
   onAddAnamnesisRecord: (record: AnamnesisRecord) => void;
   onShowToast: (msg: string, type?: 'success' | 'error') => void;
   onShowConfirm: (options: ConfirmDialogOptions) => void;
+  onShowAlert: (title: string, message: string) => void;
 }
 
-const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff, appointments, blockedPeriods, onBook, onClose, initialClientData, templates, onAddAnamnesisRecord, onShowToast, onShowConfirm }) => {
+const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff, appointments, blockedPeriods, onBook, onClose, initialClientData, templates, onAddAnamnesisRecord, onShowToast, onShowConfirm, onShowAlert }) => {
   const { logout, user } = useAuth();
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -121,9 +122,21 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
     };
 
     const parseDuration = (dur: string) => {
+      if (!dur) return 30;
       let total = 0;
-      const hours = dur.match(/(\d+)h/);
-      const mins = dur.match(/(\d+)min/);
+      const normalized = dur.replace(/;/g, ':').replace(/\s/g, '');
+
+      if (normalized.includes(':')) {
+        const parts = normalized.split(':');
+        const h = parseInt(parts[0]);
+        const m = parseInt(parts[1]);
+        if (!isNaN(h)) total += h * 60;
+        if (!isNaN(m)) total += m;
+        return total || 30;
+      }
+
+      const hours = normalized.match(/(\d+)h/);
+      const mins = normalized.match(/(\d+)min/);
       if (hours) total += parseInt(hours[1]) * 60;
       if (mins) total += parseInt(mins[1]);
       return total || 30;
@@ -199,7 +212,31 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
   }, [selectedPro, selectedDate, selectedService, appointments, blockedPeriods, services]);
 
   const handleFinish = () => {
-    if (!selectedService || !selectedPro || !selectedTime || !isNameValid || !isPhoneValid) return;
+    if (!selectedService) {
+      onShowAlert("Serviço ausente", "Por favor, selecione um serviço.");
+      setStep(1);
+      return;
+    }
+    if (!selectedPro) {
+      onShowAlert("Especialista ausente", "Por favor, selecione um profissional.");
+      setStep(2);
+      return;
+    }
+    if (!selectedTime) {
+      onShowAlert("Horário ausente", "Por favor, selecione um horário para o seu agendamento.");
+      setStep(3);
+      return;
+    }
+    if (!isNameValid) {
+      onShowAlert("Nome inválido", "Por favor, informe seu nome completo (nome e sobrenome).");
+      setStep(4);
+      return;
+    }
+    if (!isPhoneValid) {
+      onShowAlert("Telefone inválido", "Por favor, informe seu WhatsApp com DDD.");
+      setStep(4);
+      return;
+    }
 
     // Check if anamnesis is required
     const serviceHasTemplate = selectedService.anamnesisTemplateId && templates.find(t => t.id === selectedService.anamnesisTemplateId);
@@ -337,7 +374,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                             {svc.name}
                           </h4>
                           <div className="flex items-center gap-1.5 text-gray-400 font-bold text-[9px] uppercase tracking-widest mt-1">
-                            <Clock size={10} className="text-pink-300" /> {svc.duration.replace(';', ':')}
+                            <Clock size={10} className="text-pink-300" /> {svc.duration.replace(/;/g, ':')}
                           </div>
                         </div>
                       </div>
@@ -430,12 +467,12 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
                           <div className="p-4 bg-gray-50 rounded-full text-gray-300"><Calendar size={32} strokeWidth={1} /></div>
                           <p className="font-bold text-gray-400 text-sm max-w-xs mx-auto">
                             {selectedPro && selectedPro.schedule?.[new Date(selectedDate + 'T12:00:00').getDay()]?.isOff
-                              ? 'Dia de descanso do especialista.'
+                              ? 'O especialista está em seu dia de folga nesta data.'
                               : 'Sem horários disponíveis para esta data.'}
                           </p>
 
-                          {/* Waiting List CTA */}
-                          {!waitingListEntryId && (
+                          {/* Waiting List CTA - Only shown if it's NOT a day off */}
+                          {selectedPro && !selectedPro.schedule?.[new Date(selectedDate + 'T12:00:00').getDay()]?.isOff && !waitingListEntryId && (
                             <button
                               onClick={handleWaitlistClickStep3}
                               disabled={isJoiningQueue}

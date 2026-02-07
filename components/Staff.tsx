@@ -396,7 +396,7 @@ const StaffView: React.FC<StaffProps> = ({
       {/* Modal: Configuração de Jornada (Schedule) - Ajustado para rolagem em celulares */}
       {isScheduleModalOpen && selectedPro && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 overflow-y-auto max-h-[95vh] scrollbar-hide">
+          <div className="bg-white w-full max-w-4xl rounded-[2.5rem] md:rounded-[3rem] p-6 md:p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300 border border-white/20 overflow-y-auto max-h-[95vh] scrollbar-hide">
             <div className="flex justify-between items-center sticky top-0 bg-white pb-2 z-10">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-[#FF69B4] rounded-[1.2rem] flex items-center justify-center text-white shadow-lg">
@@ -619,7 +619,7 @@ const StaffView: React.FC<StaffProps> = ({
       {/* Modal: Editar Profissional */}
       {isEditModalOpen && selectedPro && isAdmin && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-300 overflow-y-auto max-h-[90vh] scrollbar-hide">
+          <div className="bg-white w-full max-w-3xl rounded-[2.5rem] p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-300 overflow-y-auto max-h-[90vh] scrollbar-hide">
             <div className="flex justify-between items-center">
               <h3 className="text-2xl font-black">Editar Perfil ⚙️</h3>
               <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={20} /></button>
@@ -834,7 +834,7 @@ const StaffView: React.FC<StaffProps> = ({
       {/* Modal: Performance (Admin Only) */}
       {isReportOpen && selectedPro && isAdmin && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg rounded-[3.5rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 relative overflow-hidden">
+          <div className="bg-white w-full max-w-xl rounded-[3.5rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-[#40E0D0]/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
 
             <div className="flex justify-between items-center relative z-10">

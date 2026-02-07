@@ -266,7 +266,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
                   <div className="text-right">
                     <span className="block text-xl font-black text-gray-900">R$ {svc.price}</span>
                     <div className="flex items-center gap-1 text-xs text-gray-400 font-medium justify-end">
-                      <Clock size={12} /> {svc.duration.replace(';', ':')}
+                      <Clock size={12} /> {svc.duration.replace(/;/g, ':')}
                     </div>
                   </div>
                 </div>
@@ -308,8 +308,9 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
         title={isEditModalOpen ? 'Editar Serviço ⚙️' : 'Novo Serviço 💎'}
         icon={isEditModalOpen ? <Edit3 size={24} /> : <BookOpen size={24} />}
         iconBgColor={isEditModalOpen ? 'bg-[#40E0D0]' : 'bg-[#FF69B4]'}
+        maxWidth="xl"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
               <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Nome do Serviço</label>
@@ -357,7 +358,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
           </div>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <CurrencyInput
                 label="Preço"
                 value={isEditModalOpen ? (selectedService?.price || 0) : newSvc.price}
@@ -374,10 +375,10 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
                     setTimePickerTarget(isEditModalOpen ? 'edit' : 'new');
                     setIsTimePickerOpen(true);
                   }}
-                  className="w-full bg-[#F5F5F5] border-none rounded-2xl py-4 px-6 outline-none text-left font-bold text-gray-800 hover:ring-2 hover:ring-[#FF69B4]/20 transition-all flex items-center justify-between"
+                  className="w-full bg-[#F5F5F5] border-none rounded-2xl py-4 px-4 outline-none text-left font-bold text-gray-800 hover:ring-2 hover:ring-[#FF69B4]/20 transition-all flex items-center justify-between"
                 >
-                  <span className="text-sm">{isEditModalOpen ? selectedService?.duration : newSvc.duration}</span>
-                  <Clock size={16} className="text-gray-300" />
+                  <span className="text-sm">{(isEditModalOpen ? selectedService?.duration : newSvc.duration)?.replace(/;/g, ':')}</span>
+                  <Clock size={16} className="text-gray-300 shrink-0" />
                 </button>
               </div>
             </div>
@@ -413,7 +414,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
           isOpen={isTimePickerOpen}
           onClose={() => setIsTimePickerOpen(false)}
           onConfirm={(h, m) => {
-            const durationStr = `${h > 0 ? `${h}h ` : ''}${m > 0 ? `${m}min` : ''}`.trim() || '30min';
+            const durationStr = h > 0 ? `${h}:${m.toString().padStart(2, '0')}h` : `${m}min`;
             if (timePickerTarget === 'edit' && selectedService) {
               setSelectedService({ ...selectedService, duration: durationStr });
             } else {

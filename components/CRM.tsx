@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { Client, Appointment, SalonSettings, Professional, ConfirmDialogOptions } from '../types';
+import { Client, Appointment, SalonSettings, Professional, Service, ConfirmDialogOptions } from '../types';
 import { User, UserPlus, Search, Phone, History, Star, X, CheckCircle2, Calendar, Sparkles, Trash2, AlertTriangle, Gift, Smartphone, Upload, Edit3, Save, Link2, ExternalLink, Copy, MessageCircle } from 'lucide-react';
 import { Modal, Button, InputField } from './ui';
 import { formatPhone, maskPhone } from '../services/utils';
@@ -19,9 +19,10 @@ interface CRMProps {
   onShowToast: (msg: string) => void;
   onShowConfirm: (options: ConfirmDialogOptions) => void;
   initialSearchTerm?: string;
+  services: Service[];
 }
 
-const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDelete, onRedeem, onPrefilledBooking, appointments, staff, settings, t, onShowToast, onShowConfirm, initialSearchTerm = '' }) => {
+const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDelete, onRedeem, onPrefilledBooking, appointments, staff, settings, t, onShowToast, onShowConfirm, initialSearchTerm = '', services = [] }) => {
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -585,7 +586,7 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
       {/* Modal: Histórico */}
       {viewingHistory && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl space-y-6 fade-in overflow-hidden flex flex-col max-h-[80vh]">
+          <div className="bg-white w-full max-w-xl rounded-[2.5rem] p-8 shadow-2xl space-y-6 fade-in overflow-hidden flex flex-col max-h-[80vh]">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500">
@@ -600,7 +601,9 @@ const CRMView: React.FC<CRMProps> = ({ clients, onAdd, onImport, onUpdate, onDel
               {getClientHistory(viewingHistory.id).length > 0 ? getClientHistory(viewingHistory.id).map(apt => (
                 <div key={apt.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between hover:bg-white transition-colors">
                   <div className="flex-1 min-w-0 pr-4">
-                    <span className="block font-bold text-gray-800 truncate">{apt.service}</span>
+                    <span className="block font-bold text-gray-800 truncate">
+                      {(services.find(s => s.id === apt.serviceId)?.name || apt.service || 'Serviço').trim() || 'Serviço'}
+                    </span>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       <span className="text-[10px] text-gray-400 flex items-center gap-1 uppercase font-black">
                         <Calendar size={10} /> {new Date(apt.date).toLocaleDateString()} • {apt.time}

@@ -5,7 +5,7 @@ import {
    Search, Plus, Package, ShoppingBag, AlertCircle,
    TrendingDown, TrendingUp, Filter, Trash2, Edit3,
    CheckCircle2, AlertTriangle, X, DollarSign, FolderPlus,
-   Tag, Scissors, Sparkles, Wand2, Droplet,
+   Tag, Scissors, Sparkles, Wand2, Droplet, Loader2,
    Brush, SprayCan, Palette, Gem, Crown, Gift, Zap, Box, Heart, Smile
 } from 'lucide-react';
 import { Modal, Button, CurrencyInput } from './ui';
@@ -480,95 +480,95 @@ const InventoryView: React.FC<InventoryViewProps> = ({
          </Modal>
 
          {/* Modal: Add/Edit Item */}
-         {isModalOpen && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-               <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl space-y-6 animate-in zoom-in duration-300">
-                  <div className="flex justify-between items-center">
-                     <h3 className="text-2xl font-bold text-gray-900">{selectedItem ? 'Editar Item' : 'Novo Item'} ✨</h3>
-                     <button onClick={() => setIsModalOpen(false)}><X /></button>
-                  </div>
+         <Modal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            title={selectedItem ? 'Editar Item' : 'Novo Item'}
+            icon={selectedItem ? <Edit3 size={24} /> : <Package size={24} />}
+            maxWidth="xl"
+         >
+            <div className="space-y-4">
+               <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase block mb-2 px-2">Nome do Item</label>
+                  <input type="text" className="w-full bg-[#F5F5F5] border-none rounded-2xl px-5 py-4 outline-none font-bold" placeholder="Nome do item..." value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+               </div>
 
-                  <div className="space-y-4">
-                     <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Nome do Item</label>
-                        <input type="text" className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none font-bold" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-                     </div>
-
-                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                           <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Tipo</label>
-                           <select
-                              className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none font-medium"
-                              value={formData.type}
-                              onChange={e => setFormData({ ...formData, type: e.target.value as any })}
-                           >
-                              <option value="consumable">Uso Interno (Insumo)</option>
-                              <option value="resale">Produto Revenda</option>
-                           </select>
-                        </div>
-                        <div>
-                           <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Categoria</label>
-                           <select
-                              className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none font-medium"
-                              value={formData.category}
-                              onChange={e => setFormData({ ...formData, category: e.target.value })}
-                           >
-                              <option value="">Sem Categoria</option>
-                              {(categories || []).map(cat => (
-                                 <option key={cat.id} value={cat.label}>{cat.label}</option>
-                              ))}
-                           </select>
-                        </div>
-                     </div>
-
-                     <div className="grid grid-cols-3 gap-4">
-                        <div>
-                           <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Estoque Atual</label>
-                           <input type="number" className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none font-bold" value={formData.quantity} onChange={e => setFormData({ ...formData, quantity: Number(e.target.value) })} />
-                        </div>
-                        <div>
-                           <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Unidade</label>
-                           <input type="text" placeholder="un, ml" className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none" value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} />
-                        </div>
-                        <div>
-                           <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Mínimo</label>
-                           <input type="number" className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none" value={formData.minLevel} onChange={e => setFormData({ ...formData, minLevel: Number(e.target.value) })} />
-                        </div>
-                     </div>
-
-                     <div className="grid grid-cols-2 gap-4">
-                        <CurrencyInput
-                           label="Preço Custo"
-                           value={formData.costPrice || 0}
-                           onChange={val => setFormData({ ...formData, costPrice: val })}
-                           placeholder="R$ 0,00"
-                        />
-                        {formData.type === 'resale' && (
-                           <CurrencyInput
-                              label="Preço Venda"
-                              value={formData.salePrice || 0}
-                              onChange={val => setFormData({ ...formData, salePrice: val })}
-                              placeholder="R$ 0,00"
-                           />
-                        )}
-                     </div>
-
-                     <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Fornecedor</label>
-                        <input type="text" className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none" value={formData.supplier} onChange={e => setFormData({ ...formData, supplier: e.target.value })} />
-                     </div>
-
-                     <button
-                        onClick={handleSaveItem}
-                        disabled={isSaving}
-                        className="w-full py-4 bg-[#FF69B4] text-white rounded-2xl font-bold shadow-lg shadow-pink-100 hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-2"
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                     <label className="text-xs font-bold text-gray-400 uppercase block mb-2 px-2">Tipo</label>
+                     <select
+                        className="w-full bg-[#F5F5F5] border-none rounded-2xl px-5 py-4 outline-none font-bold"
+                        value={formData.type}
+                        onChange={e => setFormData({ ...formData, type: e.target.value as any })}
                      >
-                        {isSaving ? <Plus className="animate-spin" size={18} /> : (selectedItem ? 'Salvar Alterações' : 'Salvar Item')}
-                     </button>
+                        <option value="consumable">Uso Interno (Insumo)</option>
+                        <option value="resale">Produto Revenda</option>
+                     </select>
+                  </div>
+                  <div>
+                     <label className="text-xs font-bold text-gray-400 uppercase block mb-2 px-2">Categoria</label>
+                     <select
+                        className="w-full bg-[#F5F5F5] border-none rounded-2xl px-5 py-4 outline-none font-bold"
+                        value={formData.category}
+                        onChange={e => setFormData({ ...formData, category: e.target.value })}
+                     >
+                        <option value="">Sem Categoria</option>
+                        {(categories || []).map(cat => (
+                           <option key={cat.id} value={cat.label}>{cat.label}</option>
+                        ))}
+                     </select>
                   </div>
                </div>
+
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                     <label className="text-xs font-bold text-gray-400 uppercase block mb-2 px-2">Estoque Atual</label>
+                     <input type="number" className="w-full bg-[#F5F5F5] border-none rounded-2xl px-5 py-4 outline-none font-bold" value={formData.quantity} onChange={e => setFormData({ ...formData, quantity: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                     <label className="text-xs font-bold text-gray-400 uppercase block mb-2 px-2">Unidade</label>
+                     <input type="text" placeholder="un, ml" className="w-full bg-[#F5F5F5] border-none rounded-2xl px-5 py-4 outline-none font-bold" value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} />
+                  </div>
+                  <div>
+                     <label className="text-xs font-bold text-gray-400 uppercase block mb-2 px-2">Nível Mínimo</label>
+                     <input type="number" className="w-full bg-[#F5F5F5] border-none rounded-2xl px-5 py-4 outline-none font-bold" value={formData.minLevel} onChange={e => setFormData({ ...formData, minLevel: Number(e.target.value) })} />
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <CurrencyInput
+                     label="Preço Custo"
+                     value={formData.costPrice || 0}
+                     onChange={val => setFormData({ ...formData, costPrice: val })}
+                     placeholder="R$ 0,00"
+                  />
+                  {formData.type === 'resale' && (
+                     <CurrencyInput
+                        label="Preço Venda"
+                        value={formData.salePrice || 0}
+                        onChange={val => setFormData({ ...formData, salePrice: val })}
+                        placeholder="R$ 0,00"
+                     />
+                  )}
+               </div>
+
+               <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase block mb-2 px-2">Fornecedor</label>
+                  <input type="text" className="w-full bg-[#F5F5F5] border-none rounded-2xl px-5 py-4 outline-none font-bold" placeholder="Nome do fornecedor..." value={formData.supplier} onChange={e => setFormData({ ...formData, supplier: e.target.value })} />
+               </div>
+
+               <Button
+                  variant="primary"
+                  fullWidth
+                  disabled={isSaving}
+                  onClick={handleSaveItem}
+                  icon={isSaving ? <Loader2 className="animate-spin" size={20} /> : (selectedItem ? <CheckCircle2 size={20} /> : <Plus size={20} />)}
+                  className="py-5 rounded-[1.8rem] mt-4"
+               >
+                  {isSaving ? 'Salvando...' : (selectedItem ? 'Salvar Alterações' : 'Cadastrar Produto')}
+               </Button>
             </div>
-         )}
+         </Modal>
 
          {/* Modal: Movement (Add/Remove) */}
          {isMovementModalOpen && selectedItem && (

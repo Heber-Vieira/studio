@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { createPortal } from 'react-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import AppointmentsView from './components/Appointments';
@@ -832,7 +833,7 @@ const MainLayout: React.FC = () => {
     try {
       // SECURITY GUARD: Clients are strictly limited to Dashboard or Booking Portal
       if (user?.role === 'client' && currentView !== View.DASHBOARD && currentView !== View.CLIENT_BOOKING) {
-        return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user.role} user={user} settings={settings} clients={clients} staff={staff} onLogout={logout} transactions={transactions} onShowConfirm={showConfirm} />;
+        return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user.role} user={user} settings={settings} clients={clients} staff={staff} services={services} onLogout={handleLogout} transactions={transactions} onShowConfirm={showConfirm} />;
       }
 
       const permissions = settings.permissions || {
@@ -841,9 +842,9 @@ const MainLayout: React.FC = () => {
 
       switch (currentView) {
         case View.DASHBOARD:
-          return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={handleLogout} transactions={transactions} onShowConfirm={showConfirm} />;
+          return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} services={services} onLogout={handleLogout} transactions={transactions} onShowConfirm={showConfirm} />;
         case View.APPOINTMENTS:
-          return <AppointmentsView appointments={appointments} clients={clients} staff={staff} services={services} onAdd={addAppointment} onDelete={deleteAppointment} onBlock={() => { }} lang={lang} initialDate={selectedDate} blockedPeriods={blockedPeriods} onShowToast={showToast} onShowConfirm={showConfirm} />;
+          return <AppointmentsView appointments={appointments} clients={clients} staff={staff} services={services} onAdd={addAppointment} onDelete={deleteAppointment} onBlock={() => { }} lang={lang} initialDate={selectedDate} blockedPeriods={blockedPeriods} onShowToast={showToast} onShowConfirm={showConfirm} onShowAlert={showAlert} />;
         case View.CRM:
           if (user?.role === 'attendant' && !permissions.viewCRM) return <AccessRestricted />;
           return (
@@ -862,6 +863,7 @@ const MainLayout: React.FC = () => {
               onShowToast={showToast}
               onShowConfirm={showConfirm}
               initialSearchTerm={crmSearchTerm}
+              services={services}
             />
           );
         case View.STAFF:
@@ -971,8 +973,8 @@ const MainLayout: React.FC = () => {
             />
           );
         case View.CLIENT_BOOKING:
-          return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} templates={anamnesisTemplates} onAddAnamnesisRecord={addAnamnesisRecord} onShowToast={showToast} onShowConfirm={showConfirm} />;
-        default: return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} onLogout={logout} onShowConfirm={showConfirm} />;
+          return <ClientBooking settings={settings} services={services} staff={staff} appointments={appointments} blockedPeriods={blockedPeriods} onBook={addAppointment} onClose={() => { setCurrentView(View.DASHBOARD); setPrefilledClient(null); }} initialClientData={prefilledClient || undefined} templates={anamnesisTemplates} onAddAnamnesisRecord={addAnamnesisRecord} onShowToast={showToast} onShowConfirm={showConfirm} onShowAlert={showAlert} />;
+        default: return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} services={services} onLogout={logout} onShowConfirm={showConfirm} />;
       }
     } catch (err) {
       console.error("Render error:", err);
@@ -1069,8 +1071,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         {!isPortalMode && user && (
           <ReleaseNotesPopup config={settings.releaseNotes} />
         )}
-        {dialog.show && (
-          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
+        {dialog.show && createPortal(
+          <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-sm rounded-[3rem] p-10 shadow-2xl space-y-8 animate-in zoom-in duration-300 border border-white/20 text-center relative overflow-hidden">
               <div className={`w-20 h-20 mx-auto rounded-[1.8rem] flex items-center justify-center mb-2 shadow-inner ${dialog.variant === 'danger' ? 'bg-rose-50 text-rose-500' : 'bg-[#40E0D0]/10 text-[#40E0D0]'}`}>
                 {dialog.variant === 'danger' ? <AlertTriangle size={36} /> : <Sparkles size={36} />}
@@ -1107,7 +1109,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                 )}
               </div>
             </div>
-          </div>
+          </div>, document.body
         )}
 
         <AnimatePresence>
@@ -1116,7 +1118,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className="fixed inset-0 pointer-events-none z-[300] flex items-center justify-center p-4"
+              className="fixed inset-0 pointer-events-none z-[10002] flex items-center justify-center p-4"
             >
               <div className="pointer-events-auto bg-gray-900/90 backdrop-blur-xl text-white px-10 py-6 rounded-[2.5rem] shadow-2xl flex flex-col items-center gap-4 border border-white/10 text-center max-w-xs animate-in zoom-in duration-300">
                 <button

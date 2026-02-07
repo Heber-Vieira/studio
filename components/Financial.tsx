@@ -866,7 +866,7 @@ const FinancialView: React.FC<FinancialProps> = ({
          {/* Modal: POS */}
          {isPOSOpen && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-               <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-white/20">
+               <div className="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-white/20">
                   <div className="bg-gradient-to-r from-[#FF69B4] to-[#C71585] p-6 text-white flex justify-between items-center">
                      <div className="flex items-center gap-3"><div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md"><Smartphone size={24} /></div><div><h3 className="font-black text-xl">BellaPay POS 💎</h3><p className="text-[10px] font-bold opacity-70">Checkout de Vendas</p></div></div>
                      <button onClick={() => { setIsPOSOpen(false); setCheckoutStep('select'); }} className="p-2 hover:bg-white/10 rounded-full"><X size={24} /></button>
@@ -894,7 +894,7 @@ const FinancialView: React.FC<FinancialProps> = ({
                                  {appointments.filter(a => a.status !== 'cancelled' && a.status !== 'completed').length > 0 ? (
                                     appointments.filter(a => a.status !== 'cancelled' && a.status !== 'completed').map(apt => (
                                        <div key={apt.id} onClick={() => setSelectedApt(apt)} className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center ${selectedApt?.id === apt.id ? 'border-[#FF69B4] bg-pink-50/30' : 'border-gray-50 hover:border-gray-100'}`}>
-                                          <div className="flex items-center gap-3"><div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${selectedApt?.id === apt.id ? 'bg-[#FF69B4] text-white' : 'bg-white text-gray-400 shadow-sm'}`}>{apt.clientName.charAt(0)}</div><div><p className="font-bold text-gray-900">{apt.clientName}</p><p className="text-xs text-gray-400">{apt.service}</p></div></div>
+                                          <div className="flex items-center gap-3"><div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${selectedApt?.id === apt.id ? 'bg-[#FF69B4] text-white' : 'bg-white text-gray-400 shadow-sm'}`}>{apt.clientName.charAt(0)}</div><div><p className="font-bold text-gray-900">{apt.clientName}</p><p className="text-xs text-gray-400">{(services.find(s => s.id === apt.serviceId)?.name || apt.service || 'Serviço').trim() || 'Serviço'}</p></div></div>
                                           <span className="font-black text-[#FF69B4]">R$ {apt.price}</span>
                                        </div>
                                     ))
@@ -1034,7 +1034,7 @@ const FinancialView: React.FC<FinancialProps> = ({
          {/* Modal: Nova Despesa */}
          {isExpenseModalOpen && (
             <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-               <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-bounce-in">
+               <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-bounce-in">
                   <div className="bg-rose-500 p-6 text-white flex justify-between items-center">
                      <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md">
@@ -1062,7 +1062,7 @@ const FinancialView: React.FC<FinancialProps> = ({
                         />
                      </div>
 
-                     <div className="grid grid-cols-2 gap-4">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                            <CurrencyInput
                               label="Valor da Despesa"
@@ -1148,7 +1148,7 @@ const FinancialView: React.FC<FinancialProps> = ({
          {/* Modal: Gerenciamento de Fornecedor */}
          {isSupplierModalOpen && (
             <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-               <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden animate-bounce-in">
+               <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-bounce-in">
                   <div className="bg-orange-500 p-8 text-white flex justify-between items-center relative overflow-hidden">
                      <div className="absolute right-[-10%] top-[-20%] opacity-20 rotate-12"><Truck size={140} /></div>
                      <div className="relative z-10 flex items-center gap-4">
