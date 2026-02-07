@@ -65,33 +65,71 @@ interface AnamnesisProps {
 
 const LUX_QUICK_TEMPLATES: Partial<AnamnesisTemplate>[] = [
     {
-        title: 'Anamnese Extensão de Cílios',
-        category: 'Lash Design',
-        description: 'Protocolo de luxo para análise de saúde ocular, estilo e retenção.',
+        title: 'Anamnese: Extensão de Cílios',
+        category: 'Cílios',
+        description: 'Protocolo completo para análise de saúde ocular, retention e styling personalizado.',
         fields: [
             { id: 'h1', label: 'Avaliação de Saúde & Contraindicações', type: 'heading', required: false, description: 'Protocolo preventivo para sua segurança ocular.' },
             { id: 'lash_designer', label: 'Nome da Lash Designer', type: 'staff', required: true },
-            { id: 'sensibilidade', label: 'Sua pele costuma reagir a materiais de uso tópico, cosméticos ou adesivos?', type: 'boolean', required: true },
-            { id: 'lentes', label: 'Você utiliza lentes de contato ou possui olhos excessivamente secos?', type: 'boolean', required: true },
-            { id: 'condicao_olhos', label: 'Já teve alguma condição relacionada aos olhos ou cílios (ex: blefarite, conjuntivite)?', type: 'boolean', required: true },
-            { id: 'procedimento_recente', label: 'Realizou procedimento facial ou ocular nos últimos 6 meses (Botox, Micro, Cirurgia)?', type: 'boolean', required: true },
-            { id: 'saude_fios', label: 'Há alguma condição de saúde ou hormonal que possa afetar o crescimento dos fios?', type: 'boolean', required: true },
-            { id: 'condicao_fisica', label: 'Há alguma condição física atual (Gestação, Sensibilidade na Coluna ou Lombo)?', type: 'boolean', required: true },
-            { id: 'medicacao', label: 'Está utilizando alguma medicação que possa interferir no procedimento ou sensibilidade?', type: 'boolean', required: true },
-
-            { id: 'h2', label: 'Histórico & Hábitos Relevantes', type: 'heading', required: false, description: 'Entendendo seu lifestyle para maximizar a retenção.' },
-            { id: 'primeira_vez', label: 'Já realizou este procedimento anteriormente? Teve alguma intercorrência?', type: 'boolean', required: true },
-            { id: 'limpeza_facial', label: 'Quais produtos de limpeza facial você prefere utilizar na área dos olhos?', type: 'select', required: true, options: ['Mousse/Sabonete Neutro', 'Água Micelar', 'Demaquilante (Base Óleo)', 'Nenhum / Somente Água'] },
-            { id: 'dormir', label: 'Qual a sua posição preferencial ao dormir? (Isso influencia na durabilidade)', type: 'select', required: true, options: ['De Costas', 'Lado Esquerdo', 'Lado Direito', 'De Bruços'] },
-            { id: 'atividades', label: 'Pratica atividades intensas com umidade ou atrito (Academia, Natação, Sauna)?', type: 'boolean', required: true },
-
-            { id: 'h3', label: 'Prontuário Técnico (Mapping)', type: 'heading', required: false, description: 'Personalização artística e design.' },
-            { id: 'mapping', label: 'Mapping Escolhido', type: 'select', required: true, options: ['Gatinho (Cat Eye)', 'Boneca (Doll)', 'Esquilo (Squirrel)', 'Fox Eye', 'Natural'] },
-            { id: 'curvatura', label: 'Curvatura Utilizada', type: 'select', required: true, options: ['J e B', 'C', 'CC / D', 'L e M'] },
-            { id: 'thickness', label: 'Espessura dos Fios', type: 'select', required: true, options: ['Volume Russo e Mega Volume (0.03mm a 0.07mm)', 'Híbrido ou Volume Suave (0.10mm a 0.12mm)', 'Fio a Fio / Clássico (0.15mm a 0.20mm)', 'Não Recomendados (0.25mm ou mais)'] },
-
-            { id: 'h4', label: 'Termos & Consentimento', type: 'heading', required: false },
-            { id: 'term_image', label: 'Autorizo o uso de imagem para portfólio profissional e redes sociais.', type: 'boolean', required: true },
+            { id: 'sensibilidade', label: 'Histórico de sensibilidade a cosméticos ou adesivos?', type: 'boolean', required: true },
+            { id: 'lentes', label: 'Utiliza lentes de contato ou possui olhos secos?', type: 'boolean', required: true },
+            { id: 'medicacao', label: 'Uso de medicação (ex: Tireoide/Roacutan) ou colírios frequentes?', type: 'boolean', required: true },
+            { id: 'dormir', label: 'Posição predominante ao dormir?', type: 'select', required: true, options: ['De Costas (Ideal)', 'Lado Direito', 'Lado Esquerdo', 'De Bruços (Não Rec.)'] },
+            { id: 'h2', label: 'Styling & Mapping', type: 'heading', required: false, description: 'Personalização do olhar.' },
+            { id: 'mapping', label: 'Mapping Escolhido', type: 'select', required: true, options: ['Natural', 'Gatinho (Cat Eye)', 'Boneca (Doll)', 'Esquilo', 'Fox Eye', 'Kim K (Wispy)'] },
+            { id: 'curvatura', label: 'Curvatura Utilizada', type: 'select', required: true, options: ['J', 'B', 'C', 'CC', 'D', 'L', 'M'] },
+            { id: 'thickness', label: 'Espessura dos Fios', type: 'select', required: true, options: ['0.03', '0.05', '0.07', '0.10', '0.12', '0.15', '0.20', '0.25'] },
+            { id: 'term_image', label: 'Autorizo uso de imagem para portfólio', type: 'boolean', required: true },
+        ]
+    },
+    {
+        title: 'Anamnese: Design de Sobrancelhas',
+        category: 'Sobrancelha',
+        description: 'Análise de simetria, estrutura e preferências de design.',
+        fields: [
+            { id: 'h1', label: 'Análise Inicial', type: 'heading', required: false },
+            { id: 'designer', label: 'Profissional Responsável', type: 'staff', required: true },
+            { id: 'alergia_henna', label: 'Já teve reação alérgica a Henna ou Tintura?', type: 'boolean', required: true },
+            { id: 'acidos', label: 'Uso recente de ácidos (Glicólico, Retinóico, etc.) na região?', type: 'boolean', required: true },
+            { id: 'tratamentos', label: 'Realizou microagulhamento ou peeling nos últimos 15 dias?', type: 'boolean', required: true },
+            { id: 'h2', label: 'Preferências de Design', type: 'heading', required: false },
+            { id: 'formato_desejado', label: 'Formato Desejado', type: 'select', required: true, options: ['Natural (Seguir o fio)', 'Arqueada Marcada', 'Reta/Fox Eyes', 'Reconstrução'] },
+            { id: 'acabamento', label: 'Acabamento Preferido', type: 'select', required: true, options: ['Apenas Pinça (Limpeza)', 'Henna Ombré (Natural)', 'Henna Marcada', 'Tintura Refectocil', 'Brow Lamination'] },
+            { id: 'falhas', label: 'Possui falhas ou cicatrizes na região?', type: 'boolean', required: false },
+            { id: 'termos', label: 'Ciente dos cuidados pós-procedimento (Evitar sol/ácidos 24h)', type: 'boolean', required: true },
+        ]
+    },
+    {
+        title: 'Anamnese: Micropigmentação Labial',
+        category: 'Estética',
+        description: 'Protocolo clínico para realizar Hydra Gloss ou Micropigmentação.',
+        fields: [
+            { id: 'h1', label: 'Saúde & Cuidados Prévios', type: 'heading', required: false },
+            { id: 'profissional', label: 'Micropigmentadora', type: 'staff', required: true },
+            { id: 'herpes', label: 'Histórico de Herpes Labial? (Obrigatório profilaxia antiviral)', type: 'boolean', required: true },
+            { id: 'preenchimento', label: 'Possui preenchimento labial (Ác. Hialurônico)?', type: 'boolean', required: true },
+            { id: 'cicatrizacao', label: 'Tem tendência a quelóides ou hiperpigmentação?', type: 'boolean', required: true },
+            { id: 'h2', label: 'Projeto & Cor', type: 'heading', required: false },
+            { id: 'objetivo', label: 'Objetivo do Procedimento', type: 'select', required: true, options: ['Revitalização (Cor Natural)', 'Efeito Batom (Cor Intensa)', 'Neutralização (Lábios Escuros)', 'Hydra Gloss (Hidratação)'] },
+            { id: 'tonalidade', label: 'Tonalidade de Preferência', type: 'select', required: true, options: ['Nude / Rosado', 'Pêssego / Coral', 'Vermelho', 'Vinho / Intenso'] },
+            { id: 'fumante', label: 'Tabagista? (Influencia na fixação e cor)', type: 'boolean', required: true },
+        ]
+    },
+    {
+        title: 'Anamnese: Estética Facial',
+        category: 'Estética',
+        description: 'Ficha completa para Limpeza de Pele e Tratamentos Faciais.',
+        fields: [
+            { id: 'h1', label: 'Diagnóstico de Pele', type: 'heading', required: false },
+            { id: 'esteticista', label: 'Esteticista', type: 'staff', required: true },
+            { id: 'biotipo', label: 'Biotipo Cutâneo (Avaliação Profissional)', type: 'select', required: true, options: ['Eudérmica (Normal)', 'Alípica (Seca)', 'Lipídica (Oleosa)', 'Mista', 'Sensível'] },
+            { id: 'fototipo', label: 'Fototipo (Fitzpatrick)', type: 'select', required: false, options: ['I (Muito Clara)', 'II (Clara)', 'III (Morena Clara)', 'IV (Morena Média)', 'V (Morena Escura)', 'VI (Negra)'] },
+            { id: 'h2', label: 'Anamnese Clínica', type: 'heading', required: false },
+            { id: 'roacutan', label: 'Uso de Isotretinoína (Roacutan) nos últimos 6 meses?', type: 'boolean', required: true },
+            { id: 'gestante', label: 'Gestante ou Lactante? (Contraindica eletroterapia/ácidos)', type: 'boolean', required: true },
+            { id: 'marcapasso', label: 'Portador de marcapasso ou pinos metálicos na face?', type: 'boolean', required: true },
+            { id: 'alergias', label: 'Alergia a cosméticos ou princípios ativos?', type: 'text', required: true },
+            { id: 'queixa', label: 'Queixa Principal', type: 'textarea', required: true },
         ]
     }
 ];
