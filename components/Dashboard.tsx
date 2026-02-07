@@ -141,9 +141,16 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
 
    const kpiData = useMemo(() => {
       const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const oneDayAgo = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+
+      const formatDateFilter = (date: Date) => date.toISOString().split('T')[0];
+      const todayFilter = formatDateFilter(now);
+      const yesterdayFilter = formatDateFilter(oneDayAgo);
 
       // 1. Weekly Revenue
       const currentWeekIncome = transactions
@@ -154,13 +161,12 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
          .filter(t => t.type === 'income' && new Date(t.date) >= twoWeeksAgo && new Date(t.date) < oneWeekAgo)
          .reduce((sum, t) => sum + t.amount, 0);
 
-      const revenueTrend = previousWeekIncome > 0
+      const revenueTrendVal = previousWeekIncome > 0
          ? Math.round(((currentWeekIncome - previousWeekIncome) / previousWeekIncome) * 100)
-         : 100;
-      const revenueSign = revenueTrend >= 0 ? '+' : '';
+         : (currentWeekIncome > 0 ? 100 : 0);
+      const revenueTrend = `${revenueTrendVal >= 0 ? '+' : ''}${revenueTrendVal}%`;
 
-      // 2. New Clients (First appointment in last 30 days)
-      // Map client => first appointment date
+      // 2. New Clients (First appointment in last 30 days vs previous 30 days)
       const clientFirstVisit: Record<string, string> = {};
       appointments.forEach(a => {
          if (!clientFirstVisit[a.clientName] || a.date < clientFirstVisit[a.clientName]) {
@@ -168,9 +174,27 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
          }
       });
 
-      const newClientsCount = Object.values(clientFirstVisit).filter(date => new Date(date) >= thirtyDaysAgo).length;
+      const currentNewClients = Object.values(clientFirstVisit).filter(date => new Date(date) >= thirtyDaysAgo).length;
+      const previousNewClients = Object.values(clientFirstVisit).filter(date => {
+         const d = new Date(date);
+         return d >= sixtyDaysAgo && d < thirtyDaysAgo;
+      }).length;
 
-      // 3. Retention Score (Clients with > 1 appointment / Total Clients)
+      const newClientsTrendVal = previousNewClients > 0
+         ? Math.round(((currentNewClients - previousNewClients) / previousNewClients) * 100)
+         : (currentNewClients > 0 ? 100 : 0);
+      const newClientsTrend = `${newClientsTrendVal >= 0 ? '+' : ''}${newClientsTrendVal}%`;
+
+      // 3. Today's Appointments Trend (Today vs Yesterday)
+      const currentTodayAppts = appointments.filter(a => a.date === todayFilter && a.status !== 'cancelled').length;
+      const yesterdayApptsCount = appointments.filter(a => a.date === yesterdayFilter && a.status !== 'cancelled').length;
+
+      const apptsTrendVal = yesterdayApptsCount > 0
+         ? Math.round(((currentTodayAppts - yesterdayApptsCount) / yesterdayApptsCount) * 100)
+         : (currentTodayAppts > 0 ? 100 : 0);
+      const apptsTrend = `${apptsTrendVal >= 0 ? '+' : ''}${apptsTrendVal}%`;
+
+      // 4. Retention Score (Clients with > 1 appointment / Total Clients)
       const clientApptCounts: Record<string, number> = {};
       appointments.forEach(a => {
          if (a.status === 'completed' || a.status === 'confirmed') {
@@ -178,14 +202,16 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
          }
       });
 
-      const returningClients = Object.values(clientApptCounts).filter(count => count > 1).length;
+      const returningClientsCount = Object.values(clientApptCounts).filter(count => count > 1).length;
       const totalActiveClients = Object.keys(clientApptCounts).length;
-      const retentionRate = totalActiveClients > 0 ? Math.round((returningClients / totalActiveClients) * 100) : 0;
+      const retentionRate = totalActiveClients > 0 ? Math.round((returningClientsCount / totalActiveClients) * 100) : 0;
 
       return {
          weeklyRevenue: currentWeekIncome,
-         revenueTrend: `${revenueSign}${revenueTrend}%`,
-         newClients: newClientsCount,
+         revenueTrend,
+         newClients: currentNewClients,
+         newClientsTrend,
+         todayApptsTrend: apptsTrend,
          retentionRate: retentionRate
       };
    }, [transactions, appointments]);
@@ -458,7 +484,7 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
             <StatCard
                title={t.dashboard.stats.newClients}
                value={kpiData.newClients.toString()}
-               change="+2"
+               change={kpiData.newClientsTrend}
                bgColor="bg-teal-50 dark:bg-teal-500/10"
                icon={<Users size={20} className="text-teal-500" />}
                onClick={() => onAction(View.CRM, 'Novo')}
@@ -467,7 +493,7 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
             <StatCard
                title={t.dashboard.stats.todayAppts}
                value={todayAppts.length.toString()}
-               change={todayAppts.length >= 10 ? "+2" : ""}
+               change={kpiData.todayApptsTrend}
                bgColor="bg-pink-50 dark:bg-pink-500/10"
                icon={<Calendar size={20} className="text-pink-500" />}
                onClick={() => handleGoToSchedule(TODAY)}
@@ -477,7 +503,7 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                <StatCard
                   title={t.dashboard.stats.retention}
                   value={`${kpiData.retentionRate}%`}
-                  change="+1%"
+                  change={""}
                   bgColor="bg-purple-50 dark:bg-purple-500/10"
                   icon={<Sparkles size={20} className="text-purple-500" />}
                   onClick={() => onAction(View.MARKETING)}
