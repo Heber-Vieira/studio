@@ -45,11 +45,13 @@ import {
     AnamnesisRecord,
     AnamnesisFieldType,
     Client,
+    Professional,
     ConfirmDialogOptions
 } from '../types';
 
 interface AnamnesisProps {
     clients: Client[];
+    staff: Professional[];
     templates: AnamnesisTemplate[];
     records: AnamnesisRecord[];
     onAddTemplate: (template: AnamnesisTemplate) => void;
@@ -68,6 +70,7 @@ const LUX_QUICK_TEMPLATES: Partial<AnamnesisTemplate>[] = [
         description: 'Protocolo de luxo para análise de saúde ocular, estilo e retenção.',
         fields: [
             { id: 'h1', label: 'Avaliação de Saúde & Contraindicações', type: 'heading', required: false, description: 'Protocolo preventivo para sua segurança ocular.' },
+            { id: 'lash_designer', label: 'Nome da Lash Designer', type: 'staff', required: true },
             { id: 'sensibilidade', label: 'Sua pele costuma reagir a materiais de uso tópico, cosméticos ou adesivos?', type: 'boolean', required: true },
             { id: 'lentes', label: 'Você utiliza lentes de contato ou possui olhos excessivamente secos?', type: 'boolean', required: true },
             { id: 'condicao_olhos', label: 'Já teve alguma condição relacionada aos olhos ou cílios (ex: blefarite, conjuntivite)?', type: 'boolean', required: true },
@@ -94,6 +97,7 @@ const LUX_QUICK_TEMPLATES: Partial<AnamnesisTemplate>[] = [
 
 const AnamnesisView: React.FC<AnamnesisProps> = ({
     clients,
+    staff,
     templates,
     records,
     onAddTemplate,
@@ -293,6 +297,7 @@ const AnamnesisView: React.FC<AnamnesisProps> = ({
                         key="player"
                         template={playerTemplate}
                         clients={clients}
+                        staff={staff}
                         onSave={handleSaveRecord}
                         onCancel={() => setActiveTab('manager')}
                         playingRecord={playingRecord}
@@ -527,6 +532,7 @@ const TemplateBuilder: React.FC<{
                                 { icon: <AlignLeft size={16} />, label: 'Parágrafo', type: 'textarea' },
                                 { icon: <ToggleLeft size={16} />, label: 'Booleano', type: 'boolean' },
                                 { icon: <List size={16} />, label: 'Seleção', type: 'select' },
+                                { icon: <Users size={16} />, label: 'Atendente', type: 'staff' },
                                 { icon: <Info size={16} />, label: 'Título', type: 'heading' }
                             ].map(item => (
                                 <button key={item.label} onClick={() => addField(item.type as AnamnesisFieldType)} className="shrink-0 md:w-full p-3 md:p-4 bg-white rounded-xl md:rounded-2xl border border-transparent shadow-sm hover:border-indigo-200 flex items-center gap-3 md:gap-4 group">
@@ -612,6 +618,7 @@ const TemplateBuilder: React.FC<{
 const FormPlayer: React.FC<{
     template: AnamnesisTemplate;
     clients: Client[];
+    staff: Professional[];
     onSave: (sig: string) => void;
     onCancel: () => void;
     playingRecord: Partial<AnamnesisRecord>;
@@ -620,9 +627,10 @@ const FormPlayer: React.FC<{
     setStep: (s: number) => void;
     onPrevStep: () => void;
     onShowToast: (msg: string, type: 'success' | 'error' | 'info') => void;
-}> = ({ template, clients, onSave, onCancel, playingRecord, onUpdateRecord, step, setStep, onPrevStep, onShowToast }) => {
+}> = ({ template, clients, staff, onSave, onCancel, playingRecord, onUpdateRecord, step, setStep, onPrevStep, onShowToast }) => {
     const sigCanvas = useRef<any>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [staffSearch, setStaffSearch] = useState('');
     const [showAftercare, setShowAftercare] = useState(false);
 
     const isClientStep = step === 0;
@@ -634,6 +642,11 @@ const FormPlayer: React.FC<{
         const lower = searchTerm.toLowerCase();
         return clients.filter(c => c.name.toLowerCase().includes(lower) || c.phone.toLowerCase().includes(lower));
     }, [clients, searchTerm]);
+
+    const filteredStaff = useMemo(() => {
+        const lower = staffSearch.toLowerCase();
+        return staff.filter(s => s.name.toLowerCase().includes(lower) || s.role.toLowerCase().includes(lower));
+    }, [staff, staffSearch]);
 
     const setAnswer = (fieldId: string, value: any) => {
         onUpdateRecord({ ...playingRecord, answers: { ...(playingRecord.answers || {}), [fieldId]: value } });
@@ -778,6 +791,40 @@ const FormPlayer: React.FC<{
                                                         {currentField.options?.map(opt => (
                                                             <button key={opt} onClick={() => setAnswerAndNext(currentField.id, opt)} className={`p-4 md:p-8 rounded-xl md:rounded-[2rem] border-2 transition-all font-serif text-base md:text-2xl ${playingRecord.answers?.[currentField.id] === opt ? 'bg-gray-900 text-white shadow-lg' : 'bg-gray-50 border-transparent text-gray-600 hover:border-[#FF69B4]'}`}>{opt}</button>
                                                         ))}
+                                                    </div>
+                                                )}
+                                                {currentField.type === 'staff' && (
+                                                    <div className="space-y-6 w-full max-w-2xl mx-auto">
+                                                        <div className="relative">
+                                                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Buscar atendente..."
+                                                                value={staffSearch}
+                                                                onChange={(e) => setStaffSearch(e.target.value)}
+                                                                className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-pink-300 font-serif text-lg"
+                                                            />
+                                                        </div>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
+                                                            {filteredStaff.map(member => (
+                                                                <button
+                                                                    key={member.id}
+                                                                    onClick={() => setAnswerAndNext(currentField.id, member.name)}
+                                                                    className={`p-4 md:p-5 rounded-2xl md:rounded-[2.5rem] border-2 transition-all flex items-center gap-4 ${playingRecord.answers?.[currentField.id] === member.name ? 'bg-gray-900 border-gray-900 text-white shadow-xl' : 'bg-white border-gray-100 text-gray-600 hover:border-[#FF69B4]'}`}
+                                                                >
+                                                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl overflow-hidden shadow-sm shrink-0">
+                                                                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.name}&background=random`} className="w-full h-full object-cover" />
+                                                                    </div>
+                                                                    <div className="text-left min-w-0">
+                                                                        <p className="font-serif text-base md:text-lg truncate leading-tight">{member.name}</p>
+                                                                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 opacity-60 truncate">{member.role}</p>
+                                                                    </div>
+                                                                </button>
+                                                            ))}
+                                                            {filteredStaff.length === 0 && (
+                                                                <p className="col-span-full py-10 text-gray-400 font-medium italic">Nenhum atendente encontrado.</p>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>

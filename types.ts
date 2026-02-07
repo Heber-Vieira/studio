@@ -230,7 +230,7 @@ export enum View {
   ANAMNESIS = 'anamnesis'
 }
 
-export type AnamnesisFieldType = 'text' | 'number' | 'boolean' | 'select' | 'textarea' | 'heading';
+export type AnamnesisFieldType = 'text' | 'number' | 'boolean' | 'select' | 'textarea' | 'heading' | 'staff';
 
 export interface AnamnesisField {
   id: string;

@@ -943,6 +943,7 @@ const MainLayout: React.FC = () => {
           return (
             <AnamnesisView
               clients={clients}
+              staff={staff}
               templates={anamnesisTemplates}
               records={anamnesisRecords}
               onAddTemplate={addAnamnesisTemplate}
