@@ -1118,10 +1118,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
               exit={{ opacity: 0, scale: 0.8 }}
               className="fixed inset-0 pointer-events-none z-[300] flex items-center justify-center p-4"
             >
-              <div className="bg-gray-900/90 backdrop-blur-xl text-white px-10 py-6 rounded-[2.5rem] shadow-2xl flex flex-col items-center gap-4 border border-white/10 text-center max-w-xs animate-in zoom-in duration-300">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${toast.type === 'error' ? 'bg-rose-500' : toast.type === 'success' ? 'bg-emerald-500' : 'bg-[#40E0D0]'}`}>
+              <div className="pointer-events-auto bg-gray-900/90 backdrop-blur-xl text-white px-10 py-6 rounded-[2.5rem] shadow-2xl flex flex-col items-center gap-4 border border-white/10 text-center max-w-xs animate-in zoom-in duration-300">
+                <button
+                  onClick={() => setToast(prev => ({ ...prev, show: false }))}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 shadow-lg ${toast.type === 'error' ? 'bg-rose-500 hover:bg-rose-600' : toast.type === 'success' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-[#40E0D0] hover:bg-[#3bc8ba]'}`}
+                >
                   {toast.type === 'error' ? <X size={24} /> : toast.type === 'success' ? <CheckCircle2 size={24} /> : <Sparkles size={24} />}
-                </div>
+                </button>
                 <div>
                   <p className="font-black text-sm tracking-tight leading-tight">{toast.message}</p>
                 </div>
