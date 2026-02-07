@@ -482,6 +482,18 @@ const TemplateBuilder: React.FC<{
     onCancel: () => void;
     onShowConfirm: (options: ConfirmDialogOptions) => void;
 }> = ({ template, onChange, onSave, onCancel, onShowConfirm }) => {
+    const fieldListRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to bottom when a new field is added
+    useEffect(() => {
+        if (fieldListRef.current) {
+            fieldListRef.current.scrollTo({
+                top: fieldListRef.current.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    }, [template.fields.length]);
+
     const updateField = (id: string, updates: Partial<AnamnesisField>) => {
         onChange({ ...template, fields: template.fields.map(f => f.id === id ? { ...f, ...updates } : f) });
     };
@@ -552,7 +564,10 @@ const TemplateBuilder: React.FC<{
                     </div>
                 </div>
 
-                <div className="w-full md:col-span-3 p-6 md:p-10 space-y-6 md:space-y-8 overflow-y-auto scrollbar-hide max-h-[600px] bg-white">
+                <div
+                    ref={fieldListRef}
+                    className="w-full md:col-span-3 p-6 md:p-10 space-y-6 md:space-y-8 overflow-y-auto scrollbar-hide max-h-[600px] bg-white scroll-smooth"
+                >
                     <div className="md:hidden mb-4">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Categoria</label>
                         <select value={template.category} onChange={e => onChange({ ...template, category: e.target.value })} className="w-full bg-gray-50 border-none rounded-xl p-3 text-xs font-bold text-gray-700">
@@ -563,7 +578,7 @@ const TemplateBuilder: React.FC<{
                     {template.fields.length === 0 && (
                         <div className="h-64 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-gray-100 rounded-[2rem]">
                             <Plus className="text-gray-200 mb-4" size={48} />
-                            <p className="text-gray-400 font-bold text-sm">Arraste uma ferramenta ou clique acima para começar a construir seu protocolo.</p>
+                            <p className="text-gray-400 font-bold text-sm">Clique em uma ferramenta para começar a construir seu protocolo.</p>
                         </div>
                     )}
 
@@ -587,7 +602,7 @@ const TemplateBuilder: React.FC<{
                                         placeholder="Pergunta ou Título"
                                     />
                                     {field.type === 'select' && (
-                                        <input value={field.options?.join(', ')} onChange={e => updateField(field.id, { options: e.target.value.split(',').map(s => s.trim()) })} className="w-full bg-gray-50 rounded-xl p-3 text-sm font-bold" placeholder="Opções (sep. por vírgula)" />
+                                        <input value={(field.options || []).join(', ')} onChange={e => updateField(field.id, { options: e.target.value.split(',').map(s => s.trim()) })} className="w-full bg-gray-50 rounded-xl p-3 text-sm font-bold" placeholder="Opções (sep. por vírgula)" />
                                     )}
                                     <div className="flex flex-wrap items-center gap-3 md:gap-4">
                                         <label className="flex items-center gap-2 cursor-pointer">
