@@ -131,7 +131,7 @@ const LoginView: React.FC = () => {
               </p>
             </div>
             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500">
-              Powered by BellaAI Systems • 2025
+              Powered by BellaAI Systems • {new Date().getFullYear()} • Todos os Direitos Reservados
             </p>
           </div>
         </div>
@@ -330,7 +330,7 @@ const LoginView: React.FC = () => {
           {/* Mobile Footer Credit */}
           <div className="lg:hidden mt-12 text-center">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
-              BellaAI Systems • 2025
+              BellaAI Systems • {new Date().getFullYear()} • Todos os Direitos Reservados
             </p>
           </div>
         </div>

@@ -857,7 +857,7 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
 
       {/* Footer Minimalista - Conforme Screenshot */}
       <footer className="p-12 text-center text-gray-300 text-[10px] font-black uppercase tracking-[0.3em] safe-pb">
-        POWERED BY BELLAAI &copy; 2025
+        POWERED BY BELLAAI &copy; {new Date().getFullYear()} • TODOS OS DIREITOS RESERVADOS
       </footer>
     </div>
   );

@@ -1048,7 +1048,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
             onOpenHelp={() => setIsHelpOpen(true)}
           />
         )}
-        <main ref={mainContentRef} className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-300 ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'bg-white p-0' : 'p-4 md:p-6 lg:p-8'} `}>
+        <main ref={mainContentRef} className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-300 ${isPortalMode && currentView === View.CLIENT_BOOKING ? 'bg-white p-0' : 'p-4 md:p-6 lg:p-8 flex flex-col'} `}>
           {!isPortalMode && user && (
             <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 lg:mb-12 fade-in gap-6 border-b border-gray-100 pb-6 shrink-0 px-4 lg:px-0">
               <div className="w-full lg:w-auto flex justify-between items-center pl-14 md:pl-0 min-w-0">
@@ -1086,6 +1086,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
             </header>
           )}
           {renderView()}
+          {!isPortalMode && (
+            <div className="py-8 text-center mt-auto">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">
+                BellaAI Systems • {new Date().getFullYear()} • Todos os Direitos Reservados
+              </p>
+            </div>
+          )}
         </main>
         <HelpSystem currentView={currentView} onShowToast={showToast} isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
         <ChatBellaAI lang={lang} />
