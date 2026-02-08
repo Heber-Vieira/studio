@@ -38,6 +38,10 @@ const LoginView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  // Privacy Consents
+  const [termsAgreed, setTermsAgreed] = useState(false);
+  const [marketingAgreed, setMarketingAgreed] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -60,7 +64,12 @@ const LoginView: React.FC = () => {
           setIsLoading(false);
           return;
         }
-        const { error: signUpError } = await signUp(email, password, name, role);
+        if (!termsAgreed) {
+          setError('Você precisa aceitar os Termos de Uso e Política de Privacidade.');
+          setIsLoading(false);
+          return;
+        }
+        const { error: signUpError } = await signUp(email, password, name, role, { terms: termsAgreed, marketing: marketingAgreed });
         if (signUpError) {
           setError(signUpError.message);
         } else {
@@ -248,6 +257,30 @@ const LoginView: React.FC = () => {
                 >
                   {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
+              </div>
+            )}
+
+            {mode === 'signup' && (
+              <div className="space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <div className={`mt-0.5 w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${termsAgreed ? 'bg-gray-900 border-gray-900' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    {termsAgreed && <CheckCircle2 size={12} className="text-white" />}
+                  </div>
+                  <input type="checkbox" className="hidden" checked={termsAgreed} onChange={e => setTermsAgreed(e.target.checked)} />
+                  <span className="text-xs text-gray-500 leading-tight">
+                    Li e aceito os <a href="#" className="font-bold text-gray-900 hover:underline">Termos de Uso</a> e <a href="#" className="font-bold text-gray-900 hover:underline">Política de Privacidade</a>.
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <div className={`mt-0.5 w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${marketingAgreed ? 'bg-pink-500 border-pink-500' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    {marketingAgreed && <CheckCircle2 size={12} className="text-white" />}
+                  </div>
+                  <input type="checkbox" className="hidden" checked={marketingAgreed} onChange={e => setMarketingAgreed(e.target.checked)} />
+                  <span className="text-xs text-gray-500 leading-tight">
+                    (Opcional) Aceito receber novidades e promoções do BellaAI via e-mail.
+                  </span>
+                </label>
               </div>
             )}
 

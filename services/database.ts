@@ -90,7 +90,9 @@ export const db = {
                     pointsPerReal: 1,
                     redemptionCost: 100,
                     rewardName: 'Presente'
-                }
+                },
+                integrations: data.integrations || {},
+                releaseNotes: data.release_notes_config || undefined
             } as SalonSettings;
         } catch (e) {
             console.error("[DB] Error fetching settings:", e);
@@ -133,7 +135,9 @@ export const db = {
                 logo_url: settings.logo,
                 theme: settings.theme,
                 permissions: settings.permissions,
-                loyalty_config: settings.loyalty
+                loyalty_config: settings.loyalty,
+                integrations: settings.integrations,
+                release_notes_config: settings.releaseNotes
             })
             .eq('id', DEFAULT_COMPANY_ID);
 
@@ -915,5 +919,80 @@ export const db = {
         } catch (e) {
             console.error("Error in syncMockData:", e);
         }
+    },
+
+    // --- LGPD & PRIVACY ---
+    async logAction(action: string, resource?: string, metadata: any = {}) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { error } = await supabase.from('audit_logs').insert({
+                actor_id: user.id,
+                action,
+                resource,
+                metadata
+            });
+
+            if (error) console.error("Error logging action:", error);
+        } catch (e) {
+            console.error("Failed to log action:", e);
+        }
+    },
+
+    async recordConsent(type: 'terms' | 'marketing' | 'cookies', agreed: boolean) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Get IP/UA if possible (client-side limits apply, mostly rely on headers or just simple grab)
+            // For now we just store the consent
+            const { error } = await supabase.from('privacy_consents').insert({
+                user_id: user.id,
+                type,
+                agreed,
+                user_agent: navigator.userAgent
+            });
+
+            if (error) throw error;
+        } catch (error) {
+            console.error("Error recording consent:", error);
+            throw error;
+        }
+    },
+
+    async getMyConsents() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        const { data, error } = await supabase
+            .from('privacy_consents')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    async anonymizeUser() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // 1. Log the request
+        await this.logAction('delete_account', 'profile', { reason: 'user_request' });
+
+        // 2. Anonymize Profile
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+                name: 'Anônimo',
+                email: `${user.id}@deleted.user`, // Keep unique constraint satisfied but remove PII
+                avatar_url: null,
+                anonymized_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+
+        if (profileError) throw profileError;
     }
 };

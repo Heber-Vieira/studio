@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { SalonSettings, BackupData, ReleaseFeature, UserRole, ReleaseNote, ConfirmDialogOptions } from '../types';
 import { Language } from '../i18n';
 import {
@@ -74,11 +74,11 @@ interface SettingsProps {
   onUpdate: (settings: SalonSettings) => void;
   onExportData: () => void;
   onImportData: (data: BackupData) => void;
-  onShowToast: (msg: string) => void;
+  onShowToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   onShowConfirm: (options: ConfirmDialogOptions) => void;
 }
 
-type TabId = 'general' | 'ai' | 'financial' | 'integrations' | 'plan' | 'loyalty' | 'data' | 'team' | 'releases' | 'users';
+type TabId = 'general' | 'ai' | 'financial' | 'integrations' | 'plan' | 'loyalty' | 'data' | 'team' | 'releases' | 'users' | 'privacy';
 
 const DEFAULT_SETTINGS: SalonSettings = {
   name: 'Studio Lívia Nicolly',
@@ -141,11 +141,120 @@ const AccessToggle: React.FC<{ title: string; description: string; isActive: boo
 );
 
 const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onUpdate, onExportData, onImportData, onShowToast, onShowConfirm }) => {
+  // Debug log to help diagnose issues
+  console.log("SettingsView Rendering. T:", t);
+
+  // Robust Translations Fallback
+  const privacyT = t?.privacy || t?.settings?.privacy || {
+    title: 'Central de Privacidade',
+    description: 'Controle seus dados e consentimentos conforme a LGPD.',
+    exportData: 'Exportar Meus Dados',
+    exportDesc: 'Baixe uma cópia dos seus dados pessoais em formato JSON.',
+    deleteAccount: 'Excluir Minha Conta',
+    deleteDesc: 'Anonimizar seus dados e encerrar acesso ao sistema.',
+    consents: 'Consentimentos',
+    marketing: 'Marketing e Comunicações',
+    marketingDesc: 'Receber novidades e promoções por e-mail.',
+    terms: 'Termos de Uso e Política',
+    termsDesc: 'Essencial para uso do sistema (Aceito no cadastro).',
+  };
+
   const [activeTab, setActiveTab] = useState<TabId>('general');
   // --- USER MANAGEMENT STATE ---
   const [userProfiles, setUserProfiles] = useState<any[]>([]);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
+
+  const [localSettings, setLocalSettings] = useState<SalonSettings>(() => ({
+    ...DEFAULT_SETTINGS,
+    ...settings,
+    permissions: { ...DEFAULT_SETTINGS.permissions, ...(settings.permissions || {}) },
+    integrations: { ...DEFAULT_SETTINGS.integrations, ...(settings.integrations || {}) },
+    releaseNotes: { ...DEFAULT_SETTINGS.releaseNotes!, ...(settings.releaseNotes || {}) }
+  }));
+
+  const integrations = localSettings.integrations || DEFAULT_SETTINGS.integrations!;
+  const permissions = localSettings.permissions || DEFAULT_SETTINGS.permissions!;
+
+  // --- PRIVACY STATE ---
+  const [consents, setConsents] = useState<any[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isAnonymizing, setIsAnonymizing] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'privacy') {
+      loadConsents();
+    }
+  }, [activeTab]);
+
+  const loadConsents = async () => {
+    try {
+      const { db } = await import('../services/database');
+      const data = await db.getMyConsents();
+      setConsents(data);
+    } catch (e) {
+      console.error("Error loading consents", e);
+    }
+  };
+
+  const handleToggleConsent = async (type: 'marketing', value: boolean) => {
+    try {
+      const { db } = await import('../services/database');
+      await db.recordConsent(type, value);
+      onShowToast("Preferência atualizada!");
+      loadConsents();
+    } catch (e) {
+      onShowToast("Erro ao atualizar.");
+    }
+  };
+
+  const handleExportMyData = async () => {
+    setIsExporting(true);
+    try {
+      const { db } = await import('../services/database');
+      const data = {
+        consents: consents,
+        timestamp: new Date().toISOString(),
+        settings: localSettings
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `meus-dados-bellaai.json`;
+      a.click();
+
+      await db.logAction('export_data', 'all');
+      onShowToast("Download iniciado!");
+    } catch (e) {
+      console.error(e);
+      onShowToast("Erro ao exportar.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    onShowConfirm({
+      title: privacyT.deleteAccount,
+      message: privacyT.deleteDesc + " Esta ação é irreversível.",
+      variant: 'danger',
+      onConfirm: async () => {
+        setIsAnonymizing(true);
+        try {
+          const { db } = await import('../services/database');
+          await db.anonymizeUser();
+          onShowToast("Conta anonimizada. Até logo.");
+          window.location.reload();
+        } catch (e) {
+          onShowToast("Erro ao excluir conta.");
+        } finally {
+          setIsAnonymizing(false);
+        }
+      }
+    });
+  };
 
   // Fetch profiles when entering "Users" tab
   React.useEffect(() => {
@@ -201,7 +310,7 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
   };
   // -----------------------------
 
-  const [localSettings, setLocalSettings] = useState<SalonSettings>(settings);
+
   const [showSavedToast, setShowSavedToast] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [integratingId, setIntegratingId] = useState<string | null>(null);
@@ -360,7 +469,11 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
   const togglePermission = (key: keyof NonNullable<SalonSettings['permissions']>) => {
     setLocalSettings(prev => ({
       ...prev,
-      permissions: { ...prev.permissions!, [key]: !prev.permissions![key] }
+      permissions: {
+        ...DEFAULT_SETTINGS.permissions,
+        ...(prev.permissions || {}),
+        [key]: !((prev.permissions || DEFAULT_SETTINGS.permissions!)[key])
+      }
     }));
   };
 
@@ -464,20 +577,88 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
   ], []);
 
   const tabs: { id: TabId; label: string; icon: any }[] = [
-    { id: 'general', label: t.settings.tabs.general, icon: Building2 },
+    { id: 'general', label: t?.settings?.tabs?.general || 'Geral', icon: Building2 },
     { id: 'team', label: 'Acesso & Equipe', icon: Users },
     { id: 'users', label: 'Usuários', icon: ShieldCheck }, // New Users Tab
-    { id: 'financial', label: t.settings.tabs.financial, icon: CreditCard },
-    { id: 'loyalty', label: t.settings.tabs.loyalty, icon: Gift },
-    { id: 'ai', label: t.settings.tabs.ai, icon: Sparkles },
-    { id: 'integrations', label: t.settings.tabs.integrations, icon: Globe },
+    { id: 'financial', label: t?.settings?.tabs?.financial || 'Financeiro', icon: CreditCard },
+    { id: 'loyalty', label: t?.settings?.tabs?.loyalty || 'Fidelidade', icon: Gift },
+    { id: 'ai', label: t?.settings?.tabs?.ai || 'IA', icon: Sparkles },
+    { id: 'integrations', label: t?.settings?.tabs?.integrations || 'Integrações', icon: Globe },
     { id: 'releases', label: 'Novidades', icon: PartyPopper },
-    { id: 'plan', label: t.settings.tabs.plan, icon: Crown },
+    { id: 'plan', label: t?.settings?.tabs?.plan || 'Plano', icon: Crown },
     { id: 'data', label: 'Dados', icon: Database },
+    { id: 'privacy', label: privacyT.title, icon: ShieldCheck },
   ];
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'privacy':
+        return (
+          <div className="space-y-8 fade-in">
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-8 rounded-[2.5rem] text-white relative overflow-hidden shadow-xl">
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md"><ShieldCheck size={24} className="text-emerald-400" /></div>
+                  <h3 className="text-2xl font-black">{privacyT.title}</h3>
+                </div>
+                <p className="text-gray-400 max-w-lg leading-relaxed text-sm font-medium">{privacyT.description}</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-6">
+              <h4 className="text-lg font-black text-gray-900">{privacyT.consents}</h4>
+
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-white rounded-xl text-gray-400"><FileText size={20} /></div>
+                  <div>
+                    <h5 className="font-bold text-gray-900 text-sm">{privacyT.terms}</h5>
+                    <p className="text-xs text-gray-500">{privacyT.termsDesc}</p>
+                  </div>
+                </div>
+                <div className="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                  Aceito
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-white rounded-xl text-pink-500"><Megaphone size={20} /></div>
+                  <div>
+                    <h5 className="font-bold text-gray-900 text-sm">{privacyT.marketing}</h5>
+                    <p className="text-xs text-gray-500">{privacyT.marketingDesc}</p>
+                  </div>
+                </div>
+                <div className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" checked={consents.find(c => c.type === 'marketing')?.agreed ?? false} onChange={e => handleToggleConsent('marketing', e.target.checked)} />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-cyan-200 transition-all">
+                <div className="mb-6">
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">{privacyT.exportData}</h4>
+                  <p className="text-gray-500 text-sm leading-relaxed">{privacyT.exportDesc}</p>
+                </div>
+                <button onClick={handleExportMyData} disabled={isExporting} className="w-full py-4 bg-cyan-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
+                  {isExporting ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />} {privacyT.exportData}
+                </button>
+              </div>
+
+              <div className="bg-rose-50 p-8 rounded-[2.5rem] border border-rose-100 shadow-sm flex flex-col justify-between group hover:border-rose-300 transition-all">
+                <div className="mb-6">
+                  <h4 className="text-xl font-black text-rose-900 mb-2">{privacyT.deleteAccount}</h4>
+                  <p className="text-rose-700 text-sm leading-relaxed">{privacyT.deleteDesc}</p>
+                </div>
+                <button onClick={handleDeleteAccount} disabled={isAnonymizing} className="w-full py-4 bg-white border-2 border-rose-200 text-rose-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-600 hover:text-white hover:border-rose-600 active:scale-95 transition-all flex items-center justify-center gap-2">
+                  {isAnonymizing ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />} {privacyT.deleteAccount}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
       case 'data':
         return (
           <div className="space-y-8 fade-in">

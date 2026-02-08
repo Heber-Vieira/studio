@@ -5,7 +5,7 @@ import { supabase } from '../services/supabase';
 interface AuthContextType {
   user: UserProfile | null;
   login: (email: string, password?: string, role?: UserRole) => Promise<{ error: any }>;
-  signUp: (email: string, password?: string, name?: string, role?: UserRole) => Promise<{ error: any }>;
+  signUp: (email: string, password?: string, name?: string, role?: UserRole, consents?: { terms: boolean; marketing: boolean }) => Promise<{ error: any }>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -183,15 +183,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error: null };
   };
 
-  const signUp = async (email: string, password?: string, name?: string, role?: UserRole) => {
+  const signUp = async (email: string, password?: string, name?: string, role?: UserRole, consents?: { terms: boolean; marketing: boolean }) => {
     setIsLoading(true);
-    const { data, error } = await supabase.auth.signUp({
+    const { data: { user }, error } = await supabase.auth.signUp({
       email,
       password: password || '',
       options: {
         data: {
           name,
-          role: role || 'client'
+          role: role || 'client',
+          consents: consents || { terms: false, marketing: false }
         }
       }
     });
@@ -199,6 +200,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) {
       setIsLoading(false);
       return { error };
+    }
+
+    // Attempt to record consents to DB immediately (best effort)
+    if (user && consents) {
+      // We use a fire-and-forget approach here to avoid blocking UI if RLS/Network fails
+      supabase.from('privacy_consents').insert([
+        { user_id: user.id, type: 'terms', agreed: consents.terms, user_agent: navigator.userAgent },
+        { user_id: user.id, type: 'marketing', agreed: consents.marketing, user_agent: navigator.userAgent }
+      ]).then(({ error }) => {
+        if (error) console.warn("Background consent recording failed (likely RLS for unconfirmed user):", error);
+      });
     }
 
     setIsLoading(false);
