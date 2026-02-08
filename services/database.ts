@@ -972,7 +972,25 @@ export const db = {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-        return data;
+
+        // --- FALLBACK: Migrate from metadata if DB is empty (Fix for Signup RLS race condition) ---
+        if ((!data || data.length === 0) && user.user_metadata?.consents) {
+            console.log("[DB] Migrating consents from metadata...", user.user_metadata.consents);
+            const meta = user.user_metadata.consents;
+            const newConsents = [
+                { user_id: user.id, type: 'terms', agreed: !!meta.terms, user_agent: navigator.userAgent },
+                { user_id: user.id, type: 'marketing', agreed: !!meta.marketing, user_agent: navigator.userAgent }
+            ];
+
+            const { data: inserted } = await supabase
+                .from('privacy_consents')
+                .insert(newConsents)
+                .select();
+
+            return inserted || [];
+        }
+
+        return data || [];
     },
 
     async anonymizeUser() {
