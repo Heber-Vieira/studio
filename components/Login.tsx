@@ -27,10 +27,12 @@ const LoginView: React.FC = () => {
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Form States
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>('client');
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +55,11 @@ const LoginView: React.FC = () => {
           setSuccessMsg('Login realizado com sucesso! Carregando seu Studio...');
         }
       } else if (mode === 'signup') {
+        if (password !== confirmPassword) {
+          setError('As senhas não coincidem.');
+          setIsLoading(false);
+          return;
+        }
         const { error: signUpError } = await signUp(email, password, name, role);
         if (signUpError) {
           setError(signUpError.message);
@@ -222,6 +229,27 @@ const LoginView: React.FC = () => {
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+
+            {mode === 'signup' && (
+              <div className="relative group">
+                <InputField
+                  label="Confirme sua Senha"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  icon={<Lock size={20} />}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 bottom-4 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            )}
 
             <Button
               type="submit"
