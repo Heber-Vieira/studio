@@ -283,47 +283,91 @@ const ClientBooking: React.FC<ClientBookingProps> = ({ settings, services, staff
       return;
     }
 
-    // Check if anamnesis is required
-    const serviceHasTemplate = selectedService.anamnesisTemplateId && templates.find(t => t.id === selectedService.anamnesisTemplateId);
-    if (serviceHasTemplate && step < 5) {
-      setStep(5);
+    // --- LÓGICA DE DUPLICIDADE (Lado do Cliente) ---
+    const clientIdentifier = clientInfo.id || clientInfo.phone;
+
+    // 1. Verificação de Duplicidade Exata (Mesmo dia, horário, serviço e cliente)
+    const exactMatch = appointments.find(a =>
+      a.date === selectedDate &&
+      a.time === selectedTime &&
+      a.serviceId === selectedService.id &&
+      (a.clientId === clientInfo.id || a.clientPhone === clientInfo.phone) &&
+      a.status !== 'cancelled'
+    );
+
+    if (exactMatch) {
+      onShowAlert(
+        "Ops! Você já agendou este horário. 🌸",
+        `Já identificamos um agendamento idêntico em nosso sistema para ${selectedService.name} às ${selectedTime}.\n\nSe você deseja alterar seu horário ou houve algum engano, entre em contato conosco pelo WhatsApp!`
+      );
       return;
     }
 
-    const appointmentId = Math.random().toString(36).substr(2, 9);
+    // 2. Verificação de Agendamento Repetido (Mesmo dia, cliente e serviço)
+    const dayMatch = appointments.find(a =>
+      a.date === selectedDate &&
+      a.serviceId === selectedService.id &&
+      (a.clientId === clientInfo.id || a.clientPhone === clientInfo.phone) &&
+      a.status !== 'cancelled'
+    );
 
-    // Save Anamnesis if filled
-    if (serviceHasTemplate) {
-      const template = templates.find(t => t.id === selectedService.anamnesisTemplateId)!;
-      const signatureData = sigCanvas.current?.toDataURL('image/png');
+    const proceedWithBooking = () => {
+      // Check if anamnesis is required
+      const serviceHasTemplate = selectedService.anamnesisTemplateId && templates.find(t => t.id === selectedService.anamnesisTemplateId);
+      if (serviceHasTemplate && step < 5) {
+        setStep(5);
+        return;
+      }
 
-      const anamnesisRecord: AnamnesisRecord = {
-        id: Math.random().toString(36).substr(2, 9),
-        templateId: template.id,
+      const appointmentId = Math.random().toString(36).substr(2, 9);
+
+      // Save Anamnesis if filled
+      if (serviceHasTemplate) {
+        const template = templates.find(t => t.id === selectedService.anamnesisTemplateId)!;
+        const signatureData = sigCanvas.current?.toDataURL('image/png');
+
+        const anamnesisRecord: AnamnesisRecord = {
+          id: Math.random().toString(36).substr(2, 9),
+          templateId: template.id,
+          clientId: clientInfo.id || 'external',
+          clientName: clientInfo.name,
+          answers: anamnesisAnswers,
+          signatureUrl: signatureData,
+          signedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        };
+        onAddAnamnesisRecord(anamnesisRecord);
+      }
+
+      onBook({
+        id: appointmentId,
         clientId: clientInfo.id || 'external',
         clientName: clientInfo.name,
-        answers: anamnesisAnswers,
-        signatureUrl: signatureData,
-        signedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      };
-      onAddAnamnesisRecord(anamnesisRecord);
+        clientPhone: clientInfo.phone,
+        serviceId: selectedService.id,
+        service: selectedService.name,
+        date: selectedDate,
+        time: selectedTime,
+        status: 'pending',
+        price: selectedService.price,
+        professionalId: selectedPro.id
+      });
+      setBookingFinished(true);
+    };
+
+    if (dayMatch) {
+      onShowConfirm({
+        title: "Você já tem um horário hoje! ✨",
+        message: `Notamos que você já possui um agendamento de ${selectedService.name} para hoje às ${dayMatch.time}.\n\nDeseja realmente agendar um segundo horário para este mesmo serviço hoje?`,
+        onConfirm: proceedWithBooking,
+        confirmText: "Sim, Agendar",
+        cancelText: "Verificar",
+        variant: 'primary'
+      });
+      return;
     }
 
-    onBook({
-      id: appointmentId,
-      clientId: clientInfo.id || 'external',
-      clientName: clientInfo.name,
-      clientPhone: clientInfo.phone,
-      serviceId: selectedService.id,
-      service: selectedService.name,
-      date: selectedDate,
-      time: selectedTime,
-      status: 'pending',
-      price: selectedService.price,
-      professionalId: selectedPro.id
-    });
-    setBookingFinished(true);
+    proceedWithBooking();
   };
 
   const handleReset = () => {

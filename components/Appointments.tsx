@@ -527,21 +527,64 @@ const AppointmentsView: React.FC<AppointmentsProps> = ({ appointments, clients, 
       return;
     }
 
-    onAdd({
-      id: Math.random().toString(36).substr(2, 9),
-      clientId: client.id,
-      clientName: client.name,
-      serviceId: service.id,
-      service: service.name,
-      date: newApt.date,
-      time: newApt.time,
-      status: 'confirmed',
-      price: service.price,
-      professionalId: newApt.professionalId
-    });
+    const performAdd = () => {
+      onAdd({
+        id: Math.random().toString(36).substr(2, 9),
+        clientId: client.id,
+        clientName: client.name,
+        serviceId: service.id,
+        service: service.name,
+        date: newApt.date,
+        time: newApt.time,
+        status: 'confirmed',
+        price: service.price,
+        professionalId: newApt.professionalId
+      });
 
-    setIsModalOpen(false);
-    setNewApt({ clientId: '', serviceId: '', professionalId: '', date: TODAY, time: '' });
+      setIsModalOpen(false);
+      setNewApt({ clientId: '', serviceId: '', professionalId: '', date: TODAY, time: '' });
+    };
+
+    // --- LÓGICA DE DUPLICIDADE ---
+
+    // 1. Verificação de Duplicidade Exata (Mesmo dia, horário, serviço e cliente)
+    const exactMatch = appointments.find(a =>
+      a.date === newApt.date &&
+      a.time === newApt.time &&
+      a.serviceId === newApt.serviceId &&
+      a.clientId === newApt.clientId &&
+      a.status !== 'cancelled'
+    );
+
+    if (exactMatch) {
+      onShowAlert(
+        "Aviso de Duplicidade! 🛑",
+        `Identificamos que já existe um agendamento idêntico (${service.name} às ${newApt.time}) para ${client.name}. \n\nPara manter a organização impecável do seu Studio, por favor selecione um horário ou serviço diferente.`
+      );
+      return;
+    }
+
+    // 2. Verificação de Agendamento Repetido (Mesmo dia, cliente e serviço)
+    const dayMatch = appointments.find(a =>
+      a.date === newApt.date &&
+      a.clientId === newApt.clientId &&
+      a.serviceId === newApt.serviceId &&
+      a.status !== 'cancelled'
+    );
+
+    if (dayMatch) {
+      onShowConfirm({
+        title: "Agendamento Repetido? ✨",
+        message: `Epa! Parece que ${client.name.split(' ')[0]} está com sede de beleza hoje! 💖\n\nJá existe um agendamento de ${service.name} para esta mesma data às ${dayMatch.time}.\n\nDeseja realmente prosseguir com este agendamento duplicado?`,
+        onConfirm: performAdd,
+        confirmText: "Sim, Agendar",
+        cancelText: "Verificar",
+        variant: 'primary'
+      });
+      return;
+    }
+
+    performAdd();
   };
 
   const handleConfirmCancel = () => {
