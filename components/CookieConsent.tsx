@@ -86,15 +86,15 @@ const CookieConsent: React.FC = () => {
 
     return (
         <>
-            {/* Privacy Icon Trigger (Floating) */}
+            {/* Privacy Icon Trigger (Floating) - MOVED TO THE RIGHT TO AVOID SIDEBAR CONFLICT */}
             {!showBanner && !showModal && (
                 <button
                     onClick={() => setShowModal(true)}
-                    className="fixed bottom-6 left-6 w-10 h-10 bg-white shadow-xl rounded-full flex items-center justify-center text-gray-400 hover:text-indigo-500 hover:scale-110 transition-all z-50 border border-gray-100 group"
+                    className="fixed bottom-6 right-24 w-10 h-10 bg-white shadow-xl rounded-full flex items-center justify-center text-gray-400 hover:text-indigo-500 hover:scale-110 transition-all z-[10002] border border-gray-100 group"
                     title="Preferências de Privacidade"
                 >
                     <ShieldCheck size={20} className="group-hover:rotate-12 transition-transform" />
-                    <div className="absolute left-12 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all whitespace-nowrap">
+                    <div className="absolute right-12 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all whitespace-nowrap">
                         Privacidade
                     </div>
                 </button>
