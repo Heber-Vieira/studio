@@ -446,8 +446,10 @@ const Dashboard: React.FC<DashboardProps> = ({ t, onAction, onNavigateDate, appo
                      </div>
 
                      <div className="p-8 border-t border-gray-100 bg-gray-50/30 flex justify-center">
-                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] overflow-hidden truncate px-2">
-                           BellaAI Systems &copy; {new Date().getFullYear()} • Todos os Direitos Reservados
+                        <p className="text-[9px] font-black text-gray-300 uppercase tracking-[0.4em] flex items-center gap-2">
+                           <span>Copyright © {new Date().getFullYear()}</span>
+                           <span className="text-[#FF69B4]/40">"{settings.name}"®</span>
+                           <span>- Todos os Direitos Reservados</span>
                         </p>
                      </div>
                   </div>

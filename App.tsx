@@ -17,6 +17,7 @@ import InventoryView from './components/Inventory';
 import AnamnesisView from './components/Anamnesis';
 import HelpSystem from './components/HelpSystem';
 import ReleaseNotesPopup from './components/ReleaseNotesPopup';
+import CookieConsent from './components/CookieConsent';
 import { View, Client, Appointment, Professional, SalonSettings, Service, Category, BlockedPeriod, BackupData, InventoryItem, Transaction, Supplier, AnamnesisTemplate, AnamnesisRecord } from './types';
 import { queueService } from './services/queueService';
 import { MOCK_CLIENTS, MOCK_APPOINTMENTS, MOCK_PROFESSIONALS, MOCK_SERVICES, MOCK_CATEGORIES, MOCK_INVENTORY, MOCK_INVENTORY_CATEGORIES } from './constants';
@@ -1132,9 +1133,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
           )}
           {renderView()}
           {!isPortalMode && (
-            <div className="py-8 text-center mt-auto">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">
-                BellaAI Systems • {new Date().getFullYear()} • Todos os Direitos Reservados
+            <div className="py-12 text-center mt-auto border-t border-gray-50/50 mx-8">
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-300 flex items-center justify-center gap-3">
+                <span className="opacity-50">Copyright © {new Date().getFullYear()}</span>
+                <span className="text-[#FF69B4]/40">"{settings.name}"®</span>
+                <span className="opacity-50">• Todos os Direitos Reservados</span>
               </p>
             </div>
           )}
@@ -1207,6 +1210,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <CookieConsent />
 
       </div>
     </>

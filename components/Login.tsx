@@ -360,10 +360,11 @@ const LoginView: React.FC = () => {
             </div>
           </form>
 
-          {/* Mobile Footer Credit */}
-          <div className="lg:hidden mt-12 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
-              BellaAI Systems • {new Date().getFullYear()} • Todos os Direitos Reservados
+          <div className="lg:hidden mt-12 text-center pb-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-300 flex flex-wrap items-center justify-center gap-2">
+              <span className="opacity-60">Copyright © {new Date().getFullYear()}</span>
+              <span className="text-[#FF69B4]/60">"BellaAI"®</span>
+              <span className="opacity-60">- Todos os Direitos Reservados</span>
             </p>
           </div>
         </div>
