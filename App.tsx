@@ -955,6 +955,7 @@ const MainLayout: React.FC = () => {
               onUpdateSupplier={updateSupplier}
               onDeleteSupplier={deleteSupplier}
               user={user!}
+              settings={settings}
               onShowToast={showToast}
               onShowConfirm={showConfirm}
             />

@@ -55,9 +55,12 @@ import {
    YAxis,
    CartesianGrid,
    BarChart,
-   Bar
+   Bar,
+   RadialBarChart,
+   RadialBar,
+   PolarAngleAxis
 } from 'recharts';
-import { Appointment, UserProfile, Transaction, Client, Service, InventoryItem, Supplier, Category, ConfirmDialogOptions } from '../types';
+import { Appointment, UserProfile, Transaction, Client, Service, InventoryItem, Supplier, Category, ConfirmDialogOptions, SalonSettings } from '../types';
 import { Modal, Button, StatCard, CurrencyInput } from './ui';
 
 interface FinancialProps {
@@ -77,6 +80,7 @@ interface FinancialProps {
    onShowToast: (msg: string) => void;
    categories: Category[];
    onShowConfirm: (options: ConfirmDialogOptions) => void;
+   settings: SalonSettings;
 }
 
 const COLORS_CHART = [COLORS.pink, COLORS.turquoise, COLORS.purple, COLORS.yellow, '#FF9F43'];
@@ -98,7 +102,8 @@ const FinancialView: React.FC<FinancialProps> = ({
    user,
    onShowToast,
    categories,
-   onShowConfirm
+   onShowConfirm,
+   settings
 }) => {
    const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'transactions' | 'suppliers'>('overview');
 
@@ -252,6 +257,31 @@ const FinancialView: React.FC<FinancialProps> = ({
          .map(key => ({ name: key, value: data[key] }))
          .sort((a, b) => b.value - a.value);
    }, [baseTransactions, services, categories]);
+
+   const expenseCategoryData = useMemo(() => {
+      const data: Record<string, number> = {};
+      const expenseTransactions = baseTransactions.filter(t => t.type === 'expense');
+
+      expenseTransactions.forEach(t => {
+         let catLabel = t.client || 'Geral';
+         data[catLabel] = (data[catLabel] || 0) + t.amount;
+      });
+
+      const total = Object.values(data).reduce((acc, v) => acc + v, 0);
+      return Object.keys(data)
+         .map(key => ({
+            name: key,
+            value: data[key],
+            percentage: total > 0 ? Math.round((data[key] / total) * 100) : 0
+         }))
+         .sort((a, b) => b.value - a.value);
+   }, [baseTransactions]);
+
+   const goalProgress = useMemo(() => {
+      const goal = settings.monthlyGoal || 20000;
+      const progress = Math.min(Math.round((totalIncome / goal) * 100), 100);
+      return [{ value: progress }];
+   }, [totalIncome, settings.monthlyGoal]);
 
    const cashFlowData = useMemo(() => {
       const today = new Date();
@@ -478,7 +508,61 @@ const FinancialView: React.FC<FinancialProps> = ({
                         </p>
                      </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                     <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col min-h-[400px]">
+                        <div className="flex justify-between items-center mb-6">
+                           <h3 className="text-xl font-bold text-gray-900">Meta Mensal</h3>
+                           <div className="bg-pink-50 text-[#FF69B4] text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider">
+                              Alvo: R$ {(settings.monthlyGoal || 20000).toLocaleString('pt-BR')}
+                           </div>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center justify-center relative">
+                           <ResponsiveContainer width="100%" height={200}>
+                              <RadialBarChart
+                                 cx="50%"
+                                 cy="50%"
+                                 innerRadius="80%"
+                                 outerRadius="100%"
+                                 barSize={20}
+                                 data={goalProgress}
+                                 startAngle={180}
+                                 endAngle={0}
+                              >
+                                 <PolarAngleAxis
+                                    type="number"
+                                    domain={[0, 100]}
+                                    angleAxisId={0}
+                                    tick={false}
+                                 />
+                                 <RadialBar
+                                    background
+                                    dataKey="value"
+                                    cornerRadius={30}
+                                    fill={COLORS.pink}
+                                 />
+                              </RadialBarChart>
+                           </ResponsiveContainer>
+                           <div className="absolute top-[60%] flex flex-col items-center">
+                              <span className="text-4xl font-black text-gray-900">{goalProgress[0].value}%</span>
+                              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Alcançado</span>
+                           </div>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center">
+                           <div className="flex flex-col">
+                              <span className="text-[10px] font-bold text-gray-400 uppercase">Faltam</span>
+                              <span className="text-sm font-black text-gray-700">
+                                 R$ {Math.max(0, (settings.monthlyGoal || 20000) - totalIncome).toLocaleString('pt-BR')}
+                              </span>
+                           </div>
+                           <div className="flex flex-col items-end">
+                              <span className="text-[10px] font-bold text-gray-400 uppercase">Faturamento</span>
+                              <span className="text-sm font-black text-[#40E0D0]">
+                                 R$ {totalIncome.toLocaleString('pt-BR')}
+                              </span>
+                           </div>
+                        </div>
+                     </div>
+
                      <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
                         <h3 className="text-xl font-bold text-gray-900 mb-6">Receita por Categoria</h3>
                         <div className="h-[300px]">
@@ -514,12 +598,27 @@ const FinancialView: React.FC<FinancialProps> = ({
                      <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
                         <h3 className="text-xl font-bold text-gray-900 mb-6">Mix de Despesas</h3>
                         <div className="space-y-5">
-                           {[{ name: 'Insumos', value: 40, color: 'bg-rose-400' }, { name: 'Comissões', value: 35, color: 'bg-orange-400' }, { name: 'Marketing', value: 15, color: 'bg-blue-400' }, { name: 'Geral', value: 10, color: 'bg-gray-400' }].map(item => (
-                              <div key={item.name}>
-                                 <div className="flex justify-between text-xs font-bold mb-1"><span>{item.name}</span><span>{item.value}%</span></div>
-                                 <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden"><div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.value}%` }}></div></div>
+                           {expenseCategoryData.length > 0 ? (
+                              expenseCategoryData.slice(0, 5).map((item, index) => (
+                                 <div key={item.name}>
+                                    <div className="flex justify-between text-xs font-bold mb-1">
+                                       <span>{item.name}</span>
+                                       <span>{item.percentage}%</span>
+                                    </div>
+                                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                                       <div
+                                          className={`h-full ${['bg-rose-400', 'bg-orange-400', 'bg-blue-400', 'bg-purple-400', 'bg-gray-400'][index % 5]} rounded-full transition-all duration-1000`}
+                                          style={{ width: `${item.percentage}%` }}
+                                       ></div>
+                                    </div>
+                                 </div>
+                              ))
+                           ) : (
+                              <div className="flex flex-col items-center justify-center py-10 text-gray-300">
+                                 <ArrowDownRight size={32} className="mb-2 opacity-20" />
+                                 <p className="text-xs font-bold italic">Sem despesas no período</p>
                               </div>
-                           ))}
+                           )}
                         </div>
                      </div>
                   </div>
