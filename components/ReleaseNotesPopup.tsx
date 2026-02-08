@@ -16,13 +16,13 @@ const ReleaseNotesPopup: React.FC<ReleaseNotesPopupProps> = ({ config }) => {
   const filteredFeatures = useMemo(() => {
     if (!config || !user) return [];
 
-    return config.activeNote.features.filter(feature => {
+    return (config.activeNote?.features || []).filter(feature => {
       // Se feature for string (legado), mostra para todos
       if (typeof feature === 'string') return true;
-      // Se roles for 'all', mostra para todos
-      if (feature.roles === 'all') return true;
+      // Se roles for 'all' ou indefinido, mostra para todos
+      if (!feature || !feature.roles || feature.roles === 'all') return true;
       // Se não, verifica se a role do usuário está na lista
-      return feature.roles.includes(user.role);
+      return Array.isArray(feature.roles) && feature.roles.includes(user.role);
     });
   }, [config, user]);
 

@@ -202,27 +202,44 @@ const FinancialView: React.FC<FinancialProps> = ({
       });
    }, [baseTransactions, searchTerm, filters]);
 
-   const totalIncome = useMemo(() => baseTransactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0), [baseTransactions]);
-   const totalExpense = useMemo(() => baseTransactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0), [baseTransactions]);
+   const { totalIncome, totalExpense, currentMonthTransactions } = useMemo(() => {
+      const now = new Date();
+      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const monthly = baseTransactions.filter(t => t.date.startsWith(monthKey));
+
+      const income = monthly.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+      const expense = monthly.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+
+      return {
+         totalIncome: income,
+         totalExpense: expense,
+         currentMonthTransactions: monthly
+      };
+   }, [baseTransactions]);
+
    const netResult = totalIncome - totalExpense;
    const profitMarginNum = totalIncome > 0 ? (netResult / totalIncome) * 100 : 0;
    const profitMargin = profitMarginNum.toFixed(1);
-   const averageTicket = baseTransactions.filter(t => t.type === 'income').length > 0 ? totalIncome / baseTransactions.filter(t => t.type === 'income').length : 0;
+
+   const averageTicket = useMemo(() => {
+      const monthlyIncomeTransactions = currentMonthTransactions.filter(t => t.type === 'income');
+      return monthlyIncomeTransactions.length > 0 ? totalIncome / monthlyIncomeTransactions.length : 0;
+   }, [currentMonthTransactions, totalIncome]);
 
    const paymentMethodData = useMemo(() => {
       const data: Record<string, number> = {};
-      baseTransactions.filter(t => t.type === 'income').forEach(t => {
+      currentMonthTransactions.filter(t => t.type === 'income').forEach(t => {
          data[t.method] = (data[t.method] || 0) + t.amount;
       });
       return Object.keys(data)
          .map(key => ({ name: key, value: data[key] }))
          .sort((a, b) => b.value - a.value);
-   }, [baseTransactions]);
+   }, [currentMonthTransactions]);
 
    const categoryData = useMemo(() => {
       const data: Record<string, number> = {};
 
-      const incomeTransactions = baseTransactions.filter(t => t.type === 'income');
+      const incomeTransactions = currentMonthTransactions.filter(t => t.type === 'income');
 
       incomeTransactions.forEach(t => {
          let catLabel = 'Outros';
@@ -256,11 +273,11 @@ const FinancialView: React.FC<FinancialProps> = ({
       return Object.keys(data)
          .map(key => ({ name: key, value: data[key] }))
          .sort((a, b) => b.value - a.value);
-   }, [baseTransactions, services, categories]);
+   }, [currentMonthTransactions, services, categories]);
 
    const expenseCategoryData = useMemo(() => {
       const data: Record<string, number> = {};
-      const expenseTransactions = baseTransactions.filter(t => t.type === 'expense');
+      const expenseTransactions = currentMonthTransactions.filter(t => t.type === 'expense');
 
       expenseTransactions.forEach(t => {
          let catLabel = t.client || 'Geral';
@@ -275,12 +292,13 @@ const FinancialView: React.FC<FinancialProps> = ({
             percentage: total > 0 ? Math.round((data[key] / total) * 100) : 0
          }))
          .sort((a, b) => b.value - a.value);
-   }, [baseTransactions]);
+   }, [currentMonthTransactions]);
 
    const goalProgress = useMemo(() => {
       const goal = settings.monthlyGoal || 20000;
-      const progress = Math.min(Math.round((totalIncome / goal) * 100), 100);
-      return [{ value: progress }];
+      const actualProgress = Math.round((totalIncome / goal) * 100);
+      const visualProgress = Math.min(actualProgress, 100);
+      return [{ value: visualProgress, actual: actualProgress }];
    }, [totalIncome, settings.monthlyGoal]);
 
    const cashFlowData = useMemo(() => {
@@ -543,7 +561,7 @@ const FinancialView: React.FC<FinancialProps> = ({
                               </RadialBarChart>
                            </ResponsiveContainer>
                            <div className="absolute top-[60%] flex flex-col items-center">
-                              <span className="text-4xl font-black text-gray-900">{goalProgress[0].value}%</span>
+                              <span className="text-4xl font-black text-gray-900">{goalProgress[0].actual}%</span>
                               <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Alcançado</span>
                            </div>
                         </div>

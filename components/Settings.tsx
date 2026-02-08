@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { SalonSettings, BackupData, ReleaseFeature, UserRole, ReleaseNote, ConfirmDialogOptions } from '../types';
+import { SalonSettings, BackupData, ReleaseFeature, UserRole, ReleaseNote, ConfirmDialogOptions, Transaction } from '../types';
 import { Language } from '../i18n';
 import {
   Building2,
@@ -76,6 +76,7 @@ interface SettingsProps {
   onImportData: (data: BackupData) => void;
   onShowToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   onShowConfirm: (options: ConfirmDialogOptions) => void;
+  transactions: Transaction[];
 }
 
 type TabId = 'general' | 'ai' | 'financial' | 'integrations' | 'plan' | 'loyalty' | 'data' | 'team' | 'releases' | 'users' | 'privacy';
@@ -140,7 +141,7 @@ const AccessToggle: React.FC<{ title: string; description: string; isActive: boo
   </div>
 );
 
-const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onUpdate, onExportData, onImportData, onShowToast, onShowConfirm }) => {
+const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onUpdate, onExportData, onImportData, onShowToast, onShowConfirm, transactions }) => {
   // Debug log to help diagnose issues
   console.log("SettingsView Rendering. T:", t);
 
@@ -342,14 +343,17 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
   const featureInputRef = useRef<HTMLInputElement>(null);
 
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    setTimeout(() => {
-      onUpdate(localSettings);
-      setIsSaving(false);
+    try {
+      await onUpdate(localSettings);
       setShowSavedToast(true);
       setTimeout(() => setShowSavedToast(false), 3000);
-    }, 800);
+    } catch (e) {
+      console.error("Save error in SettingsView:", e);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleFactoryReset = () => {
@@ -589,6 +593,23 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
     { id: 'data', label: 'Dados', icon: Database },
     { id: 'privacy', label: privacyT.title, icon: ShieldCheck },
   ];
+
+  const currentMonthIncome = useMemo(() => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    return transactions
+      .filter(t => t.date?.startsWith(monthKey) && t.type === 'income')
+      .reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+  }, [transactions]);
+
+  const goalProgress = useMemo(() => {
+    // Default to the goal in settings, or the fallback which is 20000
+    const goal = localSettings.monthlyGoal && localSettings.monthlyGoal > 0 ? localSettings.monthlyGoal : 20000;
+    const progress = Math.round((currentMonthIncome / goal) * 100);
+    const visualProgress = Math.min(progress, 100);
+    return { actual: progress, visual: visualProgress };
+  }, [currentMonthIncome, localSettings.monthlyGoal]);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -939,8 +960,24 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
                   />
                 </div>
                 <div className="w-24 h-24 rounded-full border-8 border-gray-50 flex items-center justify-center relative">
-                  <div className="text-center"><span className="block text-[10px] font-bold text-gray-400">Progresso</span><span className="block text-sm font-black text-purple-500">65%</span></div>
-                  <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#C084FC" strokeWidth="8" strokeDasharray="289" strokeDashoffset="100" strokeLinecap="round" className="opacity-100" /></svg>
+                  <div className="text-center">
+                    <span className="block text-[10px] font-bold text-gray-400">Progresso</span>
+                    <span className="block text-sm font-black text-purple-500">{goalProgress.actual}%</span>
+                  </div>
+                  <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="46"
+                      fill="none"
+                      stroke="#C084FC"
+                      strokeWidth="8"
+                      strokeDasharray="289"
+                      strokeDashoffset={289 - (289 * goalProgress.visual / 100)}
+                      strokeLinecap="round"
+                      className="transition-all duration-1000 ease-out"
+                    />
+                  </svg>
                 </div>
               </div>
               <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-4">

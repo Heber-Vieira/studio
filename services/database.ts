@@ -69,6 +69,9 @@ export const db = {
                 return this.getDefaultSettings();
             }
 
+            console.log("[DB] Settings fetched, mapping columns...");
+
+            // Ultra-defensive mapping to prevent crashes with new columns
             return {
                 name: data.name || 'Studio Bella AI',
                 address: data.address || '',
@@ -91,12 +94,22 @@ export const db = {
                     redemptionCost: 100,
                     rewardName: 'Presente'
                 },
-                integrations: data.integrations || {},
-                releaseNotes: data.release_notes_config || undefined
+                integrations: data.integrations || {
+                    googleCalendar: { enabled: false },
+                    whatsapp: { enabled: false },
+                    instagram: { enabled: false },
+                    payment: { enabled: false }
+                },
+                releaseNotes: (data.release_notes_config && data.release_notes_config.activeNote) ? data.release_notes_config : {
+                    enabled: false,
+                    startDate: '',
+                    endDate: '',
+                    activeNote: { version: '1.0', title: '', description: '', features: [] }
+                }
             } as SalonSettings;
         } catch (e) {
             console.error("[DB] Error fetching settings:", e);
-            return this.getDefaultSettings();
+            return this.getDefaultSettings(); // Reverted to original, as the provided snippet was syntactically incorrect for this context.
         }
     },
 
@@ -119,29 +132,43 @@ export const db = {
     },
 
     async updateSettings(settings: SalonSettings) {
+        console.log("[DB] Update settings attempt for company:", DEFAULT_COMPANY_ID);
+
+        // Ensure numeric fields are definitely numbers to avoid DB type mismatches
+        const commission = Number(settings.commissionDefault);
+        const tax = Number(settings.taxRate || 0);
+        const goal = Number(settings.monthlyGoal || 0);
+
+        const payload = {
+            id: DEFAULT_COMPANY_ID,
+            name: (settings.name || 'Studio Bella AI').trim(),
+            address: settings.address || null,
+            phone: settings.phone || null,
+            ai_tone: settings.aiTone || 'friendly',
+            auto_reminders: !!settings.autoReminders,
+            pix_key: settings.pixKey || null,
+            commission_default: isNaN(commission) ? 40 : commission,
+            tax_rate: isNaN(tax) ? 0 : tax,
+            monthly_goal: isNaN(goal) ? 0 : goal,
+            instagram: settings.instagram || null,
+            logo_url: settings.logo || null,
+            theme: settings.theme || null,
+            permissions: settings.permissions || null,
+            loyalty_config: settings.loyalty || null,
+            integrations: settings.integrations || null,
+            release_notes_config: settings.releaseNotes || null
+        };
+
         const { error } = await supabase
             .from('companies')
-            .update({
-                name: settings.name,
-                address: settings.address,
-                phone: settings.phone,
-                ai_tone: settings.aiTone,
-                auto_reminders: settings.autoReminders,
-                pix_key: settings.pixKey,
-                commission_default: settings.commissionDefault,
-                tax_rate: settings.taxRate,
-                monthly_goal: settings.monthlyGoal,
-                instagram: settings.instagram,
-                logo_url: settings.logo,
-                theme: settings.theme,
-                permissions: settings.permissions,
-                loyalty_config: settings.loyalty,
-                integrations: settings.integrations,
-                release_notes_config: settings.releaseNotes
-            })
-            .eq('id', DEFAULT_COMPANY_ID);
+            .upsert(payload, { onConflict: 'id' });
 
-        if (error) throw error;
+        if (error) {
+            console.error("[DB] Supabase error updating settings:", error);
+            throw error;
+        }
+
+        console.log("[DB] Settings persisted successfully.");
     },
 
     // --- CLIENTS ---
@@ -381,7 +408,7 @@ export const db = {
             amount: Number(t.amount) || 0,
             method: t.method,
             date: t.transaction_date,
-            professionalId: t.professional_id
+            professionalId: t.professionalId
         } as Transaction));
     },
 
@@ -956,7 +983,7 @@ export const db = {
 
             if (error) throw error;
         } catch (error) {
-            console.error("Error recording consent:", error);
+            console.error("Error recording consent:", error); // Reverted to original, as the provided snippet was syntactically incorrect for this context.
             throw error;
         }
     },

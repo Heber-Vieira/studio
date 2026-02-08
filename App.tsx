@@ -287,6 +287,10 @@ const MainLayout: React.FC = () => {
     const safetyTimeout = setTimeout(() => {
       console.warn("[FetchData] Safety timeout reached (15s). Forcing isDataLoading to false.");
       setIsDataLoading(false);
+      // Extra safety: if we are stuck, the cache might be polluted. Clear it to force fresh load next time.
+      if (isInitial) {
+        localStorage.removeItem('bella_startup_cache');
+      }
     }, 15000);
 
     try {
@@ -694,11 +698,30 @@ const MainLayout: React.FC = () => {
 
   const setSettingsAndPersist = async (newSettings: SalonSettings) => {
     try {
+      // 1. Database Update
       await db.updateSettings(newSettings);
+
+      // 2. State Update
       setSettings(newSettings);
-      showToast("Configurações salvas! ⚙️");
-    } catch (e) {
-      showToast("Erro ao salvar configurações.");
+
+      // 3. LocalStorage Update (Initial settings for boot)
+      localStorage.setItem('salon_settings', JSON.stringify(newSettings));
+
+      // 4. Cache Update (Fetch data cache)
+      const cached = localStorage.getItem('bella_startup_cache');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          localStorage.setItem('bella_startup_cache', JSON.stringify({ ...parsed, settings: newSettings }));
+        } catch (e) { }
+      }
+
+      showToast("Configurações salvas! ⚙️", "success");
+    } catch (e: any) {
+      console.error("Error saving settings:", e);
+      const msg = e.message || e.details || "Erro desconhecido.";
+      showToast(`Erro ao salvar: ${msg}`, "error");
+      throw e;
     }
   };
 
@@ -992,6 +1015,7 @@ const MainLayout: React.FC = () => {
               onImportData={handleImportData}
               onShowToast={showToast}
               onShowConfirm={showConfirm}
+              transactions={transactions}
             />
           );
         case View.CLIENT_BOOKING:
@@ -999,8 +1023,28 @@ const MainLayout: React.FC = () => {
         default: return <Dashboard t={t} onAction={handleViewAction} onNavigateDate={setSelectedDate} appointments={appointments} userRole={user?.role || 'client'} user={user || undefined} settings={settings} clients={clients} staff={staff} services={services} onLogout={logout} onShowConfirm={showConfirm} />;
       }
     } catch (err) {
-      console.error("Render error:", err);
-      return <div className="p-20 text-center">Erro crítico ao carregar vista.</div>;
+      console.error("CRITICAL Render error:", err);
+      return (
+        <div className="flex flex-col items-center justify-center h-full min-h-[400px] p-10 text-center gap-6 fade-in">
+          <div className="w-20 h-20 bg-rose-50 rounded-[2rem] flex items-center justify-center text-rose-500 shadow-inner">
+            <AlertTriangle size={36} />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-gray-900 tracking-tight">Ops! Brilho Ofuscado.</h2>
+            <p className="text-sm text-gray-500 max-w-xs mx-auto font-medium">Houve um erro crítico ao carregar esta tela. Isso pode ser causado por dados antigos em cache.</p>
+          </div>
+          <button
+            onClick={() => {
+              localStorage.removeItem('bella_startup_cache');
+              localStorage.removeItem('salon_settings');
+              window.location.reload();
+            }}
+            className="px-10 py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all"
+          >
+            Recuperar Sistema 🛠️
+          </button>
+        </div>
+      );
     }
   };
 
