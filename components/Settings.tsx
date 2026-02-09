@@ -126,18 +126,18 @@ const DEFAULT_SETTINGS: SalonSettings = {
  * FIX: Helper component for team permissions
  */
 const AccessToggle: React.FC<{ title: string; description: string; isActive: boolean; onToggle: () => void; icon: React.ReactNode; colorClass: string }> = ({ title, description, isActive, onToggle, icon, colorClass }) => (
-  <div className="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-[2rem] hover:border-indigo-100 transition-all group cursor-pointer shadow-sm" onClick={onToggle}>
-    <div className="flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isActive ? 'bg-indigo-500 shadow-lg' : 'bg-gray-100'}`}>
-        {React.cloneElement(icon as any, { className: isActive ? 'text-white' : colorClass })}
+  <div className="flex items-center justify-between p-4 sm:p-6 bg-white border border-gray-100 rounded-[1.5rem] sm:rounded-[2rem] hover:border-indigo-100 transition-all group cursor-pointer shadow-sm gap-4" onClick={onToggle}>
+    <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl shrink-0 flex items-center justify-center transition-all ${isActive ? 'bg-indigo-500 shadow-lg' : 'bg-gray-100'}`}>
+        {React.cloneElement(icon as any, { size: 20, className: isActive ? 'text-white' : colorClass })}
       </div>
-      <div>
-        <h4 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{title}</h4>
-        <p className="text-xs text-gray-400 font-medium">{description}</p>
+      <div className="min-w-0">
+        <h4 className="font-bold text-sm sm:text-base text-gray-900 group-hover:text-indigo-600 transition-colors truncate">{title}</h4>
+        <p className="text-[10px] sm:text-xs text-gray-400 font-medium line-clamp-1">{description}</p>
       </div>
     </div>
-    <div className={`w-14 h-8 rounded-full relative transition-all duration-300 p-1 ${isActive ? 'bg-indigo-500' : 'bg-gray-200'}`}>
-      <div className={`w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 ${isActive ? 'translate-x-6' : 'translate-x-0'}`} />
+    <div className={`w-12 sm:w-14 h-6 sm:h-8 rounded-full shrink-0 relative transition-all duration-300 p-1 ${isActive ? 'bg-indigo-500' : 'bg-gray-200'}`}>
+      <div className={`w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full shadow-md transition-all duration-300 ${isActive ? 'translate-x-6 sm:translate-x-6' : 'translate-x-0'}`} />
     </div>
   </div>
 );
@@ -695,41 +695,41 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
       case 'privacy':
         return (
           <div className="space-y-8 fade-in">
-            <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-8 rounded-[2.5rem] text-white relative overflow-hidden shadow-xl">
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] text-white relative overflow-hidden shadow-xl">
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md"><ShieldCheck size={24} className="text-emerald-400" /></div>
-                  <h3 className="text-2xl font-black">{privacyT.title}</h3>
+                  <h3 className="text-xl sm:text-2xl font-black leading-tight">{privacyT.title}</h3>
                 </div>
-                <p className="text-gray-400 max-w-lg leading-relaxed text-sm font-medium">{privacyT.description}</p>
+                <p className="text-gray-400 max-w-lg leading-relaxed text-xs sm:text-sm font-medium">{privacyT.description}</p>
               </div>
             </div>
 
-            <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-6">
-              <h4 className="text-lg font-black text-gray-900">{privacyT.consents}</h4>
+            <div className="bg-white p-5 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm space-y-6">
+              <h4 className="text-base sm:text-lg font-black text-gray-900">{privacyT.consents}</h4>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 gap-4">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 bg-white rounded-xl text-gray-400"><FileText size={20} /></div>
+                  <div className="p-2 bg-white rounded-xl text-gray-400 shrink-0"><FileText size={20} /></div>
                   <div>
                     <h5 className="font-bold text-gray-900 text-sm">{privacyT.terms}</h5>
-                    <p className="text-xs text-gray-500">{privacyT.termsDesc}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500">{privacyT.termsDesc}</p>
                   </div>
                 </div>
-                <div className="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                <div className="self-start sm:self-center px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
                   Aceito
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 gap-4">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 bg-white rounded-xl text-pink-500"><Megaphone size={20} /></div>
+                  <div className="p-2 bg-white rounded-xl text-pink-500 shrink-0"><Megaphone size={20} /></div>
                   <div>
                     <h5 className="font-bold text-gray-900 text-sm">{privacyT.marketing}</h5>
-                    <p className="text-xs text-gray-500">{privacyT.marketingDesc}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500">{privacyT.marketingDesc}</p>
                   </div>
                 </div>
-                <div className="relative inline-flex items-center cursor-pointer">
+                <div className="self-start sm:self-center relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" className="sr-only peer" checked={consents.find(c => c.type === 'marketing')?.agreed ?? false} onChange={e => handleToggleConsent('marketing', e.target.checked)} />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
                 </div>
@@ -779,30 +779,25 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
               <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-cyan-500/50 rounded-full blur-3xl"></div>
               <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-cyan-200 transition-all">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+              <div className="bg-white p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-indigo-200 transition-all">
                 <div className="mb-6">
-                  <div className="w-14 h-14 bg-cyan-50 rounded-[1.5rem] flex items-center justify-center text-cyan-500 mb-4 group-hover:scale-110 transition-transform">
-                    <Download size={28} />
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">Backup Completo</h4>
-                  <p className="text-gray-500 text-sm leading-relaxed">Baixe uma cópia de segurança contendo todos os clientes, agendamentos, configurações e histórico financeiro.</p>
+                  <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Exportar Backup</h4>
+                  <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">Baixe todas as suas configurações em um arquivo JSON de segurança.</p>
                 </div>
-                <button onClick={onExportData} className="w-full py-4 bg-cyan-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-cyan-100 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
-                  <Download size={18} /> Exportar Dados
+                <button onClick={onExportData} className="w-full py-3.5 sm:py-4 bg-gray-900 text-white rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
+                  <Download size={18} /> Baixar Dados
                 </button>
               </div>
-              <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-indigo-200 transition-all">
+
+              <div className="bg-white p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col justify-between group hover:border-indigo-200 transition-all">
                 <div className="mb-6">
-                  <div className="w-14 h-14 bg-indigo-50 rounded-[1.5rem] flex items-center justify-center text-indigo-500 mb-4 group-hover:scale-110 transition-transform">
-                    <UploadCloud size={28} />
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">Restaurar Backup</h4>
-                  <p className="text-gray-500 text-sm leading-relaxed">Recupere seus dados a partir de um arquivo de backup (.json) gerado anteriormente.</p>
+                  <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Restaurar Backup</h4>
+                  <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">Recupere seus dados a partir de um arquivo de backup (.json) gerado anteriormente.</p>
                 </div>
                 <div className="relative">
                   <input type="file" ref={backupInputRef} onChange={handleBackupUpload} accept=".json" className="hidden" />
-                  <button onClick={() => backupInputRef.current?.click()} className="w-full py-4 bg-indigo-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-indigo-100 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
+                  <button onClick={() => backupInputRef.current?.click()} className="w-full py-3.5 sm:py-4 bg-indigo-500 text-white rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest shadow-lg shadow-indigo-100 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
                     <UploadCloud size={18} /> Importar Arquivo
                   </button>
                 </div>
@@ -951,26 +946,28 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
                 <div className={`space-y-6 transition-all duration-500 ${!releaseConfig.enabled ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
                   <div className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 space-y-4">
                     <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><Calendar size={14} /> Ciclo de Exibição</h5>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Data Inicial</label><input type="date" className="w-full bg-white border-none rounded-xl px-4 py-3 font-bold text-gray-800 text-sm outline-none shadow-sm [color-scheme:light] hover:bg-gray-50 transition-colors cursor-pointer" value={releaseConfig.startDate} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, startDate: e.target.value } })} /></div>
                       <div><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Data Final</label><input type="date" className="w-full bg-white border-none rounded-xl px-4 py-3 font-bold text-gray-800 text-sm outline-none shadow-sm [color-scheme:light] hover:bg-gray-50 transition-colors cursor-pointer" value={releaseConfig.endDate} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, endDate: e.target.value } })} /></div>
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Versão Custom</label><input type="text" placeholder="v2.0" className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 font-black text-[#FF69B4] outline-none" value={activeNote.version || ''} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, activeNote: { ...activeNote, version: e.target.value } } })} /></div>
-                      <div className="col-span-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Título Personalizado</label><input type="text" placeholder="Sua Mensagem Aqui" className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 font-bold text-gray-900 outline-none" value={activeNote.title || ''} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, activeNote: { ...activeNote, title: e.target.value } } })} /></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="sm:col-span-1"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Versão Custom</label><input type="text" placeholder="v2.0" className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 font-black text-[#FF69B4] outline-none" value={activeNote.version || ''} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, activeNote: { ...activeNote, version: e.target.value } } })} /></div>
+                      <div className="sm:col-span-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Título Personalizado</label><input type="text" placeholder="Sua Mensagem Aqui" className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 font-bold text-gray-900 outline-none" value={activeNote.title || ''} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, activeNote: { ...activeNote, title: e.target.value } } })} /></div>
                     </div>
                     <div><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Mensagem Principal</label><textarea className="w-full h-24 bg-gray-50 border-none rounded-2xl px-4 py-3 font-medium text-gray-700 outline-none resize-none text-sm leading-relaxed" placeholder="Descreva as melhorias de forma empolgante..." value={activeNote.description || ''} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, activeNote: { ...activeNote, description: e.target.value } } })} /></div>
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">Gerenciar Itens da Apresentação</label>
-                    <div className="flex gap-2">
-                      <input ref={featureInputRef} type="text" placeholder="Ex: Novo painel financeiro" className="flex-1 bg-white border-2 border-gray-100 rounded-xl px-4 py-3 font-medium text-sm outline-none focus:border-[#FF69B4] transition-colors" value={newFeatureText} onChange={e => setNewFeatureText(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleAddReleaseFeature()} />
-                      <select className="bg-gray-50 border-none rounded-xl px-3 py-3 text-xs font-bold text-gray-600 outline-none cursor-pointer" value={newFeatureRole} onChange={e => setNewFeatureRole(e.target.value as any)}>
-                        <option value="all">Todos</option><option value="master_admin">Só Admins</option><option value="attendant">Equipe</option><option value="client">Clientes</option>
-                      </select>
-                      <button onClick={handleAddReleaseFeature} className="bg-[#FF69B4] text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-pink-100"><Plus size={20} /></button>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input ref={featureInputRef} type="text" placeholder="Ex: Novo painel financeiro" className="flex-1 min-w-0 bg-white border-2 border-gray-100 rounded-xl px-4 py-3 font-medium text-sm outline-none focus:border-[#FF69B4] transition-colors" value={newFeatureText} onChange={e => setNewFeatureText(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleAddReleaseFeature()} />
+                      <div className="flex gap-2">
+                        <select className="flex-1 sm:flex-none bg-gray-50 border-none rounded-xl px-3 py-3 text-xs font-bold text-gray-600 outline-none cursor-pointer" value={newFeatureRole} onChange={e => setNewFeatureRole(e.target.value as any)}>
+                          <option value="all">Todos</option><option value="master_admin">Só Admins</option><option value="attendant">Equipe</option><option value="client">Clientes</option>
+                        </select>
+                        <button onClick={handleAddReleaseFeature} className="bg-[#FF69B4] text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-pink-100 shrink-0"><Plus size={20} /></button>
+                      </div>
                     </div>
 
                     <div className="space-y-3 mt-4">
@@ -1125,11 +1122,10 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
                   </svg>
                 </div>
               </div>
-              <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-4">
+              <div className="bg-white p-5 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm space-y-4">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><FileText size={14} /> Impostos / Taxas</label>
                 <div className="relative group">
-                  <input type="number" className="w-full bg-gray-50 border-none rounded-2xl pl-4 pr-12 py-4 font-black text-xl text-gray-900 outline-none focus:ring-2 focus:ring-emerald-200 transition-all" value={localSettings.taxRate || 0} onChange={e => setLocalSettings({ ...localSettings, taxRate: Number(e.target.value) })} />
-                  <span className="absolute right-6 top-1/2 -translate-y-1/2 font-bold text-gray-400">%</span>
+                  <input type="number" className="w-full bg-gray-50 border-none rounded-2xl pl-4 pr-12 py-4 font-black text-xl text-gray-900 outline-none focus:ring-2 focus:ring-emerald-200 transition-all" value={localSettings.taxRate || 0} onChange={e => setLocalSettings({ ...localSettings, taxRate: Number(e.target.value) })} /><span className="absolute right-6 top-1/2 -translate-y-1/2 font-bold text-gray-400">%</span>
                 </div>
               </div>
             </div>
@@ -1139,16 +1135,18 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
         return (
           <div className="space-y-8 fade-in">
             <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-8 rounded-[2.5rem] text-white relative overflow-hidden shadow-xl shadow-indigo-200"><div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6"><div><div className="flex items-center gap-3 mb-2"><div className="bg-white/20 p-2 rounded-xl backdrop-blur-md"><BrainCircuit size={24} className="text-cyan-300" /></div><h3 className="text-2xl font-black">BellaAI</h3></div><p className="text-indigo-100 max-lg leading-relaxed text-sm font-medium">Personalize sua assistente virtual.</p></div><div className="bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/10 text-center min-w-[140px]"><span className="block text-[10px] font-black uppercase tracking-widest text-cyan-300 mb-1">Status</span><span className="flex items-center justify-center gap-2 font-bold text-white"><Smile size={16} fill="currentColor" className="text-yellow-400" /> Online</span></div></div><div className="absolute -bottom-20 -left-20 w-64 h-64 bg-violet-500/50 rounded-full blur-3xl"></div><div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div></div>
-            <div className="space-y-4"><label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2"><Settings size={14} /> Tom de Voz</label><div className="grid grid-cols-1 md:grid-cols-3 gap-4">{[{ id: 'friendly', label: 'Amigável', desc: 'Usa emojis e muita energia.', icon: Smile }, { id: 'professional', label: 'Elegante', desc: 'Linguagem culta e direta.', icon: Briefcase }, { id: 'zen', label: 'Acolhedor', desc: 'Calmo e empático.', icon: Coffee }].map((tone) => (<button key={tone.id} onClick={() => setLocalSettings({ ...localSettings, aiTone: tone.id as any })} className={`p-6 rounded-[2rem] border-2 text-left transition-all relative overflow-hidden group ${localSettings.aiTone === tone.id ? 'border-violet-500 bg-violet-50' : 'border-gray-100 bg-white hover:border-violet-200'}`}><div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-colors ${localSettings.aiTone === tone.id ? 'bg-violet-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400 group-hover:bg-violet-100'}`}><tone.icon size={24} /></div><h4 className="font-bold text-lg mb-1">{tone.label}</h4><p className="text-xs text-gray-500 font-medium">{tone.desc}</p></button>))}</div></div>
+            <div className="space-y-4"><label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2"><Settings size={14} /> Tom de Voz</label><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[{ id: 'friendly', label: 'Amigável', desc: 'Usa emojis e muita energia.', icon: Smile }, { id: 'professional', label: 'Elegante', desc: 'Linguagem culta e direta.', icon: Briefcase }, { id: 'zen', label: 'Acolhedor', desc: 'Calmo e empático.', icon: Coffee }].map((tone) => (<button key={tone.id} onClick={() => setLocalSettings({ ...localSettings, aiTone: tone.id as any })} className={`p-6 rounded-[2rem] border-2 text-left transition-all relative overflow-hidden group ${localSettings.aiTone === tone.id ? 'border-violet-500 bg-violet-50' : 'border-gray-100 bg-white hover:border-violet-200'}`}><div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-colors ${localSettings.aiTone === tone.id ? 'bg-violet-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400 group-hover:bg-violet-100'}`}><tone.icon size={24} /></div><h4 className="font-bold text-lg mb-1">{tone.label}</h4><p className="text-xs text-gray-500 font-medium">{tone.desc}</p></button>))}</div></div>
             <div className="space-y-4"><label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2"><FileText size={14} /> Conhecimento Específico</label><div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm focus-within:ring-2 focus-within:ring-violet-100 transition-all"><textarea className="w-full h-32 border-none outline-none resize-none text-gray-600 font-medium text-sm bg-transparent" placeholder="Ex: 'Nós usamos apenas produtos veganos'..." value={localSettings.customAiInstructions || ''} onChange={(e) => setLocalSettings({ ...localSettings, customAiInstructions: e.target.value })} /><div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-50"><span className="text-[10px] text-gray-400 font-bold uppercase">Dica: Quanto mais detalhes, mais inteligente ela fica.</span><div className="flex items-center gap-2 bg-violet-50 text-violet-600 px-3 py-1.5 rounded-lg text-xs font-black uppercase"><Sparkles size={12} /> Auto-Save</div></div></div></div>
           </div>
         );
       case 'general':
         return (
-          <div className="space-y-10 fade-in pb-10">
-            <div className="space-y-6"><div className="flex items-center justify-between"><label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2"><ImageIcon size={14} /> Identidade Visual</label></div><div className="grid grid-cols-1 xl:grid-cols-5 gap-8"><div className="xl:col-span-3 space-y-6">
-              <div className="relative group bg-gradient-to-br from-white to-gray-50 p-8 rounded-[3rem] border-2 border-dashed border-gray-200 transition-all hover:border-[#FF69B4]/40 hover:shadow-2xl hover:shadow-pink-50 flex flex-col md:flex-row items-center gap-8"><div className="relative shrink-0"><div className="w-32 h-32 rounded-[2.5rem] bg-white shadow-2xl flex items-center justify-center overflow-hidden border-4 border-white transition-transform group-hover:scale-105 relative">{isExtractingColors && (<div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-20 flex flex-col items-center justify-center"><div className="w-full h-1 bg-[#FF69B4]/20 absolute top-0 overflow-hidden"><div className="w-1/3 h-full bg-[#FF69B4] animate-[shimmer_1s_infinite]"></div></div><Loader2 size={24} className="text-[#FF69B4] animate-spin mb-2" /><span className="text-[9px] font-black uppercase text-[#FF69B4]">Escaneando...</span></div>)}{localSettings.logo ? (<img src={localSettings.logo} alt="Logo" className="w-full h-full object-contain p-3" />) : (<div className="flex flex-col items-center gap-2"><ImageIcon className="text-gray-200" size={48} /><span className="text-[9px] font-black text-gray-300 uppercase">Logo Vazio</span></div>)}</div>{localSettings.logo && (<button onClick={() => { setLocalSettings({ ...localSettings, logo: undefined }); setExtractedPalette([]); }} className="absolute -top-3 -right-3 p-2.5 bg-white text-rose-500 rounded-full shadow-xl border border-gray-100 hover:bg-rose-500 hover:text-white transition-all transform hover:rotate-12"><Trash2 size={16} /></button>)}</div><div className="flex-1 text-center md:text-left space-y-4"><div><h4 className="text-xl font-black text-gray-900 mb-1 tracking-tight">Marca 💎</h4><p className="text-sm text-gray-400 font-medium leading-relaxed">Faça o upload do seu logo.</p></div><div className="flex flex-wrap gap-3 justify-center md:justify-start"><input type="file" ref={fileInputRef} onChange={handleLogoUpload} className="hidden" accept="image/*" /><button onClick={() => fileInputRef.current?.click()} className="px-8 py-3.5 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-gray-200 flex items-center gap-2"><Upload size={16} /> Escolher Arquivo</button></div></div></div>{extractedPalette.length > 0 && (<div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500"><div className="flex items-center justify-between mb-4"><h5 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Paleta Extraída</h5><button onClick={handleResetColors} className="text-[10px] font-black text-rose-500 uppercase flex items-center gap-1.5 hover:underline"><RefreshCw size={12} /> Resetar</button></div><div className="flex flex-wrap gap-3">{extractedPalette.map((color, i) => (<button key={i} onClick={() => setLocalSettings({ ...localSettings, theme: { ...localSettings.theme!, primaryColor: color } })} className={`w-12 h-12 rounded-2xl shadow-sm border-4 transition-all hover:scale-110 active:scale-95 ${localSettings.theme?.primaryColor === color ? 'border-gray-900' : 'border-white'}`} style={{ backgroundColor: color }} />))}</div></div>)}</div><div className="xl:col-span-2">
-                <div className="bg-gray-900 p-8 rounded-[3.5rem] relative overflow-hidden h-full flex flex-col shadow-2xl border border-white/10 group"><div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div><div className="relative z-10 space-y-8 flex-1"><div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-colors duration-500" style={{ backgroundColor: localSettings.theme?.primaryColor || '#FF69B4' }}><Sparkles size={16} /></div><span className="text-[10px] font-black text-white uppercase tracking-[0.2em] block">Live Preview</span></div><div className="space-y-4 bg-white/5 p-6 rounded-[2rem] border border-white/5 relative overflow-hidden min-h-[160px] flex flex-col justify-center">{mockupView === 'default' && (<div className="animate-in fade-in zoom-in-95 duration-500 space-y-4"><div className="h-4 w-2/3 bg-white/10 rounded-full"></div><div className="flex gap-2"><div className="w-10 h-10 rounded-xl transition-colors duration-500" style={{ backgroundColor: localSettings.theme?.primaryColor || '#FF69B4' }}></div><div className="flex-1 space-y-2"><div className="h-3 w-full bg-white/10 rounded-full"></div><div className="h-3 w-4/5 bg-white/10 rounded-full opacity-50"></div></div></div></div>)}{mockupView === 'booked' && (<div className="animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center justify-center space-y-2 py-2"><div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg animate-bounce"><Check size={24} strokeWidth={4} /></div><span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Sucesso!</span><button onClick={() => setMockupView('default')} className="text-[8px] text-gray-500 hover:text-white uppercase font-bold">Voltar</button></div>)}<div className="pt-4 flex gap-2"><button onClick={() => setMockupView('booked')} className="flex-1 py-3 rounded-xl text-[10px] font-black text-white uppercase tracking-widest shadow-lg transition-all active:scale-90" style={{ backgroundColor: localSettings.theme?.primaryColor || '#FF69B4' }}>Agendar</button></div></div><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><label className="text-[9px] font-black text-gray-500 uppercase">Cor Primária</label><div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-xl border border-white/5"><input type="text" className="w-full bg-transparent text-[10px] font-mono text-white outline-none" value={localSettings.theme?.primaryColor || '#FF69B4'} onChange={(e) => setLocalSettings({ ...localSettings, theme: { ...localSettings.theme!, primaryColor: e.target.value } })} /><div className="w-4 h-4 rounded-full shrink-0 border border-white/20" style={{ backgroundColor: localSettings.theme?.primaryColor || '#FF69B4' }}></div></div></div></div></div><div className="mt-8 pt-8 border-t border-white/10 relative z-10 flex items-center justify-between"><div className="flex items-center gap-3"><button onClick={() => setLocalSettings(prev => ({ ...prev, theme: { ...prev.theme, enabled: !prev.theme?.enabled } as any }))} className={`w-12 h-7 rounded-full relative transition-all duration-300 ${localSettings.theme?.enabled ? 'bg-indigo-500' : 'bg-white/10'}`}><div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all duration-300 shadow-sm ${localSettings.theme?.enabled ? 'left-6' : 'left-1'}`} /></button><span className="text-[10px] font-black text-white uppercase tracking-widest">Ativar Tema</span></div></div></div></div></div></div><div className="h-px bg-gray-100 w-full" /><div className="space-y-6"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 ml-1"><Languages size={14} /> {t.settings.labels.language}</label><div className="flex flex-wrap gap-3">{[{ id: 'pt', label: 'Português', code: 'BR' }, { id: 'en', label: 'English', code: 'US' }, { id: 'es', label: 'Español', code: 'ES' }].map(l => (<button key={l.id} onClick={() => setLang(l.id as Language)} className={`flex items-center gap-4 px-6 py-3 rounded-2xl border-2 transition-all text-sm font-bold group ${lang === l.id ? 'border-[#FF69B4] bg-[#FF69B4]/5 text-[#FF69B4]' : 'border-gray-100 text-gray-400 bg-white'}`}><span className="text-[10px] opacity-40 font-black tracking-tighter">{l.code}</span>{l.label}</button>))}</div></div><div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4"><div className="space-y-2 group"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.settings.labels.salonName}</label><input type="text" className="w-full bg-gray-50 border-2 border-transparent rounded-[1.5rem] px-6 py-4 outline-none focus:bg-white focus:border-pink-200 transition-all font-bold text-gray-800" value={localSettings.name} onChange={e => setLocalSettings({ ...localSettings, name: e.target.value })} /></div><div className="space-y-2 group"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.settings.labels.address}</label><input type="text" className="w-full bg-gray-50 border-2 border-transparent rounded-[1.5rem] px-6 py-4 outline-none focus:bg-white focus:border-pink-200 transition-all font-bold text-gray-800" value={localSettings.address} onChange={e => setLocalSettings({ ...localSettings, address: e.target.value })} /></div><div className="space-y-2 group"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.settings.labels.whatsapp}</label><input type="tel" className="w-full bg-gray-50 border-2 border-transparent rounded-[1.5rem] px-6 py-4 outline-none focus:bg-white focus:border-pink-200 transition-all font-bold text-gray-800" value={localSettings.phone} onChange={e => setLocalSettings({ ...localSettings, phone: maskPhone(e.target.value) })} /></div><div className="space-y-2 group"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.settings.labels.instagram}</label><div className="relative"><Instagram className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 transition-colors" size={20} /><input type="text" className="w-full bg-gray-50 border-2 border-transparent rounded-[1.5rem] py-4 pl-14 pr-6 outline-none focus:bg-white focus:border-pink-200 transition-all font-bold text-gray-800" value={localSettings.instagram} onChange={e => setLocalSettings({ ...localSettings, instagram: e.target.value })} /></div></div></div>
+          <div className="space-y-6 sm:space-y-10 fade-in pb-10">
+            <div className="space-y-4 sm:space-y-6"><div className="flex items-center justify-between"><label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2"><ImageIcon size={14} /> Identidade Visual</label></div><div className="grid grid-cols-1 xl:grid-cols-5 gap-6 sm:gap-8"><div className="xl:col-span-3 space-y-6 sm:space-y-6">
+              <div className="relative group bg-gradient-to-br from-white to-gray-50 p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] border-2 border-dashed border-gray-200 transition-all hover:border-[#FF69B4]/40 hover:shadow-2xl hover:shadow-pink-50 flex flex-col sm:flex-row items-center gap-6 sm:gap-8"><div className="relative shrink-0"><div className="w-24 h-24 sm:w-32 sm:h-32 rounded-[1.8rem] sm:rounded-[2.5rem] bg-white shadow-2xl flex items-center justify-center overflow-hidden border-4 border-white transition-transform group-hover:scale-105 relative">{isExtractingColors && (<div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-20 flex flex-col items-center justify-center"><div className="w-full h-1 bg-[#FF69B4]/20 absolute top-0 overflow-hidden"><div className="w-1/3 h-full bg-[#FF69B4] animate-[shimmer_1s_infinite]"></div></div><Loader2 size={24} className="text-[#FF69B4] animate-spin mb-2" /><span className="text-[9px] font-black uppercase text-[#FF69B4]">Escaneando...</span></div>)}{localSettings.logo ? (<img src={localSettings.logo} alt="Logo" className="w-full h-full object-contain p-3" />) : (<div className="flex flex-col items-center gap-2"><ImageIcon className="text-gray-200 w-8 h-8 sm:w-12 sm:h-12" />
+                <span className="text-[9px] font-black text-gray-300 uppercase">Logo Vazio</span></div>)}</div>{localSettings.logo && (<button onClick={() => { setLocalSettings({ ...localSettings, logo: undefined }); setExtractedPalette([]); }} className="absolute -top-3 -right-3 p-2.5 bg-white text-rose-500 rounded-full shadow-xl border border-gray-100 hover:bg-rose-500 hover:text-white transition-all transform hover:rotate-12"><Trash2 size={16} /></button>)}</div><div className="flex-1 text-center sm:text-left space-y-4"><div><h4 className="text-lg sm:text-xl font-black text-gray-900 mb-1 tracking-tight leading-tight">Marca 💎</h4><p className="text-xs sm:text-sm text-gray-400 font-medium leading-relaxed">Faça o upload do seu logo.</p></div><div className="flex flex-wrap gap-3 justify-center sm:justify-start"><input type="file" ref={fileInputRef} onChange={handleLogoUpload} className="hidden" accept="image/*" /><button onClick={() => fileInputRef.current?.click()} className="px-6 sm:px-8 py-3 sm:py-3.5 bg-gray-900 text-white rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-gray-200 flex items-center gap-2"><Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  Escolher Arquivo</button></div></div></div>{extractedPalette.length > 0 && (<div className="bg-white p-6 rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500"><div className="flex items-center justify-between mb-4"><h5 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Paleta Extraída</h5><button onClick={handleResetColors} className="text-[10px] font-black text-rose-500 uppercase flex items-center gap-1.5 hover:underline"><RefreshCw size={12} /> Resetar</button></div><div className="flex flex-wrap gap-3">{extractedPalette.map((color, i) => (<button key={i} onClick={() => setLocalSettings({ ...localSettings, theme: { ...localSettings.theme!, primaryColor: color } })} className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl shadow-sm border-2 sm:border-4 transition-all hover:scale-110 active:scale-95 ${localSettings.theme?.primaryColor === color ? 'border-gray-900' : 'border-white'}`} style={{ backgroundColor: color }} />))}</div></div>)}</div><div className="xl:col-span-2">
+                <div className="bg-gray-900 p-8 rounded-[3.5rem] relative overflow-hidden h-full flex flex-col shadow-2xl border border-white/10 group"><div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div><div className="relative z-10 space-y-8 flex-1"><div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg flex items-center justify-center text-white transition-colors duration-500" style={{ backgroundColor: localSettings.theme?.primaryColor || '#FF69B4' }}></div><span className="text-[10px] font-black text-white uppercase tracking-[0.2em] block">Live Preview</span></div><div className="space-y-4 bg-white/5 p-6 rounded-[2rem] border border-white/5 relative overflow-hidden min-h-[160px] flex flex-col justify-center">{mockupView === 'default' && (<div className="animate-in fade-in zoom-in-95 duration-500 space-y-4"><div className="h-4 w-2/3 bg-white/10 rounded-full"></div><div className="flex gap-2"><div className="w-10 h-10 rounded-xl transition-colors duration-500" style={{ backgroundColor: localSettings.theme?.primaryColor || '#FF69B4' }}></div><div className="flex-1 space-y-2"><div className="h-3 w-full bg-white/10 rounded-full"></div><div className="h-3 w-4/5 bg-white/10 rounded-full opacity-50"></div></div></div></div>)}{mockupView === 'booked' && (<div className="animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center justify-center space-y-2 py-2"><div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg animate-bounce"><Check size={24} strokeWidth={4} /></div><span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Sucesso!</span><button onClick={() => setMockupView('default')} className="text-[8px] text-gray-500 hover:text-white uppercase font-bold">Voltar</button></div>)}<div className="pt-4 flex gap-2"><button onClick={() => setMockupView('booked')} className="flex-1 py-3 rounded-xl text-[10px] font-black text-white uppercase tracking-widest shadow-lg transition-all active:scale-90" style={{ backgroundColor: localSettings.theme?.primaryColor || '#FF69B4' }}>Agendar</button></div></div><div className="grid grid-cols-2 gap-4"><div className="space-y-2"><label className="text-[9px] font-black text-gray-500 uppercase">Cor Primária</label><div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-xl border border-white/5"><input type="text" className="w-full bg-transparent text-[10px] font-mono text-white outline-none" value={localSettings.theme?.primaryColor || '#FF69B4'} onChange={(e) => setLocalSettings({ ...localSettings, theme: { ...localSettings.theme!, primaryColor: e.target.value } })} /><div className="w-4 h-4 rounded-full shrink-0 border border-white/20" style={{ backgroundColor: localSettings.theme?.primaryColor || '#FF69B4' }}></div></div></div></div></div><div className="mt-8 pt-8 border-t border-white/10 relative z-10 flex items-center justify-between"><div className="flex items-center gap-3"><button onClick={() => setLocalSettings(prev => ({ ...prev, theme: { ...prev.theme, enabled: !prev.theme?.enabled } as any }))} className={`w-12 h-7 rounded-full relative transition-all duration-300 ${localSettings.theme?.enabled ? 'bg-indigo-500' : 'bg-white/10'}`}><div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all duration-300 shadow-sm ${localSettings.theme?.enabled ? 'left-6' : 'left-1'}`} /></button><span className="text-[10px] font-black text-white uppercase tracking-widest">Ativar Tema</span></div></div></div></div></div></div><div className="h-px bg-gray-100 w-full" /><div className="space-y-6"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 ml-1"><Languages size={14} /> {t.settings.labels.language}</label><div className="flex flex-wrap gap-3">{[{ id: 'pt', label: 'Português', code: 'BR' }, { id: 'en', label: 'English', code: 'US' }, { id: 'es', label: 'Español', code: 'ES' }].map(l => (<button key={l.id} onClick={() => setLang(l.id as Language)} className={`flex items-center gap-4 px-6 py-3 rounded-2xl border-2 transition-all text-sm font-bold group ${lang === l.id ? 'border-[#FF69B4] bg-[#FF69B4]/5 text-[#FF69B4]' : 'border-gray-100 text-gray-400 bg-white'}`}><span className="text-[10px] opacity-40 font-black tracking-tighter">{l.code}</span>{l.label}</button>))}</div></div><div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4"><div className="space-y-2 group"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.settings.labels.salonName}</label><input type="text" className="w-full bg-gray-50 border-2 border-transparent rounded-[1.5rem] px-6 py-4 outline-none focus:bg-white focus:border-pink-200 transition-all font-bold text-gray-800" value={localSettings.name} onChange={e => setLocalSettings({ ...localSettings, name: e.target.value })} /></div><div className="space-y-2 group"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.settings.labels.address}</label><input type="text" className="w-full bg-gray-50 border-2 border-transparent rounded-[1.5rem] px-6 py-4 outline-none focus:bg-white focus:border-pink-200 transition-all font-bold text-gray-800" value={localSettings.address} onChange={e => setLocalSettings({ ...localSettings, address: e.target.value })} /></div><div className="space-y-2 group"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.settings.labels.whatsapp}</label><input type="tel" className="w-full bg-gray-50 border-2 border-transparent rounded-[1.5rem] px-6 py-4 outline-none focus:bg-white focus:border-pink-200 transition-all font-bold text-gray-800" value={localSettings.phone} onChange={e => setLocalSettings({ ...localSettings, phone: maskPhone(e.target.value) })} /></div><div className="space-y-2 group"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{t.settings.labels.instagram}</label><div className="relative"><Instagram className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 transition-colors" size={20} /><input type="text" className="w-full bg-gray-50 border-2 border-transparent rounded-[1.5rem] py-4 pl-14 pr-6 outline-none focus:bg-white focus:border-pink-200 transition-all font-bold text-gray-800" value={localSettings.instagram} onChange={e => setLocalSettings({ ...localSettings, instagram: e.target.value })} /></div></div></div>
           </div>
         );
       case 'team':
@@ -1169,15 +1167,15 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
               <button onClick={() => fetchData(true)} className="p-3 bg-white text-gray-400 hover:text-gray-900 rounded-xl transition-all shadow-sm active:scale-95"><RefreshCw size={20} /></button>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
               {userProfiles.length === 0 ? (
                 <div className="p-10 text-center text-gray-400">
                   <User size={48} className="mx-auto mb-4 opacity-20" />
                   <p className="font-bold text-sm">Nenhum usuário encontrado.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
+                <div className="overflow-x-auto no-scrollbar">
+                  <table className="w-full text-left min-w-[600px]">
                     <thead>
                       <tr className="border-b border-gray-50 text-left">
                         <th className="py-6 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest w-20">Avatar</th>
@@ -1234,7 +1232,6 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
                 </div>
               )}
             </div>
-
           </div>
         );
       default:
@@ -1243,39 +1240,39 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10 pb-20">
+    <div className="max-w-6xl mx-auto space-y-6 lg:space-y-10 pb-10 lg:pb-20 px-4 sm:px-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
-          <h2 className="text-3xl font-black text-gray-900 tracking-tight">{t.settings.title}</h2>
-          <p className="text-gray-500 font-medium">{t.settings.subtitle}</p>
+          <h2 className="text-2xl lg:text-3xl font-black text-gray-900 tracking-tight leading-tight">{t.settings.title}</h2>
+          <p className="text-gray-500 font-medium text-sm">{t.settings.subtitle}</p>
         </div>
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="w-full md:w-auto px-10 py-4 bg-gray-900 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+          className="w-full md:w-auto px-8 lg:px-10 py-3 lg:py-4 bg-gray-900 text-white rounded-[1.5rem] lg:rounded-[1.8rem] font-black text-xs lg:text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
         >
-          {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
+          {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
           {isSaving ? 'Salvando...' : t.settings.saveBtn}
         </button>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-10">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
         <aside className="lg:w-64 shrink-0">
-          <div className="bg-white p-3 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-1 sticky top-8">
+          <div className="bg-white p-2 lg:p-3 rounded-[2rem] lg:rounded-[2.5rem] border border-gray-100 shadow-sm space-y-1 lg:sticky lg:top-8 overflow-x-auto no-scrollbar flex lg:flex-col gap-1 lg:gap-1">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all font-bold text-sm ${activeTab === tab.id ? 'bg-gray-900 text-white shadow-xl scale-[1.02]' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+                className={`flex items-center gap-3 lg:gap-4 px-4 lg:px-6 py-3 lg:py-4 rounded-xl lg:rounded-2xl transition-all font-bold text-xs lg:text-sm whitespace-nowrap shrink-0 ${activeTab === tab.id ? 'bg-gray-900 text-white shadow-xl scale-[1.02]' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
               >
-                <tab.icon size={18} /> {tab.label}
+                <tab.icon size={16} lg={18} /> {tab.label}
               </button>
             ))}
           </div>
         </aside>
 
         <main className="flex-1 min-w-0">
-          <div className="bg-white/40 backdrop-blur-sm p-8 md:p-12 rounded-[3.5rem] border border-white shadow-sm">
+          <div className="bg-white/40 backdrop-blur-sm p-5 sm:p-8 md:p-12 rounded-[2.5rem] md:rounded-[3.5rem] border border-white shadow-sm overflow-hidden">
             {renderTabContent()}
           </div>
         </main>
