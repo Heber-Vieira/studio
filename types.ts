@@ -132,6 +132,7 @@ export interface AttendantPermissions {
 export interface ReleaseFeature {
   text: string;
   roles: UserRole[] | 'all';
+  hidden?: boolean;
 }
 
 export interface ReleaseNote {
@@ -146,6 +147,7 @@ export interface ReleaseNotesConfig {
   startDate: string;
   endDate: string;
   activeNote: ReleaseNote;
+  hiddenSystemFeatures?: string[]; // Lista de textos (ou IDs) de novidades do sistema que o admin ocultou
 }
 
 export interface IntegrationConfig {

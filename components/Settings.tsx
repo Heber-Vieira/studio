@@ -57,14 +57,15 @@ import {
   MessageCircle,
   Calendar,
   Share2,
-  Eye,
   RefreshCw,
   Lightbulb,
-  // Added X icon import
+  Eye,
+  EyeOff,
   X
 } from 'lucide-react';
 import { CurrencyInput } from './ui';
 import { maskPhone } from '../services/utils';
+import { SYSTEM_UPDATES } from '../constants/systemUpdates';
 
 interface SettingsProps {
   t: any;
@@ -342,6 +343,44 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
   const backupInputRef = useRef<HTMLInputElement>(null);
   const featureInputRef = useRef<HTMLInputElement>(null);
 
+  // --- RELEASE NOTES LOGIC (Moved to Top Level to follow Rules of Hooks) ---
+  const releaseConfig = useMemo(() => localSettings.releaseNotes || {
+    enabled: false,
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+    activeNote: { version: '1.0', title: '', description: '', features: [] }
+  }, [localSettings.releaseNotes]);
+
+  const activeNote = useMemo(() => releaseConfig.activeNote || {
+    version: '1.0', title: '', description: '', features: []
+  }, [releaseConfig]);
+
+  const displayNote = useMemo(() => {
+    const rawNotes = [...(SYSTEM_UPDATES || [])];
+    if (activeNote && activeNote.version) {
+      rawNotes.push(activeNote);
+    }
+    if (rawNotes.length === 0) return null;
+
+    // Pegar a nota mais recente
+    const sorted = rawNotes.sort((a, b) => (b.version || '').localeCompare(a.version || '', undefined, { numeric: true, sensitivity: 'base' }));
+    const latest = sorted[0];
+
+    // Filtrar recursos ocultos para o preview
+    const filteredFeatures = (latest.features || []).filter(f => {
+      const fText = typeof f === 'string' ? f : f.text;
+      const isSystem = (SYSTEM_UPDATES || []).some(sn => (sn.features || []).some(sf => (typeof sf === 'string' ? sf : sf.text) === fText));
+
+      if (isSystem) {
+        return !(releaseConfig.hiddenSystemFeatures || []).includes(fText);
+      }
+      return typeof f === 'object' && !f.hidden;
+    });
+
+    return { ...latest, features: filteredFeatures };
+  }, [activeNote, releaseConfig.hiddenSystemFeatures]);
+  // ------------------------------------------------------------------------
+
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -538,16 +577,19 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
 
   const handleAddReleaseFeature = () => {
     if (!newFeatureText.trim()) return;
+    const currentReleaseNotes = localSettings.releaseNotes || { enabled: false, startDate: '', endDate: '', activeNote: { version: '1.0', title: '', description: '', features: [] } };
+    const currentActiveNote = currentReleaseNotes.activeNote || { version: '1.0', title: '', description: '', features: [] };
+
     const rolesPayload = newFeatureRole === 'all' ? 'all' : [newFeatureRole];
     const newFeatures = [
-      ...(localSettings.releaseNotes?.activeNote.features || []),
-      { text: newFeatureText, roles: rolesPayload as any }
+      ...(currentActiveNote.features || []),
+      { text: newFeatureText, roles: rolesPayload as any, hidden: false }
     ];
     setLocalSettings(prev => ({
       ...prev,
       releaseNotes: {
-        ...prev.releaseNotes!,
-        activeNote: { ...prev.releaseNotes!.activeNote, features: newFeatures }
+        ...currentReleaseNotes,
+        activeNote: { ...currentActiveNote, features: newFeatures }
       }
     }));
     setNewFeatureText('');
@@ -555,12 +597,49 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
   };
 
   const handleRemoveReleaseFeature = (idx: number) => {
-    const newFeatures = localSettings.releaseNotes?.activeNote.features.filter((_, i) => i !== idx) || [];
+    const currentReleaseNotes = localSettings.releaseNotes || { enabled: false, startDate: '', endDate: '', activeNote: { version: '1.0', title: '', description: '', features: [] } };
+    const currentActiveNote = currentReleaseNotes.activeNote || { version: '1.0', title: '', description: '', features: [] };
+
+    const newFeatures = (currentActiveNote.features || []).filter((_, i) => i !== idx);
     setLocalSettings(prev => ({
       ...prev,
       releaseNotes: {
-        ...prev.releaseNotes!,
-        activeNote: { ...prev.releaseNotes!.activeNote, features: newFeatures }
+        ...currentReleaseNotes,
+        activeNote: { ...currentActiveNote, features: newFeatures }
+      }
+    }));
+  };
+
+  const handleToggleSystemFeatureVisibility = (featureText: string) => {
+    const currentHidden = releaseConfig.hiddenSystemFeatures || [];
+    const isHidden = currentHidden.includes(featureText);
+    const newHidden = isHidden
+      ? currentHidden.filter(t => t !== featureText)
+      : [...currentHidden, featureText];
+
+    setLocalSettings(prev => ({
+      ...prev,
+      releaseNotes: {
+        ...releaseConfig,
+        hiddenSystemFeatures: newHidden
+      }
+    }));
+  };
+
+  const handleToggleCustomFeatureVisibility = (idx: number) => {
+    const currentFeatures = [...(activeNote.features || [])];
+    if (currentFeatures[idx]) {
+      const feat = currentFeatures[idx];
+      currentFeatures[idx] = typeof feat === 'string'
+        ? { text: feat, roles: 'all', hidden: true }
+        : { ...feat, hidden: !feat.hidden };
+    }
+
+    setLocalSettings(prev => ({
+      ...prev,
+      releaseNotes: {
+        ...releaseConfig,
+        activeNote: { ...activeNote, features: currentFeatures }
       }
     }));
   };
@@ -842,14 +921,7 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
             )}
           </div>
         );
-      case 'releases':
-        const releaseConfig = localSettings.releaseNotes || {
-          enabled: false,
-          startDate: new Date().toISOString().split('T')[0],
-          endDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-          activeNote: { version: '1.0', title: '', description: '', features: [] }
-        };
-
+      case 'releases': {
         const handlePreviewExplore = () => {
           setIsPreviewExploring(true);
           setTimeout(() => setIsPreviewExploring(false), 2000);
@@ -872,27 +944,27 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
                 <div className="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-[2rem] shadow-sm">
                   <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-2xl ${releaseConfig.enabled ? 'bg-emerald-50 text-emerald-500' : 'bg-gray-100 text-gray-400'}`}><Rocket size={24} /></div>
-                    <div><h4 className="font-bold text-gray-900">Campanha de Lançamento</h4><p className="text-xs text-gray-400 font-medium">Ativar popup para usuários.</p></div>
+                    <div><h4 className="font-bold text-gray-900">Apresentação de Novidades</h4><p className="text-xs text-gray-400 font-medium">Exibir popups de atualizações para usuários.</p></div>
                   </div>
                   <button onClick={() => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, enabled: !releaseConfig.enabled } })} className={`w-14 h-8 rounded-full relative transition-all duration-300 ${releaseConfig.enabled ? 'bg-emerald-500' : 'bg-gray-200'}`}><div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-300 shadow-sm ${releaseConfig.enabled ? 'left-7' : 'left-1'}`} /></button>
                 </div>
                 <div className={`space-y-6 transition-all duration-500 ${!releaseConfig.enabled ? 'opacity-50 grayscale pointer-events-none' : ''}`}>
                   <div className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 space-y-4">
-                    <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><Calendar size={14} /> Agendamento</h5>
+                    <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2"><Calendar size={14} /> Ciclo de Exibição</h5>
                     <div className="grid grid-cols-2 gap-4">
-                      <div><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Início</label><input type="date" className="w-full bg-white border-none rounded-xl px-4 py-3 font-bold text-gray-800 text-sm outline-none shadow-sm [color-scheme:light] hover:bg-gray-50 transition-colors cursor-pointer" value={releaseConfig.startDate} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, startDate: e.target.value } })} /></div>
-                      <div><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Fim</label><input type="date" className="w-full bg-white border-none rounded-xl px-4 py-3 font-bold text-gray-800 text-sm outline-none shadow-sm [color-scheme:light] hover:bg-gray-50 transition-colors cursor-pointer" value={releaseConfig.endDate} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, endDate: e.target.value } })} /></div>
+                      <div><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Data Inicial</label><input type="date" className="w-full bg-white border-none rounded-xl px-4 py-3 font-bold text-gray-800 text-sm outline-none shadow-sm [color-scheme:light] hover:bg-gray-50 transition-colors cursor-pointer" value={releaseConfig.startDate} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, startDate: e.target.value } })} /></div>
+                      <div><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Data Final</label><input type="date" className="w-full bg-white border-none rounded-xl px-4 py-3 font-bold text-gray-800 text-sm outline-none shadow-sm [color-scheme:light] hover:bg-gray-50 transition-colors cursor-pointer" value={releaseConfig.endDate} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, endDate: e.target.value } })} /></div>
                     </div>
                   </div>
                   <div className="space-y-4">
                     <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Versão</label><input type="text" placeholder="v2.0" className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 font-black text-[#FF69B4] outline-none" value={releaseConfig.activeNote.version} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, activeNote: { ...releaseConfig.activeNote, version: e.target.value } } })} /></div>
-                      <div className="col-span-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Título de Impacto</label><input type="text" placeholder="O Futuro Chegou!" className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 font-bold text-gray-900 outline-none" value={releaseConfig.activeNote.title} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, activeNote: { ...releaseConfig.activeNote, title: e.target.value } } })} /></div>
+                      <div className="col-span-1"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Versão Custom</label><input type="text" placeholder="v2.0" className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 font-black text-[#FF69B4] outline-none" value={activeNote.version || ''} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, activeNote: { ...activeNote, version: e.target.value } } })} /></div>
+                      <div className="col-span-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Título Personalizado</label><input type="text" placeholder="Sua Mensagem Aqui" className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 font-bold text-gray-900 outline-none" value={activeNote.title || ''} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, activeNote: { ...activeNote, title: e.target.value } } })} /></div>
                     </div>
-                    <div><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Mensagem Principal</label><textarea className="w-full h-24 bg-gray-50 border-none rounded-2xl px-4 py-3 font-medium text-gray-700 outline-none resize-none text-sm leading-relaxed" placeholder="Descreva as mudanças de forma empolgante..." value={releaseConfig.activeNote.description} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, activeNote: { ...releaseConfig.activeNote, description: e.target.value } } })} /></div>
+                    <div><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Mensagem Principal</label><textarea className="w-full h-24 bg-gray-50 border-none rounded-2xl px-4 py-3 font-medium text-gray-700 outline-none resize-none text-sm leading-relaxed" placeholder="Descreva as melhorias de forma empolgante..." value={activeNote.description || ''} onChange={e => setLocalSettings({ ...localSettings, releaseNotes: { ...releaseConfig, activeNote: { ...activeNote, description: e.target.value } } })} /></div>
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">Lista de Novidades</label>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">Gerenciar Itens da Apresentação</label>
                     <div className="flex gap-2">
                       <input ref={featureInputRef} type="text" placeholder="Ex: Novo painel financeiro" className="flex-1 bg-white border-2 border-gray-100 rounded-xl px-4 py-3 font-medium text-sm outline-none focus:border-[#FF69B4] transition-colors" value={newFeatureText} onChange={e => setNewFeatureText(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleAddReleaseFeature()} />
                       <select className="bg-gray-50 border-none rounded-xl px-3 py-3 text-xs font-bold text-gray-600 outline-none cursor-pointer" value={newFeatureRole} onChange={e => setNewFeatureRole(e.target.value as any)}>
@@ -900,24 +972,97 @@ const SettingsView: React.FC<SettingsProps> = ({ t, lang, setLang, settings, onU
                       </select>
                       <button onClick={handleAddReleaseFeature} className="bg-[#FF69B4] text-white p-3 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-pink-100"><Plus size={20} /></button>
                     </div>
-                    <div className="space-y-2 mt-2">
-                      {releaseConfig.activeNote.features.map((feat, i) => {
+
+                    <div className="space-y-3 mt-4">
+                      <p className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.2em] ml-1">Implementações Automáticas do Sistema</p>
+                      {SYSTEM_UPDATES && SYSTEM_UPDATES.filter((n: any) => n.version === displayNote?.version).map((n: any) => (n.features || []).map((f: any, idx: number) => {
+                        const fText = typeof f === 'string' ? f : f.text;
+                        const isHidden = (releaseConfig.hiddenSystemFeatures || []).includes(fText);
+                        return (
+                          <div key={`sys-${idx}`} className={`flex items-center justify-between p-3 border rounded-xl transition-all ${isHidden ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-indigo-50/50 border-indigo-100'}`}>
+                            <div className="flex items-center gap-3">
+                              <div className={`w-1.5 h-1.5 rounded-full ${isHidden ? 'bg-gray-300' : 'bg-indigo-400'}`}></div>
+                              <span className={`text-sm font-medium ${isHidden ? 'text-gray-400 line-through' : 'text-indigo-900'}`}>{fText}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {!isHidden && <span className="px-2 py-1 bg-white text-[8px] font-black text-indigo-500 uppercase rounded-md shadow-sm">BellaAI Auto</span>}
+                              <button
+                                onClick={() => handleToggleSystemFeatureVisibility(fText)}
+                                className={`p-1.5 rounded-lg transition-colors ${isHidden ? 'text-gray-400 hover:text-indigo-500' : 'text-indigo-400 hover:text-indigo-600'}`}
+                                title={isHidden ? "Mostrar no Popup" : "Ocultar do Popup"}
+                              >
+                                {isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }))}
+
+                      {(activeNote.features || []).length > 0 && <p className="text-[9px] font-black text-pink-400 uppercase tracking-[0.2em] ml-1 mt-4">Suas Customizações</p>}
+                      {(activeNote.features || []).map((feat, i) => {
                         const featureText = typeof feat === 'string' ? feat : feat.text;
                         const featureRole = typeof feat === 'string' ? 'all' : (Array.isArray(feat.roles) ? feat.roles[0] : feat.roles);
+                        const isHidden = typeof feat === 'object' && feat.hidden;
                         const roleColors: Record<string, string> = { all: 'bg-gray-100 text-gray-500', master_admin: 'bg-purple-100 text-purple-600', company_admin: 'bg-purple-100 text-purple-600', attendant: 'bg-teal-100 text-teal-600', client: 'bg-yellow-100 text-yellow-600' };
-                        return (<div key={i} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl group hover:border-pink-100 transition-colors"><div className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-[#FF69B4]"></div><span className="text-sm font-medium text-gray-700">{featureText}</span></div><div className="flex items-center gap-2"><span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${roleColors[featureRole as string] || roleColors.all}`}>{featureRole === 'all' ? 'Global' : featureRole === 'master_admin' ? 'Admin' : featureRole === 'company_admin' ? 'Admin' : featureRole === 'client' ? 'Cliente' : 'Equipe'}</span><button onClick={() => handleRemoveReleaseFeature(i)} className="text-gray-300 hover:text-rose-500 transition-colors p-1 active:scale-90"><Trash2 size={14} /></button></div></div>);
+                        return (
+                          <div key={i} className={`flex items-center justify-between p-3 bg-white border rounded-xl group transition-all ${isHidden ? 'opacity-60 grayscale' : 'hover:border-pink-100'}`}>
+                            <div className="flex items-center gap-3">
+                              <div className={`w-1.5 h-1.5 rounded-full ${isHidden ? 'bg-gray-300' : 'bg-[#FF69B4]'}`}></div>
+                              <span className={`text-sm font-medium ${isHidden ? 'text-gray-400 line-through' : 'text-gray-700'}`}>{featureText}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {!isHidden && (
+                                <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${roleColors[featureRole as string] || roleColors.all}`}>
+                                  {featureRole === 'all' ? 'Global' : featureRole === 'master_admin' ? 'Admin' : featureRole === 'company_admin' ? 'Admin' : featureRole === 'client' ? 'Cliente' : 'Equipe'}
+                                </span>
+                              )}
+                              <button
+                                onClick={() => handleToggleCustomFeatureVisibility(i)}
+                                className={`p-1 transition-colors ${isHidden ? 'text-gray-400 hover:text-pink-500' : 'text-gray-300 hover:text-pink-500'}`}
+                                title={isHidden ? "Mostrar no Popup" : "Ocultar do Popup"}
+                              >
+                                {isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                              </button>
+                              <button onClick={() => handleRemoveReleaseFeature(i)} className="text-gray-300 hover:text-rose-500 transition-colors p-1 active:scale-90">
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        );
                       })}
-                      {releaseConfig.activeNote.features.length === 0 && <p className="text-center text-xs text-gray-300 italic py-2">Nenhum item adicionado ainda.</p>}
                     </div>
                   </div>
                 </div>
               </div>
               <div className="hidden xl:block flex-1 relative">
-                <div className="sticky top-0"><div className="flex items-center justify-center gap-2 mb-6 text-gray-400"><Eye size={16} /><span className="text-xs font-bold uppercase tracking-widest">Live Preview</span></div><div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-gray-100 relative max-w-sm mx-auto transform hover:scale-[1.02] transition-transform duration-500"><div className="bg-gradient-to-br from-[#FF69B4] to-[#C71585] p-8 text-white text-center relative overflow-hidden"><div className="absolute top-4 left-4 opacity-30"><Lightbulb size={32} /></div><div className="absolute bottom-4 right-4 opacity-30 rotate-12"><Rocket size={32} /></div><div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full mb-4 border border-white/20"><Sparkles size={12} className="text-yellow-300" /><span className="text-[9px] font-black uppercase tracking-[0.2em]">Novidades</span></div><h2 className="text-4xl font-black tracking-tighter mb-1">v{releaseConfig.activeNote.version || '1.0'}</h2><p className="text-pink-100 font-bold text-xl px-6 leading-tight">{releaseConfig.activeNote.title || 'Título da Atualização'}</p></div><div className="p-8 space-y-6 bg-white"><p className="text-gray-500 text-sm font-medium leading-relaxed italic text-center">"{releaseConfig.activeNote.description || 'Breve descrição das melhorias incríveis.'}"</p><div className="space-y-3">{releaseConfig.activeNote.features.length > 0 ? releaseConfig.activeNote.features.map((feat, i) => (<div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 animate-in slide-in-from-left-2" style={{ animationDelay: `${i * 100}ms` }}><div className="w-5 h-5 bg-white rounded-full flex items-center justify-center shrink-0 shadow-sm mt-0.5"><CheckCircle2 size={12} className="text-[#40E0D0]" /></div><span className="text-xs font-bold text-gray-700 leading-snug">{typeof feat === 'string' ? feat : feat.text}</span></div>)) : <div className="text-center py-4 border-2 border-dashed border-gray-100 rounded-2xl"><span className="text-xs text-gray-300 font-bold">Itens aparecerão aqui...</span></div>}</div><button onClick={handlePreviewExplore} disabled={isPreviewExploring} className={`w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.25em] shadow-xl flex items-center justify-center gap-2 transition-all active:scale-95 ${isPreviewExploring ? 'bg-emerald-500 scale-95' : ''}`}>{isPreviewExploring ? <><Check size={16} /> Sucesso!</> : <>EXPLORAR <ArrowRight size={14} /></>}</button></div></div></div>
+                <div className="sticky top-0">
+                  <div className="flex items-center justify-center gap-2 mb-6 text-gray-400"><Eye size={16} /><span className="text-xs font-bold uppercase tracking-widest">Live Preview (Visto pelo Usuário)</span></div>
+                  <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-gray-100 relative max-w-sm mx-auto transform hover:scale-[1.02] transition-transform duration-500">
+                    <div className="bg-gradient-to-br from-[#FF69B4] to-[#C71585] p-8 text-white text-center relative overflow-hidden">
+                      <div className="absolute top-4 left-4 opacity-30"><Lightbulb size={32} /></div><div className="absolute bottom-4 right-4 opacity-30 rotate-12"><Rocket size={32} /></div>
+                      <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full mb-4 border border-white/20"><Sparkles size={12} className="text-yellow-300" /><span className="text-[9px] font-black uppercase tracking-[0.2em]">Novidades</span></div>
+                      <h2 className="text-4xl font-black tracking-tighter mb-1">v{displayNote?.version || '1.0'}</h2>
+                      <p className="text-pink-100 font-bold text-xl px-6 leading-tight">{displayNote?.title || 'Título da Atualização'}</p>
+                    </div>
+                    <div className="p-8 space-y-6 bg-white">
+                      <p className="text-gray-500 text-sm font-medium leading-relaxed italic text-center">"{displayNote?.description || 'Breve descrição das melhorias incríveis.'}"</p>
+                      <div className="space-y-3">
+                        {(displayNote?.features || []).map((feat, i) => (
+                          <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 animate-in slide-in-from-left-2" style={{ animationDelay: `${i * 100}ms` }}>
+                            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center shrink-0 shadow-sm mt-0.5"><CheckCircle2 size={12} className="text-[#40E0D0]" /></div>
+                            <span className="text-xs font-bold text-gray-700 leading-snug">{typeof feat === 'string' ? feat : feat.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <button onClick={handlePreviewExplore} disabled={isPreviewExploring} className={`w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.25em] shadow-xl flex items-center justify-center gap-2 transition-all active:scale-95 ${isPreviewExploring ? 'bg-emerald-500 scale-95' : ''}`}>{isPreviewExploring ? <><Check size={16} /> Sucesso!</> : <>EXPLORAR <ArrowRight size={14} /></>}</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         );
+      }
       case 'loyalty':
         const loyalty = localSettings.loyalty;
         const spendToReward = loyalty.redemptionCost / (loyalty.pointsPerReal || 1);

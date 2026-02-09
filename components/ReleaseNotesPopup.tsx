@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Sparkles, Rocket, CheckCircle2, X, PartyPopper, ArrowRight, Zap, ShieldCheck, User, Users, Star } from 'lucide-react';
-import { ReleaseNotesConfig, UserRole } from '../types';
+import { ReleaseNotesConfig, UserRole, ReleaseNote } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { SYSTEM_UPDATES } from '../constants/systemUpdates';
 
 interface ReleaseNotesPopupProps {
   config?: ReleaseNotesConfig;
@@ -12,31 +13,52 @@ const ReleaseNotesPopup: React.FC<ReleaseNotesPopupProps> = ({ config }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // Filtro Inteligente de Novidades por Cargo
-  const filteredFeatures = useMemo(() => {
-    if (!config || !user) return [];
+  // Fusion de Novidades: Sistema (Auto) + Custom (Admin)
+  const allNotes = useMemo(() => {
+    const notes: ReleaseNote[] = [...SYSTEM_UPDATES];
+    if (config?.activeNote && config.activeNote.version) {
+      notes.push(config.activeNote);
+    }
+    // Ordenar por versão (decrescente) para pegar a mais recente
+    return notes.sort((a, b) => b.version.localeCompare(a.version, undefined, { numeric: true, sensitivity: 'base' }));
+  }, [config]);
 
-    return (config.activeNote?.features || []).filter(feature => {
-      // Se feature for string (legado), mostra para todos
+  const latestNote = allNotes[0];
+
+  // Filtro Inteligente de Novidades por Cargo e Visibilidade
+  const filteredFeatures = useMemo(() => {
+    if (!latestNote || !user) return [];
+
+    return (latestNote.features || []).filter(feature => {
+      const fText = typeof feature === 'string' ? feature : feature.text;
+
+      // 1. Verificar se é um item oculto pelo Admin
+      const isSystem = SYSTEM_UPDATES.some(sn => (sn.features || []).some(sf => (typeof sf === 'string' ? sf : sf.text) === fText));
+      if (isSystem && config?.hiddenSystemFeatures?.includes(fText)) {
+        return false;
+      }
+      if (typeof feature === 'object' && feature.hidden) {
+        return false;
+      }
+
+      // 2. Verificar permissão de Cargo
       if (typeof feature === 'string') return true;
-      // Se roles for 'all' ou indefinido, mostra para todos
       if (!feature || !feature.roles || feature.roles === 'all') return true;
-      // Se não, verifica se a role do usuário está na lista
       return Array.isArray(feature.roles) && feature.roles.includes(user.role);
     });
-  }, [config, user]);
+  }, [latestNote, user, config]);
 
   useEffect(() => {
-    if (!config || !config.enabled || !user || filteredFeatures.length === 0) return;
+    if (!config || !config.enabled || !user || filteredFeatures.length === 0 || !latestNote) return;
 
     const now = new Date();
-    const start = new Date(config.startDate);
-    const end = new Date(config.endDate);
+    const start = config.startDate ? new Date(config.startDate) : new Date(0);
+    const end = config.endDate ? new Date(config.endDate) : new Date(8640000000000000);
 
     // Validar janela de campanha
     if (now < start || now > end) return;
 
-    const storageKey = `bella_seen_release_${config.activeNote.version}_${user.role}`;
+    const storageKey = `bella_seen_release_${latestNote.version}_${user.role}`;
     const hasSeen = localStorage.getItem(storageKey);
 
     if (!hasSeen) {
@@ -47,16 +69,16 @@ const ReleaseNotesPopup: React.FC<ReleaseNotesPopupProps> = ({ config }) => {
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [config, user, filteredFeatures]);
+  }, [config, user, filteredFeatures, latestNote]);
 
   const handleClose = () => {
-    if (config && user) {
-      localStorage.setItem(`bella_seen_release_${config.activeNote.version}_${user.role}`, 'true');
+    if (latestNote && user) {
+      localStorage.setItem(`bella_seen_release_${latestNote.version}_${user.role}`, 'true');
     }
     setIsVisible(false);
   };
 
-  if (!isVisible || !config || filteredFeatures.length === 0) return null;
+  if (!isVisible || !latestNote || filteredFeatures.length === 0) return null;
 
   const RoleBadge = () => {
     const rolesMap: Record<UserRole, { label: string, icon: any, color: string }> = {
@@ -123,14 +145,14 @@ const ReleaseNotesPopup: React.FC<ReleaseNotesPopupProps> = ({ config }) => {
               <span className="text-[11px] font-black uppercase tracking-[0.3em]">Novidades Exclusivas</span>
             </div>
 
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-2 drop-shadow-lg leading-none">v{config.activeNote.version}</h2>
-            <p className="text-pink-100 font-bold text-lg md:text-xl px-2 md:px-6 leading-tight">{config.activeNote.title}</p>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-2 drop-shadow-lg leading-none">v{latestNote.version}</h2>
+            <p className="text-pink-100 font-bold text-lg md:text-xl px-2 md:px-6 leading-tight">{latestNote.title}</p>
           </div>
 
           <div className="p-8 md:p-12 space-y-8 relative bg-white">
             <div className="space-y-6">
               <p className="text-gray-500 font-medium leading-relaxed italic text-center text-base md:text-lg">
-                "{config.activeNote.description}"
+                "{latestNote.description}"
               </p>
 
               <div className="space-y-3 pt-2">

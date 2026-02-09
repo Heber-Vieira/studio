@@ -194,6 +194,13 @@ const MainLayout: React.FC = () => {
           permissions: parsed.permissions || defaultPermissions,
           integrations: parsed.integrations || defaultIntegrations,
           automations: parsed.automations || defaultAutomations,
+          releaseNotes: parsed.releaseNotes || {
+            enabled: true,
+            startDate: new Date().toISOString().split('T')[0],
+            endDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+            activeNote: { version: '1.0', title: '', description: '', features: [] },
+            hiddenSystemFeatures: []
+          },
         };
       } catch (e) {
         console.warn("Failed to parse saved settings, using defaults.");
@@ -217,7 +224,14 @@ const MainLayout: React.FC = () => {
       theme: { enabled: false, primaryColor: '#FF69B4', secondaryColor: '#40E0D0' },
       loyalty: defaultLoyalty,
       permissions: defaultPermissions,
-      integrations: defaultIntegrations
+      integrations: defaultIntegrations,
+      releaseNotes: {
+        enabled: true,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+        activeNote: { version: '1.0', title: '', description: '', features: [] },
+        hiddenSystemFeatures: []
+      }
     };
   });
 
@@ -1213,7 +1227,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
         <CookieConsent />
 
-      </div>
+      </div >
     </>
   );
 };
