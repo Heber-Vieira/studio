@@ -37,7 +37,7 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-      <div className={`bg-white w-full ${maxWidthClasses[maxWidth]} rounded-3xl sm:rounded-[3rem] p-5 sm:p-10 shadow-2xl space-y-5 sm:space-y-8 animate-in zoom-in duration-300 border border-white/20 relative overflow-hidden`}>
+      <div className={`bg-white w-full ${maxWidthClasses[maxWidth]} rounded-3xl sm:rounded-[3rem] p-5 sm:p-10 shadow-2xl space-y-5 sm:space-y-8 animate-in zoom-in duration-300 border border-white/20 relative overflow-y-auto overflow-x-hidden max-h-[90dvh]`}>
         {/* Decorative circle */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-pink-50 rounded-full -translate-y-1/2 translate-x-1/2 -z-10"></div>
 
