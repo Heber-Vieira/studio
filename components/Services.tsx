@@ -317,7 +317,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
               <input
                 type="text"
                 placeholder="Ex: Botox Capilar"
-                className={`w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none focus:ring-2 ${isEditModalOpen ? 'focus:ring-[#40E0D0]' : 'focus:ring-[#FF69B4]'}`}
+                className={`w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none focus:ring-2 text-base sm:text-sm ${isEditModalOpen ? 'focus:ring-[#40E0D0]' : 'focus:ring-[#FF69B4]'}`}
                 value={isEditModalOpen ? selectedService?.name : newSvc.name}
                 onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, name: e.target.value }) : setNewSvc({ ...newSvc, name: e.target.value })}
               />
@@ -325,7 +325,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
             <div>
               <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Categoria</label>
               <select
-                className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none"
+                className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none text-base sm:text-sm"
                 value={isEditModalOpen ? selectedService?.category : newSvc.category}
                 onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, category: e.target.value }) : setNewSvc({ ...newSvc, category: e.target.value })}
               >
@@ -358,7 +358,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
           </div>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <CurrencyInput
                 label="Preço"
                 value={isEditModalOpen ? (selectedService?.price || 0) : newSvc.price}
@@ -377,7 +377,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
                   }}
                   className="w-full bg-[#F5F5F5] border-none rounded-2xl py-4 px-4 outline-none text-left font-bold text-gray-800 hover:ring-2 hover:ring-[#FF69B4]/20 transition-all flex items-center justify-between"
                 >
-                  <span className="text-sm">{(isEditModalOpen ? selectedService?.duration : newSvc.duration)?.replace(/;/g, ':')}</span>
+                  <span className="text-base sm:text-sm">{(isEditModalOpen ? selectedService?.duration : newSvc.duration)?.replace(/;/g, ':')}</span>
                   <Clock size={16} className="text-gray-300 shrink-0" />
                 </button>
               </div>
@@ -385,7 +385,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
             <div>
               <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Descrição (Marketing)</label>
               <textarea
-                className="w-full h-24 bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none resize-none text-sm font-medium"
+                className="w-full h-24 bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none resize-none text-base sm:text-sm font-medium"
                 placeholder="Descreva o serviço para atrair clientes..."
                 value={isEditModalOpen ? selectedService?.description : newSvc.description}
                 onChange={e => isEditModalOpen ? setSelectedService({ ...selectedService!, description: e.target.value }) : setNewSvc({ ...newSvc, description: e.target.value })}
@@ -394,7 +394,7 @@ const ServicesView: React.FC<ServicesProps> = ({ services, categories, onAdd, on
             <div>
               <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Anamnese Obrigatória</label>
               <select
-                className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none text-sm font-bold"
+                className="w-full bg-[#F5F5F5] border-none rounded-xl px-4 py-3 outline-none text-base sm:text-sm font-bold"
                 value={isEditModalOpen ? (selectedService?.anamnesisTemplateId || '') : newSvc.anamnesisTemplateId}
                 onChange={e => isEditModalOpen
                   ? setSelectedService({ ...selectedService!, anamnesisTemplateId: e.target.value || undefined })
